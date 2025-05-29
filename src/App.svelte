@@ -94,7 +94,7 @@
       const z = radius * Math.cos(phi);
       mesh.position.set(x, y, z);
 
-      const currentSpeed = speed === 0 ? (0.05 + Math.random() * 0.001) : speed; // Increased speed
+      const currentSpeed = speed === 0 ? (0.05 + (Math.random() * .3)) : speed; // Increased speed
       const velocity = new THREE.Vector3(
         (Math.random() - 0.5),
         (Math.random() - 0.5),
