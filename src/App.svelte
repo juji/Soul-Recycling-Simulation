@@ -6,6 +6,31 @@
 
   let container;
 
+  // Helper function to get entity count from URL parameter
+  function getEntityCountFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const val = urlParams.get('val');
+    
+    console.log('URL parameter "val":', val);
+    
+    if (val === null || val === '') {
+      console.log('No val parameter found, using default: 333');
+      return 333; // Default value
+    }
+    
+    const parsedVal = parseInt(val, 10);
+    
+    // Check if it's a valid number and clamp between 333 and 33333
+    if (isNaN(parsedVal)) {
+      console.log('Invalid val parameter, using default: 333');
+      return 333; // Default for invalid values
+    }
+    
+    const clampedVal = Math.max(333, Math.min(33333, parsedVal));
+    console.log('Entity count set to:', clampedVal);
+    return clampedVal;
+  }
+
   onMount(() => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
@@ -39,7 +64,7 @@
     pointLight3.position.set(0, 5, -2); // Positioned even closer from top-front
     scene.add(pointLight3);
 
-    const recycledSoulCount = 333;
+    const recycledSoulCount = getEntityCountFromURL();
     const newSoulSpawnRate = 0.4; // Increased from 0.2
     const interactionDistance = 6;
     let souls = []; // This will now store only the THREE.Mesh objects
