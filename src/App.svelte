@@ -7,6 +7,7 @@
   // Global soul count settings
   const DEFAULT_SOUL_COUNT = 999;
 
+  let souls = []; // Declare souls here to make it accessible to the template
   let container;
   
   // FPS counter variables
@@ -109,8 +110,23 @@
 
     const recycledSoulCount = getEntityCountFromURL();
     const newSoulSpawnRate = 0.4; // Increased from 0.2
+    // POPULATION EQUILIBRIUM NOTE:
+    // The soul population tends towards an equilibrium.
+    // This equilibrium is determined by:
+    // 1. `newSoulSpawnRate` (currently ${newSoulSpawnRate}): The average number of new souls created per frame.
+    // 2. Soul Lifespan (defined in `createSoul` as 300-900 frames, averaging 600): How long souls live before being removed.
+    //
+    // Equilibrium occurs when: Average Birth Rate = Average Death Rate
+    // Average Birth Rate = newSoulSpawnRate
+    // Average Death Rate = CurrentPopulation / AverageLifespan
+    // So, `newSoulSpawnRate = CurrentPopulation / AverageLifespan`
+    // `CurrentPopulation = newSoulSpawnRate * AverageLifespan`
+    // With current values: `CurrentPopulation = ${newSoulSpawnRate} * 600 = ${newSoulSpawnRate * 600}` (approximately)
+    //
+    // If the initial population is above this, it will decrease towards equilibrium.
+    // If the initial population is below this, it will increase towards equilibrium.
+
     const interactionDistance = 6;
-    let souls = []; // This will now store only the THREE.Mesh objects
     let lineSegments;
     const MAX_LINES = recycledSoulCount * 5; // Estimate max lines, can be adjusted
     const tempColor = new THREE.Color(); // For random color generation
@@ -546,11 +562,39 @@
   .entity-link.active {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.5);
+    /* animation: breathing-animation 2s ease-in-out infinite; */ /* Removed animation */
+  }
+
+  /* Removed keyframes for breathing animation */
+  /* @keyframes breathing-animation {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  } */
+
+  .population-counter {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
   }
 </style>
 
 <div id="container" bind:this={container}></div>
 <div class="fps-counter">FPS: {fps}</div>
+<div class="population-counter">Population: {souls.length}</div>
 
 <div class="entity-links">
   <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99 Souls</a>

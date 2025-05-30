@@ -185,3 +185,28 @@ I personally love good food, good movie and good weed.
 c'est la vie
 
 ## 🧘‍♂️ Enjoy the ride.
+
+---
+
+## 🔬 Findings & Observations
+
+### Population Equilibrium
+
+The simulation exhibits a dynamic population equilibrium. Regardless of the initial number of souls, the population will tend to stabilize around a certain number. This equilibrium is determined by the interplay of two main factors:
+
+1.  **Soul Creation Rate (`newSoulSpawnRate` in `App.svelte`):** This is the average rate at which new souls are introduced into the simulation. Currently, it's set to `0.4`, meaning there's a 40% chance of one new soul being created per animation frame.
+2.  **Soul Lifespan (defined in `createSoul` function in `App.svelte`):** Souls are assigned a random lifespan upon creation (currently between 300 and 900 animation frames, averaging 600 frames). Once a soul's life counter reaches zero, it is removed from the simulation by the `simulation.worker.js`.
+
+**How Equilibrium is Reached:**
+
+The equilibrium population is the point where the average rate of soul creation matches the average rate of soul removal.
+
+*   **Formula:** `EquilibriumPopulation ≈ newSoulSpawnRate * AverageLifespan`
+*   **Current Approximate Equilibrium:** `0.4 * 600 = 240` souls.
+
+**Behavior:**
+
+*   If the simulation starts with a population **higher** than this equilibrium (e.g., 999 souls), the rate of souls dying will be greater than the rate of souls being born. The population will decrease until it reaches equilibrium.
+*   If the simulation starts with a population **lower** than this equilibrium (e.g., 99 souls), the rate of souls being born will be greater than the rate of souls dying. The population will increase until it reaches equilibrium.
+
+This self-regulating mechanism ensures that the simulation maintains a relatively stable, albeit fluctuating, number of active souls over time.
