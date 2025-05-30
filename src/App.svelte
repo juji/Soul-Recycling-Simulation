@@ -4,6 +4,9 @@
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
+  // Global soul count settings
+  const DEFAULT_SOUL_COUNT = 999;
+
   let container;
   
   // FPS counter variables
@@ -17,16 +20,16 @@
     const val = urlParams.get('val');
     
     if (val === null || val === '') {
-      return 333; // Default value
+      return DEFAULT_SOUL_COUNT; // Default value
     }
     
     const parsedVal = parseInt(val, 10);
     
     if (isNaN(parsedVal)) {
-      return 333; // Default for invalid values
+      return DEFAULT_SOUL_COUNT; // Default for invalid values
     }
     
-    return Math.max(333, Math.min(33333, parsedVal));
+    return parsedVal;
   }
 
   // Helper function to get entity count from URL parameter
@@ -37,21 +40,20 @@
     console.log('URL parameter "val":', val);
     
     if (val === null || val === '') {
-      console.log('No val parameter found, using default: 333');
-      return 333; // Default value
+      console.log(`No val parameter found, using default: ${DEFAULT_SOUL_COUNT}`);
+      return DEFAULT_SOUL_COUNT; // Default value
     }
     
     const parsedVal = parseInt(val, 10);
     
-    // Check if it's a valid number and clamp between 333 and 33333
+    // Check if it's a valid number
     if (isNaN(parsedVal)) {
-      console.log('Invalid val parameter, using default: 333');
-      return 333; // Default for invalid values
+      console.log(`Invalid val parameter, using default: ${DEFAULT_SOUL_COUNT}`);
+      return DEFAULT_SOUL_COUNT; // Default for invalid values
     }
     
-    const clampedVal = Math.max(333, Math.min(33333, parsedVal));
-    console.log('Entity count set to:', clampedVal);
-    return clampedVal;
+    console.log('Entity count set to:', parsedVal);
+    return parsedVal;
   }
 
   onMount(() => {
@@ -87,12 +89,31 @@
     pointLight3.position.set(0, 5, -2); // Positioned even closer from top-front
     scene.add(pointLight3);
 
+    function initLineSegments() {
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(MAX_LINES * 2 * 3); // 2 vertices per line, 3 coords per vertex
+      const colors = new Float32Array(MAX_LINES * 2 * 3);    // 2 colors per line, 3 components per color
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const material = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true, // Set to false for opaque lines
+        opacity: .2 // Set to 1.0 for full opacity
+      });
+
+      lineSegments = new THREE.LineSegments(geometry, material);
+      scene.add(lineSegments);
+    }
+
     const recycledSoulCount = getEntityCountFromURL();
     const newSoulSpawnRate = 0.4; // Increased from 0.2
     const interactionDistance = 6;
     let souls = []; // This will now store only the THREE.Mesh objects
-    const linesGroup = new THREE.Group();
-    scene.add(linesGroup);
+    let lineSegments;
+    const MAX_LINES = recycledSoulCount * 5; // Estimate max lines, can be adjusted
+    const tempColor = new THREE.Color(); // For random color generation
 
     const humanGeometry = new THREE.SphereGeometry(0.15, 16, 16);
     const gptGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
@@ -304,32 +325,69 @@
         }
     };
 
+    initLineSegments(); // Call init function
+
     function createNewSoul() {
       const isGod = Math.random() < GOD_SPAWN_CHANCE;
       const isHuman = isGod ? true : Math.random() < 0.5;
       createSoul(isHuman, isGod); 
     }
 
-    function updateConnections() {
-      while (linesGroup.children.length) {
-        const l = linesGroup.children.pop();
-        l.geometry.dispose();
-        l.material.dispose();
-        linesGroup.remove(l);
+    // REMOVED old updateConnections function
+
+    function updateRandomColorConnections() {
+      if (!lineSegments || souls.length < 2) {
+        if(lineSegments) lineSegments.geometry.setDrawRange(0, 0);
+        return;
       }
+
+      const positions = lineSegments.geometry.attributes.position.array;
+      const colors = lineSegments.geometry.attributes.color.array;
+      let lineIdx = 0;
+
       for (let i = 0; i < souls.length; i++) {
         for (let j = i + 1; j < souls.length; j++) {
+          if (lineIdx >= MAX_LINES) break;
+
           const a = souls[i].position;
           const b = souls[j].position;
           const dist = a.distanceTo(b);
+
           if (dist < interactionDistance) {
-            const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.2 }); // Lowered opacity
-            const geometry = new THREE.BufferGeometry().setFromPoints([a, b]);
-            const line = new THREE.Line(geometry, material);
-            linesGroup.add(line);
+            
+            tempColor.setHSL(1, 1, 1); // Set lines to white as per previous state
+
+            // Vertex 1
+            positions[lineIdx * 6 + 0] = a.x;
+            positions[lineIdx * 6 + 1] = a.y;
+            positions[lineIdx * 6 + 2] = a.z;
+            colors[lineIdx * 6 + 0] = tempColor.r;
+            colors[lineIdx * 6 + 1] = tempColor.g;
+            colors[lineIdx * 6 + 2] = tempColor.b;
+
+            // Vertex 2
+            positions[lineIdx * 6 + 3] = b.x;
+            positions[lineIdx * 6 + 4] = b.y;
+            positions[lineIdx * 6 + 5] = b.z;
+            colors[lineIdx * 6 + 3] = tempColor.r;
+            colors[lineIdx * 6 + 4] = tempColor.g;
+            colors[lineIdx * 6 + 5] = tempColor.b;
+            
+            lineIdx++;
           }
         }
+        if (lineIdx >= MAX_LINES) break;
       }
+      
+      // Hide unused lines
+      for (let i = lineIdx; i < MAX_LINES; i++) {
+        positions[i * 6 + 0] = 0; positions[i * 6 + 1] = 0; positions[i * 6 + 2] = 0;
+        positions[i * 6 + 3] = 0; positions[i * 6 + 4] = 0; positions[i * 6 + 5] = 0;
+      }
+
+      lineSegments.geometry.setDrawRange(0, lineIdx * 2);
+      lineSegments.geometry.attributes.position.needsUpdate = true;
+      lineSegments.geometry.attributes.color.needsUpdate = true;
     }
 
     let pulseTime = 0;
@@ -360,7 +418,7 @@
         createNewSoul(); 
       }
 
-      updateConnections(); 
+      updateRandomColorConnections(); // MODIFIED call
       controls.update();
       renderer.render(scene, camera);
 
@@ -396,12 +454,13 @@
         soul.material?.dispose();
         scene.remove(soul);
       });
-      while (linesGroup.children.length) {
-        const l = linesGroup.children.pop();
-        l.geometry.dispose();
-        l.material.dispose();
-        linesGroup.remove(l);
+      // MODIFIED cleanup for lineSegments
+      if (lineSegments) {
+        scene.remove(lineSegments);
+        lineSegments.geometry.dispose();
+        lineSegments.material.dispose();
       }
+      // REMOVED old linesGroup cleanup
       if (simulationWorker) {
         simulationWorker.terminate();
       }
@@ -439,11 +498,11 @@
     bottom: 10px;
     left: 10px;
     background: rgba(0, 0, 0, 0.7);
-    color: #ffffff;
+    color: #ffffff; /* Changed to white */
     padding: 8px 12px;
     border-radius: 4px;
     font-family: 'Courier New', monospace;
-    font-size: 12px;
+    font-size: 14px; /* Increased font size */
     z-index: 1000;
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(4px);
