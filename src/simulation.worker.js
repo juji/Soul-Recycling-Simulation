@@ -6,6 +6,57 @@ let GOD_ATTRACTION_RADIUS, GOD_ATTRACTION_STRENGTH; // Added god constants
 let GOD_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST; // Added
 let pulseTime = 0;
 
+// Pre-calculate squared distances to avoid sqrt calls
+let NEIGHBOR_SPEED_INFLUENCE_RADIUS_SQ, SEPARATION_DISTANCE_SQ, GOD_ATTRACTION_RADIUS_SQ, GOD_ENHANCEMENT_RADIUS_SQ, POINTER_INTERACTION_RADIUS_SQ;
+
+// Spatial partitioning system
+class SpatialGrid {
+    constructor(cellSize) {
+        this.cellSize = cellSize;
+        this.grid = new Map();
+    }
+    
+    clear() {
+        this.grid.clear();
+    }
+    
+    getKey(x, y, z) {
+        const cx = Math.floor(x / this.cellSize);
+        const cy = Math.floor(y / this.cellSize);
+        const cz = Math.floor(z / this.cellSize);
+        return `${cx},${cy},${cz}`;
+    }
+    
+    insert(soul) {
+        const key = this.getKey(soul.position.x, soul.position.y, soul.position.z);
+        if (!this.grid.has(key)) {
+            this.grid.set(key, []);
+        }
+        this.grid.get(key).push(soul);
+    }
+    
+    getNearby(position, radius) {
+        const nearby = [];
+        const cellRadius = Math.ceil(radius / this.cellSize);
+        const centerX = Math.floor(position.x / this.cellSize);
+        const centerY = Math.floor(position.y / this.cellSize);
+        const centerZ = Math.floor(position.z / this.cellSize);
+        
+        for (let dx = -cellRadius; dx <= cellRadius; dx++) {
+            for (let dy = -cellRadius; dy <= cellRadius; dy++) {
+                for (let dz = -cellRadius; dz <= cellRadius; dz++) {
+                    const key = `${centerX + dx},${centerY + dy},${centerZ + dz}`;
+                    const cells = this.grid.get(key);
+                    if (cells) nearby.push(...cells);
+                }
+            }
+        }
+        return nearby;
+    }
+}
+
+const spatialGrid = new SpatialGrid(8.0); // Cell size slightly larger than max interaction radius
+
 // Minimal THREE.Vector3-like operations for plain objects
 const vec = {
     create: (x = 0, y = 0, z = 0) => ({ x, y, z }),
@@ -53,38 +104,56 @@ self.onmessage = function(e) {
         GOD_ENHANCEMENT_RADIUS = data.constants.GOD_ENHANCEMENT_RADIUS; // Added
         ENHANCEMENT_SATURATION_BOOST = data.constants.ENHANCEMENT_SATURATION_BOOST; // Added
         ENHANCEMENT_LIGHTNESS_BOOST = data.constants.ENHANCEMENT_LIGHTNESS_BOOST; // Added
+        
+        // Pre-calculate squared distances for performance
+        NEIGHBOR_SPEED_INFLUENCE_RADIUS_SQ = NEIGHBOR_SPEED_INFLUENCE_RADIUS * NEIGHBOR_SPEED_INFLUENCE_RADIUS;
+        SEPARATION_DISTANCE_SQ = SEPARATION_DISTANCE * SEPARATION_DISTANCE;
+        GOD_ATTRACTION_RADIUS_SQ = GOD_ATTRACTION_RADIUS * GOD_ATTRACTION_RADIUS;
+        GOD_ENHANCEMENT_RADIUS_SQ = GOD_ENHANCEMENT_RADIUS * GOD_ENHANCEMENT_RADIUS;
+        POINTER_INTERACTION_RADIUS_SQ = POINTER_INTERACTION_RADIUS * POINTER_INTERACTION_RADIUS;
     } else if (type === 'update') {
         const pointerPosition3D = data.pointerPosition3D ? vec.create(data.pointerPosition3D.x, data.pointerPosition3D.y, data.pointerPosition3D.z) : null;
         pulseTime += 0.02;
         const pulse = (Math.sin(pulseTime * 2) + 1) / 2;
 
+        // Clear and rebuild spatial grid for this frame
+        spatialGrid.clear();
+        souls.forEach(soul => spatialGrid.insert(soul));
+
         const godSouls = souls.filter(s => s.isGod);
 
         const soulsToRemove = [];
         souls.forEach(soul => {
-            // === Speed influence from neighbors ===
+            // === Speed influence from neighbors using spatial partitioning ===
             if (!soul.isGod) { // Gods are not affected by neighbor speed influence
                 let influencedSpeed = soul.speed;
-                souls.forEach(otherSoul => {
-                    if (soul.id === otherSoul.id || otherSoul.isGod) return; // Also ignore gods for speed influence
-                    const distanceToNeighbor = vec.distanceTo(soul.position, otherSoul.position);
-                    if (distanceToNeighbor < NEIGHBOR_SPEED_INFLUENCE_RADIUS) {
+                const nearbyNeighbors = spatialGrid.getNearby(soul.position, NEIGHBOR_SPEED_INFLUENCE_RADIUS);
+                
+                for (const otherSoul of nearbyNeighbors) {
+                    if (soul.id === otherSoul.id || otherSoul.isGod) continue;
+                    
+                    const distanceToNeighborSq = vec.lengthSq(vec.subVectors(soul.position, otherSoul.position));
+                    if (distanceToNeighborSq < NEIGHBOR_SPEED_INFLUENCE_RADIUS_SQ) {
                         influencedSpeed = mathUtils.lerp(
                             influencedSpeed,
                             otherSoul.speed,
                             NEIGHBOR_SPEED_INFLUENCE_STRENGTH
                         );
                     }
-                });
+                }
                 soul.speed = influencedSpeed;
             }
 
-            // === Separation from neighbors ===
+            // === Separation from neighbors using spatial partitioning ===
             const separationForce = vec.create();
-            souls.forEach(otherSoul => {
-                if (soul.id === otherSoul.id) return;
-                const distanceToNeighbor = vec.distanceTo(soul.position, otherSoul.position);
-                if (distanceToNeighbor > 0 && distanceToNeighbor < SEPARATION_DISTANCE) {
+            const nearbySeparationSouls = spatialGrid.getNearby(soul.position, SEPARATION_DISTANCE);
+            
+            for (const otherSoul of nearbySeparationSouls) {
+                if (soul.id === otherSoul.id) continue;
+                
+                const distanceToNeighborSq = vec.lengthSq(vec.subVectors(soul.position, otherSoul.position));
+                if (distanceToNeighborSq > 0 && distanceToNeighborSq < SEPARATION_DISTANCE_SQ) {
+                    const distanceToNeighbor = Math.sqrt(distanceToNeighborSq); // Only calculate sqrt when needed
                     let awayVector = vec.subVectors(soul.position, otherSoul.position);
                     awayVector = vec.normalize(awayVector);
                     awayVector = vec.multiplyScalar(awayVector, 1 / (distanceToNeighbor + 0.0001));
@@ -92,20 +161,20 @@ self.onmessage = function(e) {
                     separationForce.y += awayVector.y;
                     separationForce.z += awayVector.z;
                 }
-            });
+            }
             if (vec.lengthSq(separationForce) > 0) {
                 const scaledSeparationForce = vec.multiplyScalar(separationForce, SEPARATION_STRENGTH);
                 soul.velocity = vec.add(soul.velocity, scaledSeparationForce);
             }
 
-            // === God Attraction ===
+            // === God Attraction (optimized) ===
             if (!soul.isGod) {
                 let targetGod = null;
                 if (soul.chosenGodId !== null) {
                     const currentlyChosenGod = godSouls.find(g => g.id === soul.chosenGodId);
                     if (currentlyChosenGod) {
-                        const distanceToChosenGod = vec.distanceTo(soul.position, currentlyChosenGod.position);
-                        if (distanceToChosenGod < GOD_ATTRACTION_RADIUS) {
+                        const distanceToChosenGodSq = vec.lengthSq(vec.subVectors(soul.position, currentlyChosenGod.position));
+                        if (distanceToChosenGodSq < GOD_ATTRACTION_RADIUS_SQ) {
                             targetGod = currentlyChosenGod;
                         } else {
                             soul.chosenGodId = null; 
@@ -116,22 +185,23 @@ self.onmessage = function(e) {
                 }
                 if (targetGod === null) { 
                     let closestGod = null;
-                    let minDistanceSq = GOD_ATTRACTION_RADIUS * GOD_ATTRACTION_RADIUS;
-                    godSouls.forEach(god => {
+                    let minDistanceSq = GOD_ATTRACTION_RADIUS_SQ;
+                    for (const god of godSouls) {
                         const distanceToGodSq = vec.lengthSq(vec.subVectors(god.position, soul.position));
                         if (distanceToGodSq < minDistanceSq) {
                             minDistanceSq = distanceToGodSq;
                             closestGod = god;
                         }
-                    });
+                    }
                     if (closestGod) {
                         soul.chosenGodId = closestGod.id;
                         targetGod = closestGod;
                     }
                 }
                 if (targetGod) {
-                    const distanceToTargetGod = vec.distanceTo(soul.position, targetGod.position);
-                    if (distanceToTargetGod > 0 && distanceToTargetGod < GOD_ATTRACTION_RADIUS) { 
+                    const distanceToTargetGodSq = vec.lengthSq(vec.subVectors(soul.position, targetGod.position));
+                    if (distanceToTargetGodSq > 0 && distanceToTargetGodSq < GOD_ATTRACTION_RADIUS_SQ) { 
+                        const distanceToTargetGod = Math.sqrt(distanceToTargetGodSq); // Only calculate sqrt when needed
                         const directionToGod = vec.normalize(vec.subVectors(targetGod.position, soul.position));
                         const attractionForce = vec.multiplyScalar(directionToGod, GOD_ATTRACTION_STRENGTH * (1 - distanceToTargetGod / GOD_ATTRACTION_RADIUS));
                         soul.velocity = vec.add(soul.velocity, attractionForce);
@@ -150,10 +220,10 @@ self.onmessage = function(e) {
                 soul.velocity.z += (Math.random() - 0.5) * 0.01;
             }
 
-            // Pointer interaction logic
+            // Pointer interaction logic (optimized)
             if (pointerPosition3D && soul.isHuman && !soul.isGod) {
-                const distanceToPoint = vec.distanceTo(soul.position, pointerPosition3D);
-                if (distanceToPoint < POINTER_INTERACTION_RADIUS) {
+                const distanceToPointSq = vec.lengthSq(vec.subVectors(soul.position, pointerPosition3D));
+                if (distanceToPointSq < POINTER_INTERACTION_RADIUS_SQ) {
                     const directionToPoint = vec.normalize(vec.subVectors(pointerPosition3D, soul.position));
                     const targetVelocity = vec.multiplyScalar(directionToPoint, soul.speed);
                     soul.velocity = vec.lerp(soul.velocity, targetVelocity, POINTER_INFLUENCE_STRENGTH);
@@ -169,15 +239,15 @@ self.onmessage = function(e) {
             
             soul.life--; // Decrement life
 
-            // Visual Enhancement by Gods & HSL Calculation
+            // Visual Enhancement by Gods & HSL Calculation (optimized)
             let currentSaturation = soul.baseHSL.s;
             let currentLightness = soul.baseHSL.l;
             let isEnhanced = false; // Flag to see if enhancement happened
 
             if (!soul.isGod) {
                 for (const god of godSouls) {
-                    const distanceToGod = vec.distanceTo(soul.position, god.position);
-                    if (distanceToGod < GOD_ENHANCEMENT_RADIUS) {
+                    const distanceToGodSq = vec.lengthSq(vec.subVectors(soul.position, god.position));
+                    if (distanceToGodSq < GOD_ENHANCEMENT_RADIUS_SQ) {
                         currentSaturation = Math.min(1, soul.baseHSL.s + ENHANCEMENT_SATURATION_BOOST);
                         currentLightness = Math.min(1, soul.baseHSL.l + ENHANCEMENT_LIGHTNESS_BOOST);
                         isEnhanced = true;
@@ -223,16 +293,23 @@ self.onmessage = function(e) {
         }
 
         const updatedSoulsData = souls.map(soul => {
-            // Flicker and color animation (only for live souls) - MOVED INTO THE LOOP ABOVE
-            // const flicker = 0.5 + 0.5 * Math.sin(pulseTime * 3 + soul.flickerPhase);
-            // const newOpacity = 0.5 + 0.5 * flicker;
-            // const newLightness = Math.min(Math.max(soul.baseHSL.l + 0.2 * (pulse - 0.5), 0), 1);
-            
+            // Compress data to reduce message payload size
             return {
                 id: soul.id,
-                position: soul.position,
-                newHSL: soul.finalHSL, // Use the pre-calculated finalHSL from the loop
-                newOpacity: soul.finalOpacity // Use the pre-calculated finalOpacity from the loop
+                // Round positions to reduce precision and payload size
+                pos: [
+                    Math.round(soul.position.x * 100) / 100,
+                    Math.round(soul.position.y * 100) / 100,
+                    Math.round(soul.position.z * 100) / 100
+                ],
+                // Pack HSL into smaller format
+                hsl: [
+                    Math.round(soul.finalHSL.h * 255) / 255,
+                    Math.round(soul.finalHSL.s * 255) / 255,
+                    Math.round(soul.finalHSL.l * 255) / 255
+                ],
+                // Compress opacity
+                opacity: Math.round(soul.finalOpacity * 255) / 255
             };
         });
         self.postMessage({ type: 'soulsUpdated', data: updatedSoulsData });

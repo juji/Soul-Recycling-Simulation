@@ -10,10 +10,38 @@
   let souls = []; // Declare souls here to make it accessible to the template
   let container;
   
-  // FPS counter variables
+  // FPS counter variables with enhanced metrics
   let fps = 0;
   let frameCount = 0;
   let lastTime = performance.now();
+  let averageFPS = 0;
+  let fpsHistory = [];
+  let memoryUsage = 0;
+  
+  // Performance tracking
+  let renderTime = 0;
+  let workerUpdateTime = 0;
+  let lastFrameStart = 0;
+  
+  // Adaptive quality settings
+  let currentQuality = 'high';
+  let adaptiveSettings = {
+    high: { maxConnectionChecks: 150, connectionLimit: 20 },
+    medium: { maxConnectionChecks: 100, connectionLimit: 15 },
+    low: { maxConnectionChecks: 50, connectionLimit: 10 }
+  };
+  
+  function adjustQualityBasedOnFPS() {
+    if (fps < 30 && currentQuality !== 'low') {
+      currentQuality = 'medium';
+      if (fps < 20) currentQuality = 'low';
+      console.log(`Performance: Adaptive quality reduced to ${currentQuality} (FPS: ${fps})`);
+    } else if (fps > 50 && currentQuality !== 'high') {
+      if (currentQuality === 'low') currentQuality = 'medium';
+      else if (currentQuality === 'medium') currentQuality = 'high';
+      console.log(`Performance: Adaptive quality increased to ${currentQuality} (FPS: ${fps})`);
+    }
+  }
   
   // Helper function to determine the active count for UI highlighting
   function getActiveCount() {
@@ -131,9 +159,48 @@
     const MAX_LINES = recycledSoulCount * 5; // Estimate max lines, can be adjusted
     const tempColor = new THREE.Color(); // For random color generation
 
-    const humanGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+    const humanGeometry = new THREE.SphereGeometry(0.15, 12, 12); // Reduced from 16x16 to 12x12
     const gptGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-    const godGeometry = new THREE.SphereGeometry(0.333, 32, 32); // Larger sphere for gods
+    const godGeometry = new THREE.SphereGeometry(0.333, 20, 20); // Reduced from 32x32 to 20x20
+
+    // Shared materials for better memory efficiency
+    const sharedHumanMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
+    const sharedGptMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
+    const sharedGodMaterial = new THREE.MeshLambertMaterial({ transparent: true, opacity: 0.9 });
+    
+    // Material pool for reuse
+    const materialPool = {
+      human: [],
+      gpt: [],
+      god: []
+    };
+    
+    function getOrCreateMaterial(type) {
+      const pool = materialPool[type];
+      if (pool.length > 0) {
+        return pool.pop();
+      }
+      
+      // Create new material based on type
+      switch(type) {
+        case 'human':
+          return sharedHumanMaterial.clone();
+        case 'gpt':
+          return sharedGptMaterial.clone();
+        case 'god':
+          return sharedGodMaterial.clone();
+        default:
+          return new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
+      }
+    }
+    
+    function returnMaterial(material, type) {
+      if (materialPool[type].length < 20) { // Limit pool size
+        materialPool[type].push(material);
+      } else {
+        material.dispose();
+      }
+    }
 
     const humanBaseHue = Math.random();
     const gptBaseHue = (humanBaseHue + 0.5) % 1;
@@ -307,13 +374,15 @@
             data.forEach(updatedSoulData => {
                 const soulMesh = souls.find(s => s.userData.id === updatedSoulData.id);
                 if (soulMesh) {
-                    soulMesh.position.set(updatedSoulData.position.x, updatedSoulData.position.y, updatedSoulData.position.z);
+                    // Use optimized position format
+                    soulMesh.position.set(updatedSoulData.pos[0], updatedSoulData.pos[1], updatedSoulData.pos[2]);
                     // Ensure material exists before trying to set properties
                     if (soulMesh.material) {
                         if (soulMesh.material.color && typeof soulMesh.material.color.setHSL === 'function') {
-                            soulMesh.material.color.setHSL(updatedSoulData.newHSL.h, updatedSoulData.newHSL.s, updatedSoulData.newHSL.l);
+                            // Use optimized HSL format
+                            soulMesh.material.color.setHSL(updatedSoulData.hsl[0], updatedSoulData.hsl[1], updatedSoulData.hsl[2]);
                         }
-                        soulMesh.material.opacity = updatedSoulData.newOpacity;
+                        soulMesh.material.opacity = updatedSoulData.opacity;
                         if (soulMesh.material.needsUpdate !== undefined) {
                             soulMesh.material.needsUpdate = true;
                         }
@@ -351,6 +420,9 @@
 
     // REMOVED old updateConnections function
 
+    // Pre-calculate squared distance for line connections
+    const interactionDistanceSq = interactionDistance * interactionDistance;
+
     function updateRandomColorConnections() {
       if (!lineSegments || souls.length < 2) {
         if(lineSegments) lineSegments.geometry.setDrawRange(0, 0);
@@ -361,15 +433,31 @@
       const colors = lineSegments.geometry.attributes.color.array;
       let lineIdx = 0;
 
-      for (let i = 0; i < souls.length; i++) {
-        for (let j = i + 1; j < souls.length; j++) {
-          if (lineIdx >= MAX_LINES) break;
+      // Limit the number of souls to check for performance (adaptive LOD)
+      const settings = adaptiveSettings[currentQuality];
+      const maxSoulsToCheck = Math.min(souls.length, settings.maxConnectionChecks);
+      const connectionLimit = settings.connectionLimit;
+      const cameraPosition = camera.position;
+      
+      // Sort souls by distance to camera for priority rendering of closest connections
+      const sortedSouls = souls.slice(0, maxSoulsToCheck).sort((a, b) => 
+        a.position.distanceToSquared(cameraPosition) - b.position.distanceToSquared(cameraPosition)
+      );
 
-          const a = souls[i].position;
-          const b = souls[j].position;
-          const dist = a.distanceTo(b);
+      for (let i = 0; i < sortedSouls.length && lineIdx < MAX_LINES; i++) {
+        const soulA = sortedSouls[i];
+        
+        // Only check nearby souls, limited by quality setting
+        for (let j = i + 1; j < Math.min(sortedSouls.length, i + connectionLimit) && lineIdx < MAX_LINES; j++) {
+          const soulB = sortedSouls[j];
+          
+          const a = soulA.position;
+          const b = soulB.position;
+          
+          // Use squared distance to avoid expensive sqrt calculation
+          const distSq = a.distanceToSquared(b);
 
-          if (dist < interactionDistance) {
+          if (distSq < interactionDistanceSq) {
             
             tempColor.setHSL(1, 1, 1); // Set lines to white as per previous state
 
@@ -392,7 +480,6 @@
             lineIdx++;
           }
         }
-        if (lineIdx >= MAX_LINES) break;
       }
       
       // Hide unused lines
@@ -438,14 +525,33 @@
       controls.update();
       renderer.render(scene, camera);
 
-      // FPS counting logic
+      // FPS counting logic with enhanced metrics and adaptive quality adjustment
       frameCount++;
       const currentTime = performance.now();
       const elapsed = currentTime - lastTime;
+      
       if (elapsed >= 1000) { // Update every second
         fps = frameCount;
         frameCount = 0;
         lastTime = currentTime;
+        
+        // Track FPS history for average calculation
+        fpsHistory.push(fps);
+        if (fpsHistory.length > 10) fpsHistory.shift(); // Keep last 10 seconds
+        averageFPS = Math.round(fpsHistory.reduce((a, b) => a + b) / fpsHistory.length);
+        
+        // Memory usage tracking (if available)
+        if (performance.memory) {
+          memoryUsage = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
+        }
+        
+        // Adjust quality based on performance every second
+        adjustQualityBasedOnFPS();
+        
+        // Log performance stats occasionally
+        if (fpsHistory.length % 5 === 0) {
+          console.log(`Performance Stats - FPS: ${fps}, Avg: ${averageFPS}, Souls: ${souls.length}, Quality: ${currentQuality}, Memory: ${memoryUsage}MB`);
+        }
       }
     }
 
