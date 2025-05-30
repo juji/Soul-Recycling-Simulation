@@ -1,0 +1,193 @@
+// Real-time AI Performance Testing Bridge
+// This script can be injected into the simulation for real-time testing
+
+class AIPerformanceTestBridge {
+    constructor() {
+        this.isActive = false;
+        this.testCallbacks = new Map();
+        this.setupMessageListener();
+        
+        console.log('🔗 AI Performance Test Bridge initialized');
+    }
+    
+    setupMessageListener() {
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'AI_PERFORMANCE_TEST') {
+                this.handleTestCommand(event.data);
+            }
+        });
+    }
+    
+    handleTestCommand(data) {
+        const { command, params } = data;
+        
+        switch (command) {
+            case 'GET_PERFORMANCE_DATA':
+                this.sendPerformanceData();
+                break;
+            case 'FORCE_QUALITY':
+                this.forceQuality(params.quality);
+                break;
+            case 'SET_SOUL_COUNT':
+                this.setSoulCount(params.count);
+                break;
+            case 'ENABLE_DEBUG':
+                this.enableDebugMode();
+                break;
+            case 'GET_AI_INSIGHTS':
+                this.sendAIInsights();
+                break;
+            case 'STRESS_TEST':
+                this.runStressTest(params);
+                break;
+            default:
+                console.warn('Unknown AI test command:', command);
+        }
+    }
+    
+    sendPerformanceData() {
+        // This would need to access the actual simulation variables
+        // For now, we'll simulate the data structure
+        const performanceData = {
+            type: 'PERFORMANCE_DATA_RESPONSE',
+            data: {
+                fps: window.currentFPS || 60,
+                avgFPS: window.averageFPS || 60,
+                currentQuality: window.currentQuality || 'medium',
+                soulCount: window.soulCount || 999,
+                memoryUsage: window.memoryUsage || 256,
+                hardwareProfile: window.hardwareProfile || {},
+                timestamp: Date.now()
+            }
+        };
+        
+        window.parent.postMessage(performanceData, '*');
+    }
+    
+    sendAIInsights() {
+        // Access the performance manager if available
+        if (window.performanceManager) {
+            const insights = window.performanceManager.getModelInsights();
+            const report = window.performanceManager.getPerformanceReport();
+            
+            window.parent.postMessage({
+                type: 'AI_INSIGHTS_RESPONSE',
+                data: {
+                    insights: insights,
+                    report: report,
+                    timestamp: Date.now()
+                }
+            }, '*');
+        }
+    }
+    
+    forceQuality(quality) {
+        if (window.performanceManager) {
+            const settings = window.performanceManager.forceQuality(quality);
+            console.log(`🎯 Quality forced to: ${quality}`, settings);
+            
+            window.parent.postMessage({
+                type: 'QUALITY_CHANGED',
+                data: { quality: quality, settings: settings }
+            }, '*');
+        }
+    }
+    
+    setSoulCount(count) {
+        // This would need to trigger a URL change or direct soul creation
+        const newUrl = `${window.location.origin}${window.location.pathname}?val=${count}`;
+        window.location.href = newUrl;
+    }
+    
+    enableDebugMode() {
+        if (window.performanceManager) {
+            window.performanceManager.enableDebugMode();
+            console.log('🔍 Debug mode enabled via test bridge');
+        }
+    }
+    
+    async runStressTest(params) {
+        const { type, duration = 10000 } = params;
+        console.log(`⚡ Starting stress test: ${type} for ${duration}ms`);
+        
+        const startTime = Date.now();
+        const results = [];
+        
+        const monitor = setInterval(() => {
+            if (window.performanceManager) {
+                const report = window.performanceManager.getPerformanceReport();
+                results.push({
+                    timestamp: Date.now() - startTime,
+                    fps: report.metrics.avgFPS,
+                    quality: report.currentQuality,
+                    memoryPressure: report.metrics.memoryPressure,
+                    performanceScore: report.metrics.performanceScore
+                });
+            }
+            
+            if (Date.now() - startTime >= duration) {
+                clearInterval(monitor);
+                
+                window.parent.postMessage({
+                    type: 'STRESS_TEST_COMPLETE',
+                    data: {
+                        type: type,
+                        duration: duration,
+                        results: results,
+                        summary: this.analyzeStressTestResults(results)
+                    }
+                }, '*');
+            }
+        }, 500);
+    }
+    
+    analyzeStressTestResults(results) {
+        if (results.length === 0) return { status: 'no_data' };
+        
+        const avgFPS = results.reduce((sum, r) => sum + r.fps, 0) / results.length;
+        const minFPS = Math.min(...results.map(r => r.fps));
+        const maxFPS = Math.max(...results.map(r => r.fps));
+        const qualityChanges = new Set(results.map(r => r.quality)).size;
+        
+        return {
+            status: 'complete',
+            avgFPS: Math.round(avgFPS),
+            minFPS: minFPS,
+            maxFPS: maxFPS,
+            fpsStability: Math.round((1 - ((maxFPS - minFPS) / avgFPS)) * 100),
+            qualityChanges: qualityChanges - 1, // -1 because initial quality counts as a change
+            performanceScore: results[results.length - 1]?.performanceScore || 0
+        };
+    }
+    
+    startPerformanceMonitoring() {
+        this.isActive = true;
+        this.monitoringInterval = setInterval(() => {
+            this.sendPerformanceData();
+        }, 1000);
+    }
+    
+    stopPerformanceMonitoring() {
+        this.isActive = false;
+        if (this.monitoringInterval) {
+            clearInterval(this.monitoringInterval);
+        }
+    }
+}
+
+// Initialize the bridge if we're in an iframe
+if (window.parent !== window) {
+    window.aiTestBridge = new AIPerformanceTestBridge();
+    
+    // Make performance manager and other variables globally accessible for testing
+    window.addEventListener('DOMContentLoaded', () => {
+        // These will be set by the main application
+        window.currentFPS = 0;
+        window.averageFPS = 0;
+        window.currentQuality = 'medium';
+        window.soulCount = 999;
+        window.memoryUsage = 0;
+        window.hardwareProfile = {};
+        window.performanceManager = null;
+    });
+}

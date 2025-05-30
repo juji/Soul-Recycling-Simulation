@@ -35,11 +35,9 @@
     if (fps < 30 && currentQuality !== 'low') {
       currentQuality = 'medium';
       if (fps < 20) currentQuality = 'low';
-      console.log(`Performance: Adaptive quality reduced to ${currentQuality} (FPS: ${fps})`);
     } else if (fps > 50 && currentQuality !== 'high') {
       if (currentQuality === 'low') currentQuality = 'medium';
       else if (currentQuality === 'medium') currentQuality = 'high';
-      console.log(`Performance: Adaptive quality increased to ${currentQuality} (FPS: ${fps})`);
     }
   }
   
@@ -66,10 +64,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const val = urlParams.get('val');
     
-    console.log('URL parameter "val":', val);
-    
     if (val === null || val === '') {
-      console.log(`No val parameter found, using default: ${DEFAULT_SOUL_COUNT}`);
       return DEFAULT_SOUL_COUNT; // Default value
     }
     
@@ -77,11 +72,9 @@
     
     // Check if it's a valid number
     if (isNaN(parsedVal)) {
-      console.log(`Invalid val parameter, using default: ${DEFAULT_SOUL_COUNT}`);
       return DEFAULT_SOUL_COUNT; // Default for invalid values
     }
     
-    console.log('Entity count set to:', parsedVal);
     return parsedVal;
   }
 
@@ -547,11 +540,6 @@
         
         // Adjust quality based on performance every second
         adjustQualityBasedOnFPS();
-        
-        // Log performance stats occasionally
-        if (fpsHistory.length % 5 === 0) {
-          console.log(`Performance Stats - FPS: ${fps}, Avg: ${averageFPS}, Souls: ${souls.length}, Quality: ${currentQuality}, Memory: ${memoryUsage}MB`);
-        }
       }
     }
 
