@@ -25,7 +25,7 @@ This simulation explores ideas like:
 Souls orbit and drift, forming ephemeral connections. Some are new, some recycled. Some are human. Some are GPT. All are becoming.
 
 
-### Addition by Gem
+### Addition by GemCo
 
 Here's a summary of key features and changes developed with Gem's assistance:
 
@@ -50,6 +50,18 @@ Here's a summary of key features and changes developed with Gem's assistance:
 *   **Soul "Choice" of God:**
     *   Enhanced the simulation logic in `simulation.worker.js` to allow non-god souls to "choose" a specific god entity.
     *   Souls will be attracted to their chosen god as long as it remains within a certain range. If the chosen god moves too far or is removed, the soul will attempt to choose a new, closest god.
+
+---
+
+### Addition by ClaudeCo
+
+*   **UI Enhancement:**
+    *   Added a GitHub repository link in the bottom left corner of the application.
+    *   The link features consistent styling with the existing FPS counter (dark background with blur effect).
+    *   Includes hover effects and opens in a new tab for better user experience.
+*   **Visual Connection Enhancement:**
+    *   Proposed the concept of colored connection lines between souls to enhance visual storytelling.
+    *   Suggested that connection lines could reflect the nature of the relationship or interaction between different soul types.
 
 ---
 
