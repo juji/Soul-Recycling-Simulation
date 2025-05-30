@@ -40,7 +40,7 @@
     */
 
     const recycledSoulCount = 333;       // Increased number
-    const newSoulSpawnRate = 0.02;       // higher spawn rate
+    const newSoulSpawnRate = 0.05;       // higher spawn rate
     const interactionDistance = 6;
     const souls = [];
     const linesGroup = new THREE.Group();
@@ -61,6 +61,10 @@
     const interactionPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // Interact on XZ plane at y=0
     const POINTER_INTERACTION_RADIUS = 10;
     const POINTER_INFLUENCE_STRENGTH = 0.05; // How strongly pointer pulls souls
+
+    // Neighbor speed influence variables
+    const NEIGHBOR_SPEED_INFLUENCE_RADIUS = 5; // How close for speed to be influenced
+    const NEIGHBOR_SPEED_INFLUENCE_STRENGTH = 0.1; // How much neighbors' speed influences current soul
 
     function onMouseMove(event) {
       if (!container) return;
@@ -94,7 +98,7 @@
       const z = radius * Math.cos(phi);
       mesh.position.set(x, y, z);
 
-      const currentSpeed = speed === 0 ? (0.05 + (Math.random() * .3)) : speed; // Increased speed
+      const currentSpeed = speed === 0 ? (0.05 + (Math.random() * .03)) : speed; // Increased speed
       const velocity = new THREE.Vector3(
         (Math.random() - 0.5),
         (Math.random() - 0.5),
@@ -117,7 +121,10 @@
     for (let i = 0; i < recycledSoulCount; i++) {
       const angle = (i / recycledSoulCount) * Math.PI * 2;
       const isHuman = Math.random() < 0.6;
-      const speed = 0.05 + Math.random() * 0.025; // Increased speed
+
+      // give some of them speed super power
+      const speed = Math.random() < 0.1 ?  0.05 + Math.random() * 0.25 : 0.05 + Math.random() * 0.025; // Increased speed
+      
       createSoul(isHuman, angle, speed); // Removed 'true' for recycled
     }
 
@@ -166,7 +173,25 @@
       const pulse = (Math.sin(pulseTime * 2) + 1) / 2;
 
       souls.forEach(soul => {
-        const { velocity, speed: soulSpeed, isHuman } = soul.userData; // Added isHuman here
+        // === Start: Speed influence from neighbors ===
+        let influencedSpeed = soul.userData.speed; // Start with its own speed
+
+        souls.forEach(otherSoul => {
+            if (soul === otherSoul) return; // Don't interact with self
+
+            const distanceToNeighbor = soul.position.distanceTo(otherSoul.position);
+            if (distanceToNeighbor < NEIGHBOR_SPEED_INFLUENCE_RADIUS) {
+                influencedSpeed = THREE.MathUtils.lerp(
+                    influencedSpeed,
+                    otherSoul.userData.speed, // Speed of the *other* soul
+                    NEIGHBOR_SPEED_INFLUENCE_STRENGTH
+                );
+            }
+        });
+        soul.userData.speed = influencedSpeed; // Update the soul's speed with the influenced value
+        // === End: Speed influence from neighbors ===
+
+        const { velocity, speed: soulSpeed, isHuman } = soul.userData; // soulSpeed is now the influenced speed
 
         // Slightly perturb the velocity to change direction smoothly
         velocity.x += (Math.random() - 0.5) * 0.2; // Adjust this factor for more/less rapid changes
