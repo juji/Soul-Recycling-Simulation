@@ -1,11 +1,5 @@
 <script>
 
-  // Add gentle interaction between pointer and nearby souls:
-  // - Use raycaster to find a 3D point under the mouse
-  // - For each human soul near that point, ease its velocity toward the pointer
-  // - Keep the soul's original velocity logic but blend (lerp) toward the new direction
-  // - Only affect souls within a certain distance threshold (e.g., 10 units)
-
   import { onMount } from 'svelte';
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
