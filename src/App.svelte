@@ -10,6 +10,24 @@
   let fps = 0;
   let frameCount = 0;
   let lastTime = performance.now();
+  
+  // Helper function to determine the active count for UI highlighting
+  function getActiveCount() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const val = urlParams.get('val');
+    
+    if (val === null || val === '') {
+      return 333; // Default value
+    }
+    
+    const parsedVal = parseInt(val, 10);
+    
+    if (isNaN(parsedVal)) {
+      return 333; // Default for invalid values
+    }
+    
+    return Math.max(333, Math.min(33333, parsedVal));
+  }
 
   // Helper function to get entity count from URL parameter
   function getEntityCountFromURL() {
@@ -437,8 +455,48 @@
     background: rgba(0, 0, 0, 0.9);
     color: #ffffff;
   }
+  
+  .entity-links {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 8px;
+    z-index: 1000;
+  }
+  
+  .entity-link {
+    background: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  
+  .entity-link:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .entity-link.active {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
 </style>
 
 <div id="container" bind:this={container}></div>
 <div class="fps-counter">FPS: {fps}</div>
+
+<div class="entity-links">
+  <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99 Souls</a>
+  <a href="?val=333" class="entity-link" class:active={getActiveCount() === 333}>333 Souls</a>
+  <a href="?val=777" class="entity-link" class:active={getActiveCount() === 777}>777 Souls</a>
+</div>
+
 <a href="https://github.com/juji/Soul-Recycling-Simulation" target="_blank" class="github-link">GitHub</a>

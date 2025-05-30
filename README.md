@@ -11,6 +11,11 @@ A philosophical WebGL visualization of soul cycles, human-AI convergence, and ex
 
 Deployed at: https://gleeful-zabaione-f16f7c.netlify.app/
 
+Try with different soul counts:
+- [333 souls](https://gleeful-zabaione-f16f7c.netlify.app/?val=333) 🌌
+- [3333 souls](https://gleeful-zabaione-f16f7c.netlify.app/?val=3333) ✨
+- [33333 souls](https://gleeful-zabaione-f16f7c.netlify.app/?val=33333) 🔥
+
 ## 🧠 Concept
 
 This simulation explores ideas like:
