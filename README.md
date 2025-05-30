@@ -184,6 +184,11 @@ I personally love good food, good movie and good weed.
 
 c'est la vie
 
+
+--- 
+
+so basically, create a way so a machine can adapt based on it's own computing power.
+
 ## 🧘‍♂️ Enjoy the ride.
 
 ---
