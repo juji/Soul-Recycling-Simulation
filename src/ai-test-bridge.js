@@ -6,8 +6,6 @@ class AIPerformanceTestBridge {
         this.isActive = false;
         this.testCallbacks = new Map();
         this.setupMessageListener();
-        
-        console.log('🔗 AI Performance Test Bridge initialized');
     }
     
     setupMessageListener() {
@@ -41,7 +39,7 @@ class AIPerformanceTestBridge {
                 this.runStressTest(params);
                 break;
             default:
-                console.warn('Unknown AI test command:', command);
+                // Unknown command
         }
     }
     
@@ -84,7 +82,6 @@ class AIPerformanceTestBridge {
     forceQuality(quality) {
         if (window.performanceManager) {
             const settings = window.performanceManager.forceQuality(quality);
-            console.log(`🎯 Quality forced to: ${quality}`, settings);
             
             window.parent.postMessage({
                 type: 'QUALITY_CHANGED',
@@ -102,13 +99,11 @@ class AIPerformanceTestBridge {
     enableDebugMode() {
         if (window.performanceManager) {
             window.performanceManager.enableDebugMode();
-            console.log('🔍 Debug mode enabled via test bridge');
         }
     }
     
     async runStressTest(params) {
         const { type, duration = 10000 } = params;
-        console.log(`⚡ Starting stress test: ${type} for ${duration}ms`);
         
         const startTime = Date.now();
         const results = [];
