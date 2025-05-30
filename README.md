@@ -40,12 +40,13 @@ Here's a summary of key features and changes developed with Gem's assistance:
     *   Refactored `src/App.svelte` to communicate with the worker for soul initialization, updates, and addition of new souls.
 *   **"God" Entity Implementation & Refinement:**
     *   Introduced "god" entities as a special soul type with unique characteristics.
-    *   While multiple "god" instances can exist in the simulation, they are all created from a common blueprint, sharing the same fundamental properties (e.g., silver appearance, specific base speed, attraction capabilities).
-    *   Iteratively refined the appearance of "god" entities to be silver, metallic, reflective, with a subtle emissive sheen, using `MeshPhysicalMaterial`.
+    *   "God" entities are now self-illuminated, appearing with a random vibrant color (maximum saturation and brightness) using `MeshBasicMaterial`. Their size has been set to a radius of 0.333 units.
+    *   While multiple "god" instances can exist in the simulation, they are all created from a common blueprint, sharing the same fundamental properties (e.g., specific base speed, attraction capabilities).
     *   Implemented distinct behaviors for "god" entities in `simulation.worker.js`:
         *   **Attraction:** God entities act as attractors for non-god souls within a defined radius and strength.
-        *   **Appearance:** Gods maintain a consistent silver appearance, without the color pulsing seen in other souls.
+        *   **Appearance (Behavioral):** In the simulation worker, god entities' colors are set directly from their base HSL values and do not undergo the same pulsing lightness effect as other non-enhanced souls.
         *   **Movement:** Gods have a slower, more deliberate base speed, are not influenced by the speed of their neighbors, and experience significantly less random perturbation in their movement, while still participating in separation behavior.
+        *   **Visual Enhancement Aura:** Non-god souls within a defined radius of a god entity receive a temporary visual boost, increasing their color saturation and lightness.
 *   **Soul "Choice" of God:**
     *   Enhanced the simulation logic in `simulation.worker.js` to allow non-god souls to "choose" a specific god entity.
     *   Souls will be attracted to their chosen god as long as it remains within a certain range. If the chosen god moves too far or is removed, the soul will attempt to choose a new, closest god.
@@ -159,5 +160,7 @@ wrapped neatly in a 3d ball.
 Will it expand...? i like to turn this on for a weekend and see how they evolve. Like an expanding ball.
 
 I personally love good food, good movie and good weed.
+
+c'est la vie
 
 ## 🧘‍♂️ Enjoy the ride.

@@ -26,12 +26,27 @@
     controls.dampingFactor = 0.01;
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Slightly reduced ambient for more contrast
     scene.add(ambientLight);
-    scene.add(new THREE.DirectionalLight(0xffffff, 1));
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7); // Adjusted intensity
+    directionalLight.position.set(-8, 10, 8); // Closer and different angle
+    scene.add(directionalLight);
+
+    const pointLight1 = new THREE.PointLight(0xffccaa, 0.65, 60); // Warmish light, closer, adjusted distance & intensity
+    pointLight1.position.set(10, 4, 4);
+    scene.add(pointLight1);
+
+    const pointLight2 = new THREE.PointLight(0xaaccff, 0.55, 60); // Coolish light, closer, adjusted distance & intensity
+    pointLight2.position.set(-4, -6, -10);
+    scene.add(pointLight2);
+
+    const pointLight3 = new THREE.PointLight(0xffffff, 0.5, 25); // New white point light, much closer, adjusted intensity & distance
+    pointLight3.position.set(0, 5, -2); // Positioned even closer from top-front
+    scene.add(pointLight3);
 
     const recycledSoulCount = 333;
-    const newSoulSpawnRate = 0.05;
+    const newSoulSpawnRate = 0.4; // Increased from 0.2
     const interactionDistance = 6;
     let souls = []; // This will now store only the THREE.Mesh objects
     const linesGroup = new THREE.Group();
@@ -39,6 +54,7 @@
 
     const humanGeometry = new THREE.SphereGeometry(0.15, 16, 16);
     const gptGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+    const godGeometry = new THREE.SphereGeometry(0.333, 32, 32); // Larger sphere for gods
 
     const humanBaseHue = Math.random();
     const gptBaseHue = (humanBaseHue + 0.5) % 1;
@@ -64,6 +80,9 @@
     const GOD_ATTRACTION_STRENGTH = 0.005; 
     const GOD_SPAWN_CHANCE = 0.05; 
     const GOD_BASE_SPEED = 0.02; // Slower, consistent speed for gods
+    const GOD_ENHANCEMENT_RADIUS = 10; // New: Radius within which gods enhance other souls
+    const ENHANCEMENT_SATURATION_BOOST = 0.2; // New: How much to boost saturation (0 to 1)
+    const ENHANCEMENT_LIGHTNESS_BOOST = 0.15; // New: How much to boost lightness (0 to 1)
 
     let simulationWorker;
     let nextSoulId = 0;
@@ -78,24 +97,29 @@
     container.addEventListener('mousemove', onMouseMove);
 
     function createSoul(isHuman, isGod = false, angle = 0, speed = 0) {
-      const geometry = (isHuman || isGod) ? humanGeometry : gptGeometry; 
+      let geometry;
+      if (isGod) {
+        geometry = godGeometry;
+      } else {
+        geometry = isHuman ? humanGeometry : gptGeometry;
+      }
+      // const geometry = (isHuman || isGod) ? humanGeometry : gptGeometry; // Old logic
       let material;
       let h_val, s_val, l_val; 
 
       if (isGod) {
-        material = new THREE.MeshPhysicalMaterial({
-            color: 0xc0c0c0,       // Silver color
-            metalness: 1.0,        // Fully metallic
-            roughness: 0.1,        // Smooth for sharp reflections
-            emissive: 0x444444,    // Subtle white/grey emissive for a slight sheen
-            emissiveIntensity: 0.5, // Lower intensity for emissive
-            transparent: false,    // Typically false for solid metallic objects
-            opacity: 1.0           // Fully opaque
+        h_val = Math.random(); // Random hue
+        s_val = 1;             // Max saturation
+        l_val = 0.5;           // Max brightness (standard for HSL)
+        material = new THREE.MeshBasicMaterial({ 
+            color: new THREE.Color().setHSL(h_val, s_val, l_val), // Set color using HSL
+            transparent: false,
+            opacity: 1.0
         });
-        // For baseHSL, silver is achromatic. Hue is irrelevant, saturation is 0.
-        h_val = 0; 
-        s_val = 0;          // No color saturation for silver
-        l_val = 0.75;       // Lightness for silver (0.0 black, 1.0 white)
+        // For baseHSL, update with the new random color
+        // h_val is already set above
+        // s_val is already set above
+        // l_val is already set above
       } else {
         material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
         const baseHue = isHuman ? humanBaseHue : gptBaseHue;
@@ -128,7 +152,8 @@
       mesh.userData.isHuman = isHuman;
       mesh.userData.isGod = isGod; 
       mesh.userData.flickerPhase = Math.random() * Math.PI * 2;
-      mesh.userData.life = 0;
+      // mesh.userData.life = 600; // Initialize life to 600 ticks - Old fixed value
+      mesh.userData.life = 300 + Math.random() * 600; // Random lifespan between 300 and 900 ticks
       mesh.userData.baseHSL = { h: h_val, s: s_val, l: l_val }; 
       mesh.userData.velocity = { x: initialVelocity.x, y: initialVelocity.y, z: initialVelocity.z }; 
 
@@ -140,7 +165,7 @@
         isHuman,
         isGod, 
         flickerPhase: mesh.userData.flickerPhase,
-        life: mesh.userData.life,
+        life: mesh.userData.life, // Pass the initialized life
         baseHSL: mesh.userData.baseHSL, 
       };
 
@@ -172,7 +197,7 @@
         isHuman: mesh.userData.isHuman,
         isGod: mesh.userData.isGod, 
         flickerPhase: mesh.userData.flickerPhase,
-        life: mesh.userData.life,
+        life: mesh.userData.life, // Ensure life is passed for initial souls too
         baseHSL: mesh.userData.baseHSL
       });
     }
@@ -189,7 +214,10 @@
                 SEPARATION_DISTANCE,
                 SEPARATION_STRENGTH,
                 GOD_ATTRACTION_RADIUS, 
-                GOD_ATTRACTION_STRENGTH
+                GOD_ATTRACTION_STRENGTH,
+                GOD_ENHANCEMENT_RADIUS, // Added
+                ENHANCEMENT_SATURATION_BOOST, // Added
+                ENHANCEMENT_LIGHTNESS_BOOST // Added
             }
         }
     });
@@ -201,10 +229,36 @@
                 const soulMesh = souls.find(s => s.userData.id === updatedSoulData.id);
                 if (soulMesh) {
                     soulMesh.position.set(updatedSoulData.position.x, updatedSoulData.position.y, updatedSoulData.position.z);
-                    soulMesh.material.color.setHSL(updatedSoulData.newHSL.h, updatedSoulData.newHSL.s, updatedSoulData.newHSL.l);
-                    soulMesh.material.opacity = updatedSoulData.newOpacity;
+                    // Ensure material exists before trying to set properties
+                    if (soulMesh.material) {
+                        if (soulMesh.material.color && typeof soulMesh.material.color.setHSL === 'function') {
+                            soulMesh.material.color.setHSL(updatedSoulData.newHSL.h, updatedSoulData.newHSL.s, updatedSoulData.newHSL.l);
+                        }
+                        soulMesh.material.opacity = updatedSoulData.newOpacity;
+                        if (soulMesh.material.needsUpdate !== undefined) {
+                            soulMesh.material.needsUpdate = true;
+                        }
+                    }
                 }
             });
+        } else if (type === 'soulRemoved') {
+            const soulIdToRemove = data.soulId;
+            const soulMeshToRemove = souls.find(s => s.userData.id === soulIdToRemove);
+            if (soulMeshToRemove) {
+                scene.remove(soulMeshToRemove);
+                if (soulMeshToRemove.geometry) {
+                    soulMeshToRemove.geometry.dispose();
+                }
+                if (soulMeshToRemove.material) {
+                    // If material is an array (e.g. multi-material), dispose each
+                    if (Array.isArray(soulMeshToRemove.material)) {
+                        soulMeshToRemove.material.forEach(material => material.dispose());
+                    } else {
+                        soulMeshToRemove.material.dispose();
+                    }
+                }
+                souls = souls.filter(s => s.userData.id !== soulIdToRemove);
+            }
         }
     };
 
