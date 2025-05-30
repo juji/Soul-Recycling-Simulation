@@ -5,6 +5,11 @@
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
   let container;
+  
+  // FPS counter variables
+  let fps = 0;
+  let frameCount = 0;
+  let lastTime = performance.now();
 
   // Helper function to get entity count from URL parameter
   function getEntityCountFromURL() {
@@ -340,6 +345,16 @@
       updateConnections(); 
       controls.update();
       renderer.render(scene, camera);
+
+      // FPS counting logic
+      frameCount++;
+      const currentTime = performance.now();
+      const elapsed = currentTime - lastTime;
+      if (elapsed >= 1000) { // Update every second
+        fps = frameCount;
+        frameCount = 0;
+        lastTime = currentTime;
+      }
     }
 
     animate();
@@ -384,6 +399,23 @@
     top: 0;
     left: 0;
   }
+  
+  .fps-counter {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+  }
 </style>
 
 <div id="container" bind:this={container}></div>
+<div class="fps-counter">FPS: {fps}</div>
