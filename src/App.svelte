@@ -64,7 +64,11 @@
 
     // Neighbor speed influence variables
     const NEIGHBOR_SPEED_INFLUENCE_RADIUS = 5; // How close for speed to be influenced
-    const NEIGHBOR_SPEED_INFLUENCE_STRENGTH = 0.1; // How much neighbors' speed influences current soul
+    const NEIGHBOR_SPEED_INFLUENCE_STRENGTH = 0.1; // How much neighbors\' speed influences current soul
+
+    // Boids-like separation variables
+    const SEPARATION_DISTANCE = 1.5; // How close another soul needs to be to trigger separation
+    const SEPARATION_STRENGTH = 0.05; // How strongly souls will push away
 
     function onMouseMove(event) {
       if (!container) return;
@@ -177,7 +181,7 @@
         let influencedSpeed = soul.userData.speed; // Start with its own speed
 
         souls.forEach(otherSoul => {
-            if (soul === otherSoul) return; // Don't interact with self
+            if (soul === otherSoul) return; // Don\'t interact with self
 
             const distanceToNeighbor = soul.position.distanceTo(otherSoul.position);
             if (distanceToNeighbor < NEIGHBOR_SPEED_INFLUENCE_RADIUS) {
@@ -188,10 +192,31 @@
                 );
             }
         });
-        soul.userData.speed = influencedSpeed; // Update the soul's speed with the influenced value
+        soul.userData.speed = influencedSpeed; // Update the soul\'s speed with the influenced value
         // === End: Speed influence from neighbors ===
 
         const { velocity, speed: soulSpeed, isHuman } = soul.userData; // soulSpeed is now the influenced speed
+        
+        // === Start: Separation from neighbors ===
+        const separationForce = new THREE.Vector3();
+        souls.forEach(otherSoul => {
+            if (soul === otherSoul) return;
+
+            const distanceToNeighbor = soul.position.distanceTo(otherSoul.position);
+            if (distanceToNeighbor > 0 && distanceToNeighbor < SEPARATION_DISTANCE) {
+                // Calculate force vector away from neighbor
+                const awayVector = new THREE.Vector3().subVectors(soul.position, otherSoul.position);
+                awayVector.normalize(); // Get direction
+                // Inverse proportion to distance: closer means stronger repulsion
+                // Add a small epsilon to distanceToNeighbor to avoid division by zero if they are exactly at the same spot (though unlikely with floats)
+                awayVector.divideScalar(distanceToNeighbor + 0.0001); 
+                separationForce.add(awayVector);
+            }
+        });
+        if (separationForce.lengthSq() > 0) { 
+            velocity.add(separationForce.multiplyScalar(SEPARATION_STRENGTH));
+        }
+        // === End: Separation from neighbors ===
 
         // Slightly perturb the velocity to change direction smoothly
         velocity.x += (Math.random() - 0.5) * 0.2; // Adjust this factor for more/less rapid changes
