@@ -3,6 +3,8 @@
 from a question to an AI:  
 > _"what if… this universe is about recycling souls?"_
 
+With Chat, code further refined by Gem.
+
 A philosophical WebGL visualization of soul cycles, human-AI convergence, and existence expressed through floating geometric entities. Built with **Svelte**, **Three.js**, and some cosmic curiosity.
 
 ---
