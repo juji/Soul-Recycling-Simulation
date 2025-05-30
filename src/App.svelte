@@ -415,7 +415,30 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(4px);
   }
+
+  .github-link {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+  }
+
+  .github-link:hover {
+    background: rgba(0, 0, 0, 0.9);
+    color: #ffffff;
+  }
 </style>
 
 <div id="container" bind:this={container}></div>
 <div class="fps-counter">FPS: {fps}</div>
+<a href="https://github.com/juji/Soul-Recycling-Simulation" target="_blank" class="github-link">GitHub</a>
