@@ -31,6 +31,9 @@
     low: { maxConnectionChecks: 50, connectionLimit: 10 }
   };
   
+  // Equilibrium info toggle for mobile
+  let showEquilibriumInfo = false;
+  
   function adjustQualityBasedOnFPS() {
     if (fps < 30 && currentQuality !== 'low') {
       currentQuality = 'medium';
@@ -635,6 +638,50 @@
     z-index: 1000;
   }
   
+  /* Equilibrium toggle button for mobile */
+  .equilibrium-toggle {
+    position: fixed;
+    top: 60px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1001;
+    backdrop-filter: blur(8px);
+    display: none; /* Hidden on desktop by default */
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .equilibrium-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  .toggle-icon {
+    font-size: 16px;
+    color: #ffd700;
+  }
+  
+  .toggle-text {
+    font-size: 12px;
+  }
+  
+  /* Show toggle button on mobile screens */
+  @media (max-width: 768px) {
+    .equilibrium-toggle {
+      display: flex;
+    }
+  }
+  
   .equilibrium-info {
     position: fixed;
     top: 60px;
@@ -651,7 +698,26 @@
     max-width: 320px;
     line-height: 1.5;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-
+    transition: all 0.3s ease;
+  }
+  
+  /* Mobile responsive behavior */
+  @media (max-width: 768px) {
+    .equilibrium-info {
+      top: 100px;
+      left: 10px;
+      right: 10px;
+      max-width: none;
+      transform: translateY(-20px);
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .equilibrium-info.show-mobile {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
   
   .equilibrium-title {
@@ -772,7 +838,13 @@
   <a href="?val=777" class="entity-link" class:active={getActiveCount() === 999}>Auto</a>
 </div>
 
-<div class="equilibrium-info">
+<!-- Toggle button for mobile equilibrium info -->
+<button class="equilibrium-toggle" on:click={() => showEquilibriumInfo = !showEquilibriumInfo}>
+  <span class="toggle-icon">{showEquilibriumInfo ? '✕' : 'ℹ'}</span>
+  <span class="toggle-text">Info</span>
+</button>
+
+<div class="equilibrium-info" class:show-mobile={showEquilibriumInfo}>
   <div class="equilibrium-title">Population Equilibrium</div>
   <div class="equilibrium-formula">EquilibriumPopulation ≈ newSoulSpawnRate × AverageLifespan</div>
   <div class="equilibrium-calculation">Current: 0.4 × 600 = ~240 souls</div>
