@@ -638,7 +638,7 @@
     z-index: 1000;
   }
   
-  /* Equilibrium toggle button for mobile */
+  /* Equilibrium toggle button for all screens */
   .equilibrium-toggle {
     position: fixed;
     top: 60px;
@@ -654,7 +654,7 @@
     cursor: pointer;
     z-index: 1001;
     backdrop-filter: blur(8px);
-    display: none; /* Hidden on desktop by default */
+    display: flex; /* Show on all screens */
     align-items: center;
     gap: 6px;
     transition: all 0.3s ease;
@@ -675,16 +675,11 @@
     font-size: 12px;
   }
   
-  /* Show toggle button on mobile screens */
-  @media (max-width: 768px) {
-    .equilibrium-toggle {
-      display: flex;
-    }
-  }
+  /* Remove mobile-only display rule */
   
   .equilibrium-info {
     position: fixed;
-    top: 60px;
+    top: 110px;
     left: 10px;
     right: 10px;
     background: rgba(0, 0, 0, 0.85);
@@ -699,24 +694,32 @@
     line-height: 1.5;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
+    transform: translateY(-20px);
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  .equilibrium-info.show-mobile {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  /* Desktop specific positioning */
+  @media (min-width: 769px) {
+    .equilibrium-info {
+      top: 110px;
+      max-width: 320px;
+    }
   }
   
   /* Mobile responsive behavior */
   @media (max-width: 768px) {
     .equilibrium-info {
-      top: 100px;
+      top: 110px;
       left: 10px;
       right: 10px;
       max-width: none;
-      transform: translateY(-20px);
-      opacity: 0;
-      pointer-events: none;
-    }
-    
-    .equilibrium-info.show-mobile {
-      transform: translateY(0);
-      opacity: 1;
-      pointer-events: auto;
     }
   }
   
