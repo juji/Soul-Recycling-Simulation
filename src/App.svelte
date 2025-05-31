@@ -122,7 +122,7 @@
       const material = new THREE.LineBasicMaterial({
         vertexColors: true,
         transparent: true, // Set to false for opaque lines
-        opacity: .2 // Set to 1.0 for full opacity
+        opacity: .333 // Set to 1.0 for full opacity
       });
 
       lineSegments = new THREE.LineSegments(geometry, material);
@@ -698,7 +698,7 @@
 
     &>span{
       display: none;
-      @media screen and (min-width: 400px) {
+      @media screen and (min-width: 464px) {
         display: inline; /* Show span on larger screens */
       }
     }
@@ -751,6 +751,7 @@
   <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99 <span>Souls</span></a>
   <a href="?val=333" class="entity-link" class:active={getActiveCount() === 333}>333 <span>Souls</span></a>
   <a href="?val=777" class="entity-link" class:active={getActiveCount() === 777}>777 <span>Souls</span></a>
+  <a href="?val=777" class="entity-link" class:active={getActiveCount() === 999}>Auto</a>
 </div>
 
 <div class="equilibrium-info">
