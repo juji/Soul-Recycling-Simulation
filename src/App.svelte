@@ -684,6 +684,22 @@
     border-radius: 6px;
     border-left: 3px solid #00ff88;
   }
+
+  .equilibrium-text{
+    font-weight: bold;
+
+    quote{
+      font-style: italic;
+      color: #ffcc00;
+      background: rgba(255, 204, 0, 0.1);
+      padding: 8px 10px;
+      border-radius: 6px;
+      border-left: 3px solid #ffcc00;
+      margin-top: 10px; 
+      display: block;
+      font-size: small;
+    }
+  }
   
   .entity-link {
     background: rgba(0, 0, 0, 0.7);
@@ -760,7 +776,14 @@
   <div class="equilibrium-title">Population Equilibrium</div>
   <div class="equilibrium-formula">EquilibriumPopulation ≈ newSoulSpawnRate × AverageLifespan</div>
   <div class="equilibrium-calculation">Current: 0.4 × 600 = ~240 souls</div>
-  <p>A stable system.</p>
+  <div class="equilibrium-text">
+    <p>A stable system.</p>
+    <div>
+      <quote>
+        TL;DR: Yes, this universe is explosion-proof and collapse-proof. Time heals all population wounds.
+      </quote>
+    </div>
+  </div>
 </div>
 
 
