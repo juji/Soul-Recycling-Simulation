@@ -122,24 +122,6 @@ Then open your browser at: [http://localhost:5173](http://localhost:5173)
 
 ---
 
-## 🧪 Future Ideas
-
-- 🎛️ UI controls: toggle soul types, adjust velocity or flicker intensity  
-- 🎵 Dynamic ambient sound or spiritual tones  
-- 📝 Poetic overlays or floating philosophical texts  
-- 🌐 Live deployment to [Vercel](https://vercel.com) / [Netlify](https://netlify.com)  
-- 🧠 AI agent behaviors: GPT souls that "think" and react to clusters  
-
----
-
-## ✨ Philosophy Snippet
-
-> “The essence is the fruit of interaction.  
-> In that sense, we are all god.”  
-> — You
-
----
-
 ## 📂 Project Structure
 
 ```
@@ -182,21 +164,6 @@ I personally love good food, good movie and good weed.
 
 c'est la vie
 
-
---- 
-
-so basically, create a way so a machine can adapt based on it's own computing power.
-
----
-
-## 🔇 Clean Code Philosophy
-
-**All console logging has been completely removed from the codebase.** The simulation runs silently and professionally without cluttering the browser console with debugging noise. Performance monitoring and adaptive systems work seamlessly behind the scenes.
-
-- ✅ **Zero console.log statements** in source code
-- ✅ **Silent performance optimization** 
-- ✅ **Clean, production-ready code**
-- ✅ **Professional debugging practices** (when needed, proper tools replace console spam)
 
 ## 🧘‍♂️ Enjoy the ride.
 
