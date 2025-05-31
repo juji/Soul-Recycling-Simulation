@@ -4,8 +4,28 @@
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-  // Global soul count settings
+  // Global settings
   const DEFAULT_SOUL_COUNT = 999;
+  const NEW_SOUL_SPAWN_RATE = 0.4; // Increased from 0.2
+  const MIN_LIFESPAN = 300; // Minimum lifespan of souls in frames
+  const MAX_LIFESPAN = 900; // Maximum lifespan of souls in frames
+  const AVG_LIFESPAN = (MIN_LIFESPAN + MAX_LIFESPAN) / 2; // Average lifespan of souls in frames
+
+  // POPULATION EQUILIBRIUM NOTE:
+  // The soul population tends towards an equilibrium.
+  // This equilibrium is determined by:
+  // 1. `NEW_SOUL_SPAWN_RATE` (currently ${NEW_SOUL_SPAWN_RATE}): The average number of new souls created per frame.
+  // 2. Soul Lifespan (defined in `createSoul` as ${MIN_LIFESPAN}-${MAX_LIFESPAN} frames, averaging ${AVG_LIFESPAN}): How long souls live before being removed.
+  //
+  // Equilibrium occurs when: Average Birth Rate = Average Death Rate
+  // Average Birth Rate = NEW_SOUL_SPAWN_RATE
+  // Average Death Rate = CurrentPopulation / AverageLifespan
+  // So, `NEW_SOUL_SPAWN_RATE = CurrentPopulation / AverageLifespan`
+  // `CurrentPopulation = NEW_SOUL_SPAWN_RATE * AverageLifespan`
+  // With current values: `CurrentPopulation = ${NEW_SOUL_SPAWN_RATE} * ${AVG_LIFESPAN} = ${NEW_SOUL_SPAWN_RATE * AVG_LIFESPAN}` (approximately)
+  //
+  // If the initial population is above this, it will decrease towards equilibrium.
+  // If the initial population is below this, it will increase towards equilibrium.
 
   let souls = []; // Declare souls here to make it accessible to the template
   let container;
@@ -133,22 +153,7 @@
     }
 
     const recycledSoulCount = getEntityCountFromURL();
-    const newSoulSpawnRate = 0.4; // Increased from 0.2
-    // POPULATION EQUILIBRIUM NOTE:
-    // The soul population tends towards an equilibrium.
-    // This equilibrium is determined by:
-    // 1. `newSoulSpawnRate` (currently ${newSoulSpawnRate}): The average number of new souls created per frame.
-    // 2. Soul Lifespan (defined in `createSoul` as 300-900 frames, averaging 600): How long souls live before being removed.
-    //
-    // Equilibrium occurs when: Average Birth Rate = Average Death Rate
-    // Average Birth Rate = newSoulSpawnRate
-    // Average Death Rate = CurrentPopulation / AverageLifespan
-    // So, `newSoulSpawnRate = CurrentPopulation / AverageLifespan`
-    // `CurrentPopulation = newSoulSpawnRate * AverageLifespan`
-    // With current values: `CurrentPopulation = ${newSoulSpawnRate} * 600 = ${newSoulSpawnRate * 600}` (approximately)
-    //
-    // If the initial population is above this, it will decrease towards equilibrium.
-    // If the initial population is below this, it will increase towards equilibrium.
+    
 
     const interactionDistance = 6;
     let lineSegments;
@@ -295,7 +300,7 @@
       mesh.userData.isDewa = isDewa; 
       mesh.userData.flickerPhase = Math.random() * Math.PI * 2;
       // mesh.userData.life = 600; // Initialize life to 600 ticks - Old fixed value
-      mesh.userData.life = 300 + Math.random() * 600; // Random lifespan between 300 and 900 ticks
+      mesh.userData.life = MIN_LIFESPAN + Math.random() * (MAX_LIFESPAN - MIN_LIFESPAN); // Random lifespan between MIN_LIFESPAN and MAX_LIFESPAN
       mesh.userData.baseHSL = { h: h_val, s: s_val, l: l_val }; 
       mesh.userData.velocity = { x: initialVelocity.x, y: initialVelocity.y, z: initialVelocity.z }; 
 
@@ -513,7 +518,7 @@
         });
       }
 
-      if (Math.random() < newSoulSpawnRate) {
+      if (Math.random() < NEW_SOUL_SPAWN_RATE) {
         createNewSoul(); 
       }
 
@@ -849,7 +854,7 @@
 
 <div class="equilibrium-info" class:show-mobile={showEquilibriumInfo}>
   <div class="equilibrium-title">Population Equilibrium</div>
-  <div class="equilibrium-formula">EquilibriumPopulation ≈ newSoulSpawnRate × AverageLifespan</div>
+  <div class="equilibrium-formula">EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN</div>
   <div class="equilibrium-calculation">Current: 0.4 × 600 = ~240 souls</div>
   <div class="equilibrium-text">
     <p>A stable system.</p>
