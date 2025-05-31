@@ -843,7 +843,7 @@
   <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99 <span>Souls</span></a>
   <a href="?val=333" class="entity-link" class:active={getActiveCount() === 333}>333 <span>Souls</span></a>
   <a href="?val=777" class="entity-link" class:active={getActiveCount() === 777}>777 <span>Souls</span></a>
-  <a href="?val=777" class="entity-link" class:active={getActiveCount() === 999}>Auto</a>
+  <a href="/" class="entity-link" class:active={getActiveCount() === 999}>Auto</a>
 </div>
 
 <!-- Toggle button for mobile equilibrium info -->
