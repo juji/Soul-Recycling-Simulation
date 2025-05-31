@@ -634,6 +634,54 @@
     z-index: 1000;
   }
   
+  .equilibrium-info {
+    position: fixed;
+    top: 60px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #ffffff;
+    padding: 16px 20px;
+    border-radius: 10px;
+    font-family: 'Courier New', monospace;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    max-width: 320px;
+    line-height: 1.5;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .equilibrium-title {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #ffd700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.5px;
+  }
+  
+  .equilibrium-formula {
+    font-size: 13px;
+    color: #e0e0e0;
+    margin-bottom: 8px;
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 10px;
+    border-radius: 6px;
+    border-left: 3px solid #4a90e2;
+  }
+  
+  .equilibrium-calculation {
+    font-size: 14px;
+    color: #00ff88;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    background: rgba(0, 255, 136, 0.1);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border-left: 3px solid #00ff88;
+  }
+  
   .entity-link {
     background: rgba(0, 0, 0, 0.7);
     color: #ffffff;
@@ -696,4 +744,14 @@
   <a href="?val=777" class="entity-link" class:active={getActiveCount() === 777}>777 Souls</a>
 </div>
 
-<a href="https://github.com/juji/Soul-Recycling-Simulation" target="_blank" class="github-link">GitHub</a>
+<div class="equilibrium-info">
+  <div class="equilibrium-title">Population Equilibrium</div>
+  <div class="equilibrium-formula">EquilibriumPopulation ≈ newSoulSpawnRate × AverageLifespan</div>
+  <div class="equilibrium-calculation">Current: 0.4 × 600 = ~240 souls</div>
+  <p>A stable system.</p>
+</div>
+
+
+<a href="https://github.com/juji/Soul-Recycling-Simulation" target="_blank" class="github-link">
+  GitHub
+</a>
