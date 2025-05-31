@@ -171,9 +171,7 @@ MIT — remix, expand, explore.
 You know, in this simulation, the term dewa can be changed into... ice cream...
 and it will share the same result.
 
----
 future: try webgpu
----
 
 It's about human nature, existence, and all that bla bla bla...
 wrapped neatly in a 3d ball.
