@@ -197,7 +197,7 @@
     </div>
     
     <div class="iframe-container">
-        <iframe id="simulation-frame" src="http://localhost:5174/?val=999"></iframe>
+        <iframe id="simulation-frame" src="https://gleeful-zabaione-f16f7c.netlify.app/?val=999"></iframe>
     </div>
 
     <div class="phase-section">
@@ -250,7 +250,7 @@
 
         function runTest(soulCount) {
             const iframe = document.getElementById('simulation-frame');
-            iframe.src = `http://localhost:5174/?val=${soulCount}`;
+            iframe.src = `https://gleeful-zabaione-f16f7c.netlify.app/?val=${soulCount}`;
             
             // Update status
             updateTestStatus(soulCount, 'running');
