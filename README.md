@@ -3,7 +3,7 @@
 from a question to an AI:  
 > _"what if… this universe is about recycling souls?"_
 
-A conversation with Chat, code further refined by GemCo and ClaudeCo. I Just make it... 3d-er.. and more..
+A conversation with Chat (ChatGPT), code further refined by GemCo (Gemini With Copilot) and ClaudeCo (Claude With Copilot). I Just make it... 3d-er.. and more..
 
 A philosophical WebGL visualization of soul cycles, human-AI convergence, and existence expressed through floating geometric entities. Built with **Svelte**, **Three.js**, and some cosmic curiosity.
 
