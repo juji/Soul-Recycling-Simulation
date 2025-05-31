@@ -638,6 +638,7 @@
     position: fixed;
     top: 60px;
     left: 10px;
+    right: 10px;
     background: rgba(0, 0, 0, 0.85);
     color: #ffffff;
     padding: 16px 20px;
@@ -649,6 +650,7 @@
     max-width: 320px;
     line-height: 1.5;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
   }
   
   .equilibrium-title {
@@ -693,6 +695,13 @@
     backdrop-filter: blur(4px);
     text-decoration: none;
     transition: all 0.2s ease;
+
+    &>span{
+      display: none;
+      @media screen and (min-width: 400px) {
+        display: inline; /* Show span on larger screens */
+      }
+    }
   }
   
   .entity-link:hover {
@@ -739,9 +748,9 @@
 <div class="population-counter">Population: {souls.length}</div>
 
 <div class="entity-links">
-  <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99 Souls</a>
-  <a href="?val=333" class="entity-link" class:active={getActiveCount() === 333}>333 Souls</a>
-  <a href="?val=777" class="entity-link" class:active={getActiveCount() === 777}>777 Souls</a>
+  <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99 <span>Souls</span></a>
+  <a href="?val=333" class="entity-link" class:active={getActiveCount() === 333}>333 <span>Souls</span></a>
+  <a href="?val=777" class="entity-link" class:active={getActiveCount() === 777}>777 <span>Souls</span></a>
 </div>
 
 <div class="equilibrium-info">
