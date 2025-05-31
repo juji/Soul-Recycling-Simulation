@@ -613,6 +613,7 @@
     border-radius: 4px;
     font-family: 'Courier New', monospace;
     font-size: 14px; /* Increased font size */
+    font-weight: bold;
     z-index: 1000;
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(4px);
@@ -690,7 +691,8 @@
     padding: 6px 10px;
     border-radius: 4px;
     font-family: 'Courier New', monospace;
-    font-size: 12px;
+    font-size: 15px;
+    font-weight: bold;
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(4px);
     text-decoration: none;
@@ -698,7 +700,7 @@
 
     &>span{
       display: none;
-      @media screen and (min-width: 464px) {
+      @media screen and (min-width: 500px) {
         display: inline; /* Show span on larger screens */
       }
     }
