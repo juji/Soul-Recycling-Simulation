@@ -189,6 +189,17 @@ c'est la vie
 
 so basically, create a way so a machine can adapt based on it's own computing power.
 
+---
+
+## 🔇 Clean Code Philosophy
+
+**All console logging has been completely removed from the codebase.** The simulation runs silently and professionally without cluttering the browser console with debugging noise. Performance monitoring and adaptive systems work seamlessly behind the scenes.
+
+- ✅ **Zero console.log statements** in source code
+- ✅ **Silent performance optimization** 
+- ✅ **Clean, production-ready code**
+- ✅ **Professional debugging practices** (when needed, proper tools replace console spam)
+
 ## 🧘‍♂️ Enjoy the ride.
 
 ---
