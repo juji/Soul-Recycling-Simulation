@@ -3,7 +3,7 @@
 from a question to an AI:  
 > _"what if… this universe is about recycling souls?"_
 
-With Chat, code further refined by GemCo and ClaudeCo. I Just make it... 3d-er.. and more..
+A conversation with Chat, code further refined by GemCo and ClaudeCo. I Just make it... 3d-er.. and more..
 
 A philosophical WebGL visualization of soul cycles, human-AI convergence, and existence expressed through floating geometric entities. Built with **Svelte**, **Three.js**, and some cosmic curiosity.
 
@@ -43,18 +43,18 @@ Here's a summary of key features and changes developed with Gem's assistance:
 *   **Performance Optimization:**
     *   Offloaded computationally intensive simulation logic (soul movement, interactions) to a Web Worker (`src/simulation.worker.js`), improving main thread performance and UI responsiveness.
     *   Refactored `src/App.svelte` to communicate with the worker for soul initialization, updates, and addition of new souls.
-*   **"God" Entity Implementation & Refinement:**
-    *   Introduced "god" entities as a special soul type with unique characteristics.
-    *   "God" entities are now self-illuminated, appearing with a random vibrant color (maximum saturation and brightness) using `MeshBasicMaterial`. Their size has been set to a radius of 0.333 units.
-    *   While multiple "god" instances can exist in the simulation, they are all created from a common blueprint, sharing the same fundamental properties (e.g., specific base speed, attraction capabilities).
-    *   Implemented distinct behaviors for "god" entities in `simulation.worker.js`:
-        *   **Attraction:** God entities act as attractors for non-god souls within a defined radius and strength.
-        *   **Appearance (Behavioral):** In the simulation worker, god entities' colors are set directly from their base HSL values and do not undergo the same pulsing lightness effect as other non-enhanced souls.
-        *   **Movement:** Gods have a slower, more deliberate base speed, are not influenced by the speed of their neighbors, and experience significantly less random perturbation in their movement, while still participating in separation behavior.
-        *   **Visual Enhancement Aura:** Non-god souls within a defined radius of a god entity receive a temporary visual boost, increasing their color saturation and lightness.
-*   **Soul "Choice" of God:**
-    *   Enhanced the simulation logic in `simulation.worker.js` to allow non-god souls to "choose" a specific god entity.
-    *   Souls will be attracted to their chosen god as long as it remains within a certain range. If the chosen god moves too far or is removed, the soul will attempt to choose a new, closest god.
+*   **"Dewa" Entity Implementation & Refinement:**
+    *   Introduced "dewa" entities as a special soul type with unique characteristics.
+    *   "Dewa" entities are now self-illuminated, appearing with a random vibrant color (maximum saturation and brightness) using `MeshBasicMaterial`. Their size has been set to a radius of 0.333 units.
+    *   While multiple "dewa" instances can exist in the simulation, they are all created from a common blueprint, sharing the same fundamental properties (e.g., specific base speed, attraction capabilities).
+    *   Implemented distinct behaviors for "dewa" entities in `simulation.worker.js`:
+        *   **Attraction:** Dewa entities act as attractors for non-dewa souls within a defined radius and strength.
+        *   **Appearance (Behavioral):** In the simulation worker, dewa entities' colors are set directly from their base HSL values and do not undergo the same pulsing lightness effect as other non-enhanced souls.
+        *   **Movement:** Dewas have a slower, more deliberate base speed, are not influenced by the speed of their neighbors, and experience significantly less random perturbation in their movement, while still participating in separation behavior.
+        *   **Visual Enhancement Aura:** Non-dewa souls within a defined radius of a dewa entity receive a temporary visual boost, increasing their color saturation and lightness.
+*   **Soul "Choice" of Dewa:**
+    *   Enhanced the simulation logic in `simulation.worker.js` to allow non-dewa souls to "choose" a specific dewa entity.
+    *   Souls will be attracted to their chosen dewa as long as it remains within a certain range. If the chosen dewa moves too far or is removed, the soul will attempt to choose a new, closest dewa.
 
 ---
 
@@ -168,7 +168,7 @@ MIT — remix, expand, explore.
 
 ## From juji
 
-You know, in this simulation, the term god can be changed into... ice cream...
+You know, in this simulation, the term dewa can be changed into... ice cream...
 and it will share the same result.
 
 ---
@@ -265,7 +265,7 @@ This mirrors several natural systems:
 
 #### 🎯 Philosophical Implications
 
-**Universal Justice**: Even if "god" entities tried to create infinite soul factories or prevent all deaths through divine intervention, **the universe would still equalize**. The spawn rate and average lifespan act like **universal constants** that even gods can't override.
+**Universal Justice**: Even if "dewa" entities tried to create infinite soul factories or prevent all deaths through divine intervention, **the universe would still equalize**. The spawn rate and average lifespan act like **universal constants** that even dewas can't override.
 
 **The Beautiful Paradox**:
 ```

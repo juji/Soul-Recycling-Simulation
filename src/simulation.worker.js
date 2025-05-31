@@ -2,12 +2,12 @@ let souls = [];
 let POINTER_INTERACTION_RADIUS, POINTER_INFLUENCE_STRENGTH;
 let NEIGHBOR_SPEED_INFLUENCE_RADIUS, NEIGHBOR_SPEED_INFLUENCE_STRENGTH;
 let SEPARATION_DISTANCE, SEPARATION_STRENGTH;
-let GOD_ATTRACTION_RADIUS, GOD_ATTRACTION_STRENGTH; // Added god constants
-let GOD_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST; // Added
+let DEWA_ATTRACTION_RADIUS, DEWA_ATTRACTION_STRENGTH; // Added dewa constants
+let DEWA_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST; // Added
 let pulseTime = 0;
 
 // Pre-calculate squared distances to avoid sqrt calls
-let NEIGHBOR_SPEED_INFLUENCE_RADIUS_SQ, SEPARATION_DISTANCE_SQ, GOD_ATTRACTION_RADIUS_SQ, GOD_ENHANCEMENT_RADIUS_SQ, POINTER_INTERACTION_RADIUS_SQ;
+let NEIGHBOR_SPEED_INFLUENCE_RADIUS_SQ, SEPARATION_DISTANCE_SQ, DEWA_ATTRACTION_RADIUS_SQ, DEWA_ENHANCEMENT_RADIUS_SQ, POINTER_INTERACTION_RADIUS_SQ;
 
 // Spatial partitioning system
 class SpatialGrid {
@@ -91,7 +91,7 @@ self.onmessage = function(e) {
             ...s,
             position: vec.create(s.position.x, s.position.y, s.position.z),
             velocity: vec.create(s.velocity.x, s.velocity.y, s.velocity.z),
-            chosenGodId: null // Initialize chosenGodId
+            chosenDewaId: null // Initialize chosenDewaId
         }));
         POINTER_INTERACTION_RADIUS = data.constants.POINTER_INTERACTION_RADIUS;
         POINTER_INFLUENCE_STRENGTH = data.constants.POINTER_INFLUENCE_STRENGTH;
@@ -99,17 +99,17 @@ self.onmessage = function(e) {
         NEIGHBOR_SPEED_INFLUENCE_STRENGTH = data.constants.NEIGHBOR_SPEED_INFLUENCE_STRENGTH;
         SEPARATION_DISTANCE = data.constants.SEPARATION_DISTANCE;
         SEPARATION_STRENGTH = data.constants.SEPARATION_STRENGTH;
-        GOD_ATTRACTION_RADIUS = data.constants.GOD_ATTRACTION_RADIUS; // Store god constant
-        GOD_ATTRACTION_STRENGTH = data.constants.GOD_ATTRACTION_STRENGTH; // Store god constant
-        GOD_ENHANCEMENT_RADIUS = data.constants.GOD_ENHANCEMENT_RADIUS; // Added
+        DEWA_ATTRACTION_RADIUS = data.constants.DEWA_ATTRACTION_RADIUS; // Store dewa constant
+        DEWA_ATTRACTION_STRENGTH = data.constants.DEWA_ATTRACTION_STRENGTH; // Store dewa constant
+        DEWA_ENHANCEMENT_RADIUS = data.constants.DEWA_ENHANCEMENT_RADIUS; // Added
         ENHANCEMENT_SATURATION_BOOST = data.constants.ENHANCEMENT_SATURATION_BOOST; // Added
         ENHANCEMENT_LIGHTNESS_BOOST = data.constants.ENHANCEMENT_LIGHTNESS_BOOST; // Added
         
         // Pre-calculate squared distances for performance
         NEIGHBOR_SPEED_INFLUENCE_RADIUS_SQ = NEIGHBOR_SPEED_INFLUENCE_RADIUS * NEIGHBOR_SPEED_INFLUENCE_RADIUS;
         SEPARATION_DISTANCE_SQ = SEPARATION_DISTANCE * SEPARATION_DISTANCE;
-        GOD_ATTRACTION_RADIUS_SQ = GOD_ATTRACTION_RADIUS * GOD_ATTRACTION_RADIUS;
-        GOD_ENHANCEMENT_RADIUS_SQ = GOD_ENHANCEMENT_RADIUS * GOD_ENHANCEMENT_RADIUS;
+        DEWA_ATTRACTION_RADIUS_SQ = DEWA_ATTRACTION_RADIUS * DEWA_ATTRACTION_RADIUS;
+        DEWA_ENHANCEMENT_RADIUS_SQ = DEWA_ENHANCEMENT_RADIUS * DEWA_ENHANCEMENT_RADIUS;
         POINTER_INTERACTION_RADIUS_SQ = POINTER_INTERACTION_RADIUS * POINTER_INTERACTION_RADIUS;
     } else if (type === 'update') {
         const pointerPosition3D = data.pointerPosition3D ? vec.create(data.pointerPosition3D.x, data.pointerPosition3D.y, data.pointerPosition3D.z) : null;
@@ -120,17 +120,17 @@ self.onmessage = function(e) {
         spatialGrid.clear();
         souls.forEach(soul => spatialGrid.insert(soul));
 
-        const godSouls = souls.filter(s => s.isGod);
+        const dewaSouls = souls.filter(s => s.isDewa);
 
         const soulsToRemove = [];
         souls.forEach(soul => {
             // === Speed influence from neighbors using spatial partitioning ===
-            if (!soul.isGod) { // Gods are not affected by neighbor speed influence
+            if (!soul.isDewa) { // Dewas are not affected by neighbor speed influence
                 let influencedSpeed = soul.speed;
                 const nearbyNeighbors = spatialGrid.getNearby(soul.position, NEIGHBOR_SPEED_INFLUENCE_RADIUS);
                 
                 for (const otherSoul of nearbyNeighbors) {
-                    if (soul.id === otherSoul.id || otherSoul.isGod) continue;
+                    if (soul.id === otherSoul.id || otherSoul.isDewa) continue;
                     
                     const distanceToNeighborSq = vec.lengthSq(vec.subVectors(soul.position, otherSoul.position));
                     if (distanceToNeighborSq < NEIGHBOR_SPEED_INFLUENCE_RADIUS_SQ) {
@@ -167,50 +167,50 @@ self.onmessage = function(e) {
                 soul.velocity = vec.add(soul.velocity, scaledSeparationForce);
             }
 
-            // === God Attraction (optimized) ===
-            if (!soul.isGod) {
-                let targetGod = null;
-                if (soul.chosenGodId !== null) {
-                    const currentlyChosenGod = godSouls.find(g => g.id === soul.chosenGodId);
-                    if (currentlyChosenGod) {
-                        const distanceToChosenGodSq = vec.lengthSq(vec.subVectors(soul.position, currentlyChosenGod.position));
-                        if (distanceToChosenGodSq < GOD_ATTRACTION_RADIUS_SQ) {
-                            targetGod = currentlyChosenGod;
+            // === Dewa Attraction (optimized) ===
+            if (!soul.isDewa) {
+                let targetDewa = null;
+                if (soul.chosenDewaId !== null) {
+                    const currentlyChosenDewa = dewaSouls.find(g => g.id === soul.chosenDewaId);
+                    if (currentlyChosenDewa) {
+                        const distanceToChosenDewaSq = vec.lengthSq(vec.subVectors(soul.position, currentlyChosenDewa.position));
+                        if (distanceToChosenDewaSq < DEWA_ATTRACTION_RADIUS_SQ) {
+                            targetDewa = currentlyChosenDewa;
                         } else {
-                            soul.chosenGodId = null; 
+                            soul.chosenDewaId = null; 
                         }
                     } else {
-                        soul.chosenGodId = null; 
+                        soul.chosenDewaId = null; 
                     }
                 }
-                if (targetGod === null) { 
-                    let closestGod = null;
-                    let minDistanceSq = GOD_ATTRACTION_RADIUS_SQ;
-                    for (const god of godSouls) {
-                        const distanceToGodSq = vec.lengthSq(vec.subVectors(god.position, soul.position));
-                        if (distanceToGodSq < minDistanceSq) {
-                            minDistanceSq = distanceToGodSq;
-                            closestGod = god;
+                if (targetDewa === null) { 
+                    let closestDewa = null;
+                    let minDistanceSq = DEWA_ATTRACTION_RADIUS_SQ;
+                    for (const dewa of dewaSouls) {
+                        const distanceToDewaSq = vec.lengthSq(vec.subVectors(dewa.position, soul.position));
+                        if (distanceToDewaSq < minDistanceSq) {
+                            minDistanceSq = distanceToDewaSq;
+                            closestDewa = dewa;
                         }
                     }
-                    if (closestGod) {
-                        soul.chosenGodId = closestGod.id;
-                        targetGod = closestGod;
+                    if (closestDewa) {
+                        soul.chosenDewaId = closestDewa.id;
+                        targetDewa = closestDewa;
                     }
                 }
-                if (targetGod) {
-                    const distanceToTargetGodSq = vec.lengthSq(vec.subVectors(soul.position, targetGod.position));
-                    if (distanceToTargetGodSq > 0 && distanceToTargetGodSq < GOD_ATTRACTION_RADIUS_SQ) { 
-                        const distanceToTargetGod = Math.sqrt(distanceToTargetGodSq); // Only calculate sqrt when needed
-                        const directionToGod = vec.normalize(vec.subVectors(targetGod.position, soul.position));
-                        const attractionForce = vec.multiplyScalar(directionToGod, GOD_ATTRACTION_STRENGTH * (1 - distanceToTargetGod / GOD_ATTRACTION_RADIUS));
+                if (targetDewa) {
+                    const distanceToTargetDewaSq = vec.lengthSq(vec.subVectors(soul.position, targetDewa.position));
+                    if (distanceToTargetDewaSq > 0 && distanceToTargetDewaSq < DEWA_ATTRACTION_RADIUS_SQ) { 
+                        const distanceToTargetDewa = Math.sqrt(distanceToTargetDewaSq); // Only calculate sqrt when needed
+                        const directionToDewa = vec.normalize(vec.subVectors(targetDewa.position, soul.position));
+                        const attractionForce = vec.multiplyScalar(directionToDewa, DEWA_ATTRACTION_STRENGTH * (1 - distanceToTargetDewa / DEWA_ATTRACTION_RADIUS));
                         soul.velocity = vec.add(soul.velocity, attractionForce);
                     }
                 }
             }
             
             // Slightly perturb the velocity
-            if (!soul.isGod) {
+            if (!soul.isDewa) {
                 soul.velocity.x += (Math.random() - 0.5) * 0.2;
                 soul.velocity.y += (Math.random() - 0.5) * 0.2;
                 soul.velocity.z += (Math.random() - 0.5) * 0.2;
@@ -221,7 +221,7 @@ self.onmessage = function(e) {
             }
 
             // Pointer interaction logic (optimized)
-            if (pointerPosition3D && soul.isHuman && !soul.isGod) {
+            if (pointerPosition3D && soul.isHuman && !soul.isDewa) {
                 const distanceToPointSq = vec.lengthSq(vec.subVectors(soul.position, pointerPosition3D));
                 if (distanceToPointSq < POINTER_INTERACTION_RADIUS_SQ) {
                     const directionToPoint = vec.normalize(vec.subVectors(pointerPosition3D, soul.position));
@@ -239,15 +239,15 @@ self.onmessage = function(e) {
             
             soul.life--; // Decrement life
 
-            // Visual Enhancement by Gods & HSL Calculation (optimized)
+            // Visual Enhancement by Dewas & HSL Calculation (optimized)
             let currentSaturation = soul.baseHSL.s;
             let currentLightness = soul.baseHSL.l;
             let isEnhanced = false; // Flag to see if enhancement happened
 
-            if (!soul.isGod) {
-                for (const god of godSouls) {
-                    const distanceToGodSq = vec.lengthSq(vec.subVectors(soul.position, god.position));
-                    if (distanceToGodSq < GOD_ENHANCEMENT_RADIUS_SQ) {
+            if (!soul.isDewa) {
+                for (const dewa of dewaSouls) {
+                    const distanceToDewaSq = vec.lengthSq(vec.subVectors(soul.position, dewa.position));
+                    if (distanceToDewaSq < DEWA_ENHANCEMENT_RADIUS_SQ) {
                         currentSaturation = Math.min(1, soul.baseHSL.s + ENHANCEMENT_SATURATION_BOOST);
                         currentLightness = Math.min(1, soul.baseHSL.l + ENHANCEMENT_LIGHTNESS_BOOST);
                         isEnhanced = true;
@@ -260,11 +260,11 @@ self.onmessage = function(e) {
             const flicker = 0.5 + 0.5 * Math.sin(pulseTime * 3 + soul.flickerPhase);
             soul.finalOpacity = 0.5 + 0.5 * flicker; // Store opacity directly on soul for mapping
 
-            // Use the potentially boosted lightness for pulsing, unless it's a god or already enhanced to max
-            // Gods retain their base lightness. Enhanced souls use their boosted lightness for pulsing.
-            // Non-enhanced, non-god souls pulse their base lightness.
+            // Use the potentially boosted lightness for pulsing, unless it's a dewa or already enhanced to max
+            // Dewas retain their base lightness. Enhanced souls use their boosted lightness for pulsing.
+            // Non-enhanced, non-dewa souls pulse their base lightness.
             let pulsedLightness;
-            if (soul.isGod) {
+            if (soul.isDewa) {
                 pulsedLightness = soul.baseHSL.l;
             } else if (isEnhanced) {
                 // If enhanced, pulse based on the boosted lightness
@@ -276,7 +276,7 @@ self.onmessage = function(e) {
             
             soul.finalHSL = { // Store the HSL to be sent, directly on soul for mapping
                 h: soul.baseHSL.h,
-                s: soul.isGod ? soul.baseHSL.s : currentSaturation, 
+                s: soul.isDewa ? soul.baseHSL.s : currentSaturation, 
                 l: pulsedLightness
             };
 
@@ -318,7 +318,7 @@ self.onmessage = function(e) {
             ...data.soul,
             position: vec.create(data.soul.position.x, data.soul.position.y, data.soul.position.z),
             velocity: vec.create(data.soul.velocity.x, data.soul.velocity.y, data.soul.velocity.z),
-            chosenGodId: null // Initialize chosenGodId for new souls
+            chosenDewaId: null // Initialize chosenDewaId for new souls
         });
     }
 };

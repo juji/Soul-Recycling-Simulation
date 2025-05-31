@@ -157,18 +157,18 @@
 
     const humanGeometry = new THREE.SphereGeometry(0.15, 12, 12); // Reduced from 16x16 to 12x12
     const gptGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-    const godGeometry = new THREE.SphereGeometry(0.333, 20, 20); // Reduced from 32x32 to 20x20
+    const dewaGeometry = new THREE.SphereGeometry(0.333, 20, 20); // Reduced from 32x32 to 20x20
 
     // Shared materials for better memory efficiency
     const sharedHumanMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
     const sharedGptMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
-    const sharedGodMaterial = new THREE.MeshLambertMaterial({ transparent: true, opacity: 0.9 });
+    const sharedDewaMaterial = new THREE.MeshLambertMaterial({ transparent: true, opacity: 0.9 });
     
     // Material pool for reuse
     const materialPool = {
       human: [],
       gpt: [],
-      god: []
+      dewa: []
     };
     
     function getOrCreateMaterial(type) {
@@ -183,8 +183,8 @@
           return sharedHumanMaterial.clone();
         case 'gpt':
           return sharedGptMaterial.clone();
-        case 'god':
-          return sharedGodMaterial.clone();
+        case 'dewa':
+          return sharedDewaMaterial.clone();
         default:
           return new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
       }
@@ -217,12 +217,12 @@
     const SEPARATION_DISTANCE = 1.5;
     const SEPARATION_STRENGTH = 0.05;
 
-    // God entity properties
-    const GOD_ATTRACTION_RADIUS = 15; 
-    const GOD_ATTRACTION_STRENGTH = 0.005; 
-    const GOD_SPAWN_CHANCE = 0.05; 
-    const GOD_BASE_SPEED = 0.02; // Slower, consistent speed for gods
-    const GOD_ENHANCEMENT_RADIUS = 10; // New: Radius within which gods enhance other souls
+    // Dewa entity properties
+    const DEWA_ATTRACTION_RADIUS = 15; 
+    const DEWA_ATTRACTION_STRENGTH = 0.005; 
+    const DEWA_SPAWN_CHANCE = 0.05; 
+    const DEWA_BASE_SPEED = 0.02; // Slower, consistent speed for dewas
+    const DEWA_ENHANCEMENT_RADIUS = 10; // New: Radius within which dewas enhance other souls
     const ENHANCEMENT_SATURATION_BOOST = 0.2; // New: How much to boost saturation (0 to 1)
     const ENHANCEMENT_LIGHTNESS_BOOST = 0.15; // New: How much to boost lightness (0 to 1)
 
@@ -238,18 +238,18 @@
 
     container.addEventListener('mousemove', onMouseMove);
 
-    function createSoul(isHuman, isGod = false, angle = 0, speed = 0) {
+    function createSoul(isHuman, isDewa = false, angle = 0, speed = 0) {
       let geometry;
-      if (isGod) {
-        geometry = godGeometry;
+      if (isDewa) {
+        geometry = dewaGeometry;
       } else {
         geometry = isHuman ? humanGeometry : gptGeometry;
       }
-      // const geometry = (isHuman || isGod) ? humanGeometry : gptGeometry; // Old logic
+      // const geometry = (isHuman || isDewa) ? humanGeometry : gptGeometry; // Old logic
       let material;
       let h_val, s_val, l_val; 
 
-      if (isGod) {
+      if (isDewa) {
         h_val = Math.random(); // Random hue
         s_val = 1;             // Max saturation
         l_val = 0.5;           // Max brightness (standard for HSL)
@@ -283,7 +283,7 @@
       const z = radius * Math.cos(phi);
       mesh.position.set(x, y, z);
 
-      const currentSpeed = isGod ? GOD_BASE_SPEED : (speed === 0 ? (0.05 + (Math.random() * .03)) : speed);
+      const currentSpeed = isDewa ? DEWA_BASE_SPEED : (speed === 0 ? (0.05 + (Math.random() * .03)) : speed);
       const initialVelocity = new THREE.Vector3(
         (Math.random() - 0.5),
         (Math.random() - 0.5),
@@ -292,7 +292,7 @@
 
       mesh.userData.speed = currentSpeed;
       mesh.userData.isHuman = isHuman;
-      mesh.userData.isGod = isGod; 
+      mesh.userData.isDewa = isDewa; 
       mesh.userData.flickerPhase = Math.random() * Math.PI * 2;
       // mesh.userData.life = 600; // Initialize life to 600 ticks - Old fixed value
       mesh.userData.life = 300 + Math.random() * 600; // Random lifespan between 300 and 900 ticks
@@ -305,7 +305,7 @@
         velocity: { x: initialVelocity.x, y: initialVelocity.y, z: initialVelocity.z },
         speed: currentSpeed,
         isHuman,
-        isGod, 
+        isDewa, 
         flickerPhase: mesh.userData.flickerPhase,
         life: mesh.userData.life, // Pass the initialized life
         baseHSL: mesh.userData.baseHSL, 
@@ -327,17 +327,17 @@
     const initialSoulsForWorkerInit = [];
     for (let i = 0; i < recycledSoulCount; i++) {
       const angle = (i / recycledSoulCount) * Math.PI * 2;
-      const isGod = Math.random() < GOD_SPAWN_CHANCE;
-      const isHuman = isGod ? true : Math.random() < 0.6; 
+      const isDewa = Math.random() < DEWA_SPAWN_CHANCE;
+      const isHuman = isDewa ? true : Math.random() < 0.6; 
       const speed = Math.random() < 0.1 ?  0.05 + Math.random() * 0.25 : 0.05 + Math.random() * 0.025;
-      const mesh = createSoul(isHuman, isGod, angle, speed); 
+      const mesh = createSoul(isHuman, isDewa, angle, speed); 
       initialSoulsForWorkerInit.push({
         id: mesh.userData.id,
         position: {x: mesh.position.x, y: mesh.position.y, z: mesh.position.z},
         velocity: mesh.userData.velocity, 
         speed: mesh.userData.speed, 
         isHuman: mesh.userData.isHuman,
-        isGod: mesh.userData.isGod, 
+        isDewa: mesh.userData.isDewa, 
         flickerPhase: mesh.userData.flickerPhase,
         life: mesh.userData.life, // Ensure life is passed for initial souls too
         baseHSL: mesh.userData.baseHSL
@@ -355,9 +355,9 @@
                 NEIGHBOR_SPEED_INFLUENCE_STRENGTH,
                 SEPARATION_DISTANCE,
                 SEPARATION_STRENGTH,
-                GOD_ATTRACTION_RADIUS, 
-                GOD_ATTRACTION_STRENGTH,
-                GOD_ENHANCEMENT_RADIUS, // Added
+                DEWA_ATTRACTION_RADIUS, 
+                DEWA_ATTRACTION_STRENGTH,
+                DEWA_ENHANCEMENT_RADIUS, // Added
                 ENHANCEMENT_SATURATION_BOOST, // Added
                 ENHANCEMENT_LIGHTNESS_BOOST // Added
             }
@@ -409,9 +409,9 @@
     initLineSegments(); // Call init function
 
     function createNewSoul() {
-      const isGod = Math.random() < GOD_SPAWN_CHANCE;
-      const isHuman = isGod ? true : Math.random() < 0.5;
-      createSoul(isHuman, isGod); 
+      const isDewa = Math.random() < DEWA_SPAWN_CHANCE;
+      const isHuman = isDewa ? true : Math.random() < 0.5;
+      createSoul(isHuman, isDewa); 
     }
 
     // REMOVED old updateConnections function
@@ -508,7 +508,7 @@
         simulationWorker.postMessage({
             type: 'update',
             data: {
-                pointerPosition3D: null // God is everywhere, not tied to a specific mouse-derived point
+                pointerPosition3D: null // Dewa is everywhere, not tied to a specific mouse-derived point
             }
         });
       }

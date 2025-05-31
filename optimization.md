@@ -230,7 +230,7 @@ instancedGeometry.setAttribute('instanceScale', new THREE.InstancedBufferAttribu
 // Share materials between souls of the same type
 const sharedHumanMaterial = new THREE.MeshBasicMaterial();
 const sharedGptMaterial = new THREE.MeshBasicMaterial();
-const sharedGodMaterial = new THREE.MeshBasicMaterial();
+const sharedDewaMaterial = new THREE.MeshBasicMaterial();
 
 // Dispose unused resources
 function cleanup() {
