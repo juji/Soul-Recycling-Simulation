@@ -223,28 +223,28 @@ This universe operates under what could be called a **"Universal Population Gove
 
 The equilibrium is determined by the interplay of two fundamental cosmic constants:
 
-1.  **Soul Creation Rate (`newSoulSpawnRate` in `App.svelte`):** Currently set to `0.4`, meaning there's a 40% chance of one new soul being created per animation frame - this acts as the **universal birth rate**.
+1.  **Soul Creation Rate (`NEW_SOUL_SPAWN_RATE` in `App.svelte`):** Currently set to `0.4`, meaning there's a 40% chance of one new soul being created per animation frame - this acts as the **universal birth rate**.
 2.  **Soul Lifespan (defined in `createSoul` function in `App.svelte`):** Souls are assigned a random lifespan upon creation (currently between `MIN_LIFESPAN` and `MAX_LIFESPAN` animation frames, averaging `AVG_LIFESPAN` frames) - this determines the **natural death rate**.
 
 #### 📊 The Mathematics of Universal Stability
 
-**Equilibrium Formula:** `EquilibriumPopulation ≈ newSoulSpawnRate × AverageLifespan`
+**Equilibrium Formula:** `EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN`
 
-**Current Equilibrium:** `0.4 × AVG_LIFESPAN = 0.4 × 600 = ~240 souls`
+**Current Equilibrium:** `NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN = 0.4 × 600 = ~240 souls`
 
 #### 🎭 Population Scenarios & Cosmic Justice
 
 **Population Explosion Scenario** 💥
 - Start with 33,333 souls
 - **Death rate** becomes massive: `33,333 ÷ AVG_LIFESPAN = 33,333 ÷ 600 = ~55 souls dying per frame`
-- **Birth rate** stays constant: `0.4 souls born per frame`
+- **Birth rate** stays constant: `NEW_SOUL_SPAWN_RATE = 0.4 souls born per frame`
 - **Net effect**: `-54.6 souls per frame` until equilibrium
 - **Result**: Universe automatically corrects the "overpopulation"
 
 **Population Collapse Scenario** 📉
 - Start with 99 souls
 - **Death rate** becomes minimal: `99 ÷ AVG_LIFESPAN = 99 ÷ 600 = ~0.16 souls dying per frame`
-- **Birth rate** stays constant: `0.4 souls born per frame`
+- **Birth rate** stays constant: `NEW_SOUL_SPAWN_RATE = 0.4 souls born per frame`
 - **Net effect**: `+0.24 souls per frame` until equilibrium
 - **Result**: Universe automatically prevents extinction
 

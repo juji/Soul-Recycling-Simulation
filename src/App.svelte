@@ -855,7 +855,7 @@
 <div class="equilibrium-info" class:show-mobile={showEquilibriumInfo}>
   <div class="equilibrium-title">Population Equilibrium</div>
   <div class="equilibrium-formula">EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN</div>
-  <div class="equilibrium-calculation">Current: {NEW_SOUL_SPAWN_RATE} × {AVG_LIFESPAN} = ~{NEW_SOUL_SPAWN_RATE*AVG_LIFESPAN} souls</div>
+  <div class="equilibrium-calculation">Current: {NEW_SOUL_SPAWN_RATE} × {AVG_LIFESPAN} = ~{Math.round(NEW_SOUL_SPAWN_RATE*AVG_LIFESPAN)} souls</div>
   <div class="equilibrium-text">
     <p>A stable system.</p>
     <div>
