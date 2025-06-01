@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export class InstancedSoulRenderer {
-    constructor(scene, maxSouls = 2000) {
+    constructor(scene, maxSouls = 5000) {
         this.scene = scene;
         this.maxSouls = maxSouls;
         this.soulCounts = { human: 0, gpt: 0, dewa: 0 };
@@ -64,8 +64,7 @@ export class InstancedSoulRenderer {
             this.updateInstancedMesh(type, typeSouls);
         });
     }
-    
-    updateInstancedMesh(type, souls) {
+     updateInstancedMesh(type, souls) {
         const instancedMesh = this.instancedMeshes[type];
         const matrix = this.tempMatrix;
         const color = this.tempColor;
@@ -75,7 +74,13 @@ export class InstancedSoulRenderer {
             return;
         }
         
-        souls.forEach((soul, index) => {
+        // Safety check: prevent buffer overflow
+        const soulCount = Math.min(souls.length, this.maxSouls);
+        if (souls.length > this.maxSouls) {
+            console.warn(`⚠️ Soul count (${souls.length}) exceeds maxSouls (${this.maxSouls}). Clamping to ${this.maxSouls}.`);
+        }
+
+        souls.slice(0, soulCount).forEach((soul, index) => {
             // Set transformation matrix (position only for now)
             matrix.setPosition(soul.position.x, soul.position.y, soul.position.z);
             instancedMesh.setMatrixAt(index, matrix);
@@ -101,12 +106,12 @@ export class InstancedSoulRenderer {
         });
         
         // Update instance count and mark for GPU update
-        instancedMesh.count = souls.length;
+        instancedMesh.count = soulCount;
         instancedMesh.instanceMatrix.needsUpdate = true;
         instancedMesh.instanceColor.needsUpdate = true;
         
         // Update soul count for this type
-        this.soulCounts[type] = souls.length;
+        this.soulCounts[type] = soulCount;
     }
     
     getSoulType(soul) {

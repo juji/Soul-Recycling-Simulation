@@ -374,28 +374,7 @@
       // Performance logging removed for production
     }
 
-    if (renderingMode === 'instanced') {
-      try {
-        instancedRenderer = new InstancedSoulRenderer(scene, 2000);
-        
-        // Hide any existing individual meshes from scene
-        souls.forEach(soul => {
-          if (soul.parent === scene) {
-            scene.remove(soul);
-          }
-        });
-      } catch (error) {
-        console.warn('⚠️ Phase 3: Instanced rendering failed, falling back to individual meshes');
-        renderingMode = 'individual';
-        
-        // Show individual meshes again on fallback
-        souls.forEach(soul => {
-          if (soul.parent !== scene) {
-            scene.add(soul);
-          }
-        });
-      }
-    }
+    // Instanced renderer initialization will happen after souls are created
 
     function initLineSegments() {
       const geometry = new THREE.BufferGeometry();
@@ -687,6 +666,38 @@
         life: mesh.userData.life, // Ensure life is passed for initial souls too
         baseHSL: mesh.userData.baseHSL
       });
+    }
+    
+    // Phase 3: Initialize instanced renderer AFTER souls are created
+    if (renderingMode === 'instanced') {
+      try {
+        // Dynamic buffer size based on URL parameter with 2x safety margin
+        const dynamicMaxSouls = recycledSoulCount * 2;
+        instancedRenderer = new InstancedSoulRenderer(scene, dynamicMaxSouls);
+        
+        console.log(`✅ Phase 3: Instanced renderer initialized with maxSouls=${dynamicMaxSouls} for ${souls.length} existing souls`);
+        
+        // Hide individual meshes from scene since we'll use instanced rendering
+        souls.forEach(soul => {
+          if (soul.parent === scene) {
+            scene.remove(soul);
+          }
+        });
+        
+        // Perform initial instanced update with existing souls
+        instancedRenderer.updateInstances(souls);
+        
+      } catch (error) {
+        console.warn('⚠️ Phase 3: Instanced rendering failed, falling back to individual meshes:', error);
+        renderingMode = 'individual';
+        
+        // Show individual meshes again on fallback
+        souls.forEach(soul => {
+          if (soul.parent !== scene) {
+            scene.add(soul);
+          }
+        });
+      }
     }
     
     simulationWorker.postMessage({
