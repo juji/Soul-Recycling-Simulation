@@ -1348,13 +1348,6 @@
     backdrop-filter: blur(4px);
     text-decoration: none;
     transition: all 0.2s ease;
-
-    &>span{
-      display: none;
-      @media screen and (min-width: 500px) {
-        display: inline; /* Show span on larger screens */
-      }
-    }
   }
   
   .entity-link:hover {
@@ -1430,9 +1423,10 @@
 <div class="population-counter">Population: {souls.length}</div>
 
 <div class="entity-links">
-  <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99 <span>Souls</span></a>
-  <a href="?val=999" class="entity-link" class:active={getActiveCount() === 999}>999 <span>Souls</span></a>
-  <a href="?val=3333" class="entity-link" class:active={getActiveCount() === 3333}>3333 <span>Souls</span></a>
+  <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99</a>
+  <a href="?val=999" class="entity-link" class:active={getActiveCount() === 999}>999</a>
+  <a href="?val=2222" class="entity-link" class:active={getActiveCount() === 2222}>2222</a>
+  <a href="?val=3333" class="entity-link" class:active={getActiveCount() === 3333}>3333</a>
   <a href="/" class="entity-link" class:active={getActiveCount() === 777}>Auto</a>
 </div>
 
