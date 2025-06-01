@@ -301,6 +301,21 @@
         showToastMessage('Settings loaded from storage');
       }, 1000);
     }
+
+    // Auto-open equilibrium info on wider screens
+    if (window.innerWidth > 1200) {
+      showEquilibriumInfo = true;
+    }
+
+    // Handle window resize to show/hide equilibrium info based on screen width
+    const handleResize = () => {
+      if (window.innerWidth > 1200) {
+        showEquilibriumInfo = true;
+      }
+      // Don't auto-close on smaller screens - let user control
+    };
+
+    window.addEventListener('resize', handleResize);
     
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -999,6 +1014,9 @@
     });
 
     return () => {
+      // Remove resize event listener to prevent memory leaks
+      window.removeEventListener('resize', handleResize);
+      
       if (container) {
         container.removeEventListener('mousemove', onMouseMove);
         if (renderer.domElement && container.contains(renderer.domElement)) {
