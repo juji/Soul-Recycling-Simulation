@@ -892,7 +892,8 @@
         simulationWorker.postMessage({
             type: 'update',
             data: {
-                pointerPosition3D: null // Dewa is everywhere, not tied to a specific mouse-derived point
+                pointerPosition3D: null, // Dewa is everywhere, not tied to a specific mouse-derived point
+                lodData: lodData // Pass LOD data for physics and connection optimization
             }
         });
       }

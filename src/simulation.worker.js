@@ -5,6 +5,7 @@
 // Worker state
 let souls = [];
 let pulseTime = 0;
+let frameCount = 0; // For LOD physics update rate calculations
 
 // Worker constants - configured from main thread
 const WORKER_SETTINGS = {
@@ -162,6 +163,24 @@ const mathUtils = {
     lerp: (a, b, t) => a + (b - a) * t
 };
 
+// LOD Physics Helper Functions
+function shouldUpdatePhysicsForSoul(soul, lodData, frameCount) {
+    const lodInfo = lodData[soul.id];
+    if (!lodInfo) return true; // Default to full physics if no LOD data
+    
+    // Skip physics for culled souls entirely
+    if (lodInfo.lod === 'CULLED') return false;
+    
+    // For other LOD levels, use physics update rate
+    const updateRate = lodInfo.physicsUpdateRate;
+    if (updateRate >= 1.0) return true; // HIGH LOD - always update
+    if (updateRate <= 0) return false; // Should not happen, but safety check
+    
+    // Use frame count to distribute physics updates across frames
+    const interval = Math.round(1 / updateRate);
+    return (frameCount % interval) === 0;
+}
+
 self.onmessage = function(e) {
     const { type, data } = e.data;
 
@@ -192,6 +211,9 @@ self.onmessage = function(e) {
         POINTER_INTERACTION_RADIUS_SQ = POINTER_INTERACTION_RADIUS * POINTER_INTERACTION_RADIUS;
     } else if (type === 'update') {
         const pointerPosition3D = data.pointerPosition3D ? vec.create(data.pointerPosition3D.x, data.pointerPosition3D.y, data.pointerPosition3D.z) : null;
+        const lodData = data.lodData || {}; // LOD data from main thread
+        
+        frameCount++; // Increment frame counter for LOD physics rate calculations
         pulseTime += WORKER_SETTINGS.PULSE_INCREMENT;
         const pulse = (Math.sin(pulseTime * WORKER_SETTINGS.PULSE_MULTIPLIER) + 1) / 2;
 
@@ -203,6 +225,20 @@ self.onmessage = function(e) {
 
         const soulsToRemove = [];
         souls.forEach(soul => {
+            // Check if physics should update for this soul based on LOD
+            const shouldUpdatePhysics = shouldUpdatePhysicsForSoul(soul, lodData, frameCount);
+            
+            // Skip physics calculations for culled souls or souls that shouldn't update this frame
+            if (!shouldUpdatePhysics) {
+                // Still decrement life and check for removal
+                soul.life--;
+                if (soul.life <= 0) {
+                    soulsToRemove.push(soul.id);
+                    self.postMessage({ type: 'soulRemoved', data: { soulId: soul.id } });
+                }
+                return; // Skip physics for this soul this frame
+            }
+            
             // === Speed influence from neighbors using spatial partitioning ===
             if (!soul.isDewa) { // Dewas are not affected by neighbor speed influence
                 let influencedSpeed = soul.speed;
@@ -446,7 +482,8 @@ self.onmessage = function(e) {
             souls, 
             WORKER_SETTINGS.DEFAULT_INTERACTION_DISTANCE,
             WORKER_SETTINGS.DEFAULT_MAX_CONNECTIONS,
-            WORKER_SETTINGS.DEFAULT_MAX_SOULS_TO_CHECK
+            WORKER_SETTINGS.DEFAULT_MAX_SOULS_TO_CHECK,
+            lodData // Pass LOD data for connection optimization
         );
 
         self.postMessage({ type: 'soulsUpdated', data: updatedSoulsData });
@@ -472,7 +509,7 @@ self.onmessage = function(e) {
 };
 
 // Add connection calculation function after the existing functions
-function calculateConnections(souls, interactionDistance, maxConnections, maxSoulsToCheck) {
+function calculateConnections(souls, interactionDistance, maxConnections, maxSoulsToCheck, lodData = {}) {
     const connections = [];
     const maxDistSq = interactionDistance * interactionDistance;
     
@@ -496,10 +533,32 @@ function calculateConnections(souls, interactionDistance, maxConnections, maxSou
 
     for (let i = 0; i < soulsToCheck.length && connections.length < maxConnections; i++) {
         const soul = soulsToCheck[i];
+        
+        // LOD-aware connection filtering
+        const soulLodInfo = lodData[soul.id];
+        const soulConnectionMultiplier = soulLodInfo ? soulLodInfo.connectionMultiplier : 1.0;
+        
+        // Skip connections entirely for culled souls
+        if (soulLodInfo && soulLodInfo.lod === 'CULLED') continue;
+        
         const nearby = spatialGrid.getNearby(soul.position, interactionDistance);
         for (const other of nearby) {
             if (soul.id >= other.id) continue; // Avoid duplicates
             if (connections.length >= maxConnections) break;
+            
+            // Check LOD for the other soul too
+            const otherLodInfo = lodData[other.id];
+            const otherConnectionMultiplier = otherLodInfo ? otherLodInfo.connectionMultiplier : 1.0;
+            
+            // Skip connections for culled souls
+            if (otherLodInfo && otherLodInfo.lod === 'CULLED') continue;
+            
+            // Use the minimum connection multiplier between the two souls
+            const effectiveConnectionMultiplier = Math.min(soulConnectionMultiplier, otherConnectionMultiplier);
+            
+            // Probabilistic connection based on LOD multiplier
+            if (Math.random() > effectiveConnectionMultiplier) continue;
+            
             const distSq = vec.lengthSq(vec.subVectors(soul.position, other.position));
             if (distSq < maxDistSq) {
                 const rgb = getStableColor(soul.id, other.id);
