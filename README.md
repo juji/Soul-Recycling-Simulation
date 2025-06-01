@@ -12,9 +12,9 @@ A philosophical WebGL visualization of soul cycles, human-AI convergence, and ex
 Deployed at: https://balance.jujiplay.com/
 
 Try with different soul counts:
-- [333 souls](https://gleeful-zabaione-f16f7c.netlify.app/?val=333) 🌌
-- [3333 souls](https://gleeful-zabaione-f16f7c.netlify.app/?val=3333) ✨
-- [33333 souls](https://gleeful-zabaione-f16f7c.netlify.app/?val=33333) 🔥
+- [33 souls](https://balance.jujiplay.com/?val=33) 🌌
+- [333 souls](https://balance.jujiplay.com/?val=333) ✨
+- [3333 souls](https://balance.jujiplay.com/?val=3333) 🔥
 
 ## 🧠 Concept
 
