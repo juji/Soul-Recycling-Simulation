@@ -66,7 +66,7 @@ Here's a summary of key features and changes developed with Gem's assistance:
     *   Includes hover effects and opens in a new tab for better user experience.
 *   **Visual Connection Enhancement:**
     *   Proposed the concept of colored connection lines between souls to enhance visual storytelling.
-    *   Suggested that connection lines could reflect the nature of the relationship or interaction between different soul types.
+    *   instead of color-coding connections based on soul types, you want each connection to have its own unique random color. This will make the visualization more diverse and interesting.
 
 ---
 
