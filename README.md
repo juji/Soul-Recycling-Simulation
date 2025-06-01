@@ -16,6 +16,8 @@ Try with different soul counts:
 - [3333 souls](https://gleeful-zabaione-f16f7c.netlify.app/?val=3333) ✨
 - [33333 souls](https://gleeful-zabaione-f16f7c.netlify.app/?val=33333) 🔥
 
+> **🧪 Performance Testing**: For comprehensive performance testing, benchmarks, and hardware validation, see the [`testing-results/`](testing-results/) directory.
+
 ## 🧠 Concept
 
 This simulation explores ideas like:
@@ -64,9 +66,6 @@ Here's a summary of key features and changes developed with Gem's assistance:
     *   Added a GitHub repository link in the bottom left corner of the application.
     *   The link features consistent styling with the existing FPS counter (dark background with blur effect).
     *   Includes hover effects and opens in a new tab for better user experience.
-*   **Visual Connection Enhancement:**
-    *   Proposed the concept of colored connection lines between souls to enhance visual storytelling.
-    *   instead of color-coding connections based on soul types, you want each connection to have its own unique random color. This will make the visualization more diverse and interesting.
 
 ---
 

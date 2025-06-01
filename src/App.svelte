@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import * as THREE from 'three';
   import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
+  import './ai-test-bridge.js';  // Import AI test bridge for performance testing
 
   // Global settings
   const DEFAULT_SOUL_COUNT = 777;
@@ -157,6 +158,15 @@
     medium: { maxConnectionChecks: 100, connectionLimit: 15 },
     low: { maxConnectionChecks: 50, connectionLimit: 10 }
   };
+  
+  // Expose performance variables globally for AI test bridge
+  if (typeof window !== 'undefined') {
+    window.currentFPS = 0;
+    window.averageFPS = 0;
+    window.currentQuality = currentQuality;
+    window.soulCount = souls.length;
+    window.memoryUsage = 0;
+  }
   
   // Equilibrium info toggle for mobile
   let showEquilibriumInfo = false;
@@ -718,6 +728,15 @@
         fps = frameCount;
         frameCount = 0;
         lastTime = currentTime;
+        
+        // Update global variables for AI test bridge
+        if (typeof window !== 'undefined') {
+          window.currentFPS = fps;
+          window.averageFPS = averageFPS;
+          window.currentQuality = currentQuality;
+          window.soulCount = souls.length;
+          window.memoryUsage = memoryUsage;
+        }
         
         // Track FPS history for average calculation
         fpsHistory.push(fps);
