@@ -46,6 +46,10 @@ export class InstancedSoulRenderer {
         // Add all instanced meshes to scene and start with no visible instances
         Object.values(this.instancedMeshes).forEach(mesh => {
             mesh.count = 0;
+            // Initialize instanceColor attribute for each mesh
+            mesh.instanceColor = new THREE.InstancedBufferAttribute(
+                new Float32Array(this.maxSouls * 3), 3
+            );
             this.scene.add(mesh);
         });
     }
@@ -105,7 +109,11 @@ export class InstancedSoulRenderer {
         // Update instance count and mark for GPU update
         instancedMesh.count = soulCount;
         instancedMesh.instanceMatrix.needsUpdate = true;
-        instancedMesh.instanceColor.needsUpdate = true;
+        
+        // Safety check for instanceColor attribute
+        if (instancedMesh.instanceColor) {
+            instancedMesh.instanceColor.needsUpdate = true;
+        }
         
         // Update soul count for this type
         this.soulCounts[type] = soulCount;

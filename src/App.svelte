@@ -16,7 +16,7 @@
   };
 
   // Global settings
-  const DEFAULT_SOUL_COUNT = 777;
+  const DEFAULT_SOUL_COUNT = 9; // Fallback value when adaptive performance manager is not available
   
   // Camera and lighting settings
   const CAMERA_SETTINGS = {
@@ -257,19 +257,32 @@
   }
 
   // Helper function to get entity count from URL parameter
+  // Uses adaptive performance management to determine optimal soul count when no URL parameter is provided
+  let isAutomaticSoulCount = 0; // Flag to indicate if adaptive performance manager is used
   function getEntityCountFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
     const val = urlParams.get('val');
     
     if (val === null || val === '') {
-      return DEFAULT_SOUL_COUNT; // Default value
+      // Use adaptive performance manager to determine optimal soul count
+      if (adaptivePerformanceManager) {
+        const currentQualitySettings = adaptivePerformanceManager.getQualitySettings();
+        isAutomaticSoulCount = currentQualitySettings.maxSouls
+        return currentQualitySettings.maxSouls;
+      }
+      return DEFAULT_SOUL_COUNT; // Fallback if adaptive performance manager not available
     }
     
     const parsedVal = parseInt(val, 10);
     
     // Check if it's a valid number
     if (isNaN(parsedVal)) {
-      return DEFAULT_SOUL_COUNT; // Default for invalid values
+      // Use adaptive performance manager for invalid values too
+      if (adaptivePerformanceManager) {
+        const currentQualitySettings = adaptivePerformanceManager.getQualitySettings();
+        return currentQualitySettings.maxSouls;
+      }
+      return DEFAULT_SOUL_COUNT; // Fallback for invalid values
     }
     
     return parsedVal;
@@ -1427,7 +1440,7 @@
   <a href="?val=999" class="entity-link" class:active={getActiveCount() === 999}>999</a>
   <a href="?val=2222" class="entity-link" class:active={getActiveCount() === 2222}>2222</a>
   <a href="?val=3333" class="entity-link" class:active={getActiveCount() === 3333}>3333</a>
-  <a href="/" class="entity-link" class:active={getActiveCount() === 777}>Auto</a>
+  <a href="/" class="entity-link" class:active={isAutomaticSoulCount}>{isAutomaticSoulCount ? `Auto: ${isAutomaticSoulCount}` : 'Auto'}</a>
 </div>
 
 <!-- Toggle button for mobile equilibrium info -->
