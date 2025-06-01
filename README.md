@@ -147,7 +147,7 @@ The simulation exhibits a fascinating **universal law**: **no matter what happen
 
 ```
 No matter what perturbation occurs, 
-the system will ALWAYS return to equilibrium ≈ 240 souls
+the system will ALWAYS return to equilibrium ≈ 420 souls
 ```
 
 This universe operates under what could be called a **"Universal Population Governor"** - a self-regulating mechanism that makes runaway growth or total collapse impossible.
