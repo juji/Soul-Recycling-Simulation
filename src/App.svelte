@@ -1354,7 +1354,7 @@
 <div class="entity-links">
   <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99 <span>Souls</span></a>
   <a href="?val=999" class="entity-link" class:active={getActiveCount() === 999}>999 <span>Souls</span></a>
-  <a href="?val=9999" class="entity-link" class:active={getActiveCount() === 9999}>9999 <span>Souls</span></a>
+  <a href="?val=3333" class="entity-link" class:active={getActiveCount() === 3333}>3333 <span>Souls</span></a>
   <a href="/" class="entity-link" class:active={getActiveCount() === 777}>Auto</a>
 </div>
 
