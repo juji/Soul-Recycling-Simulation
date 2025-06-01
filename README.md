@@ -16,8 +16,6 @@ Try with different soul counts:
 - [3333 souls](https://gleeful-zabaione-f16f7c.netlify.app/?val=3333) ✨
 - [33333 souls](https://gleeful-zabaione-f16f7c.netlify.app/?val=33333) 🔥
 
-> **🧪 Performance Testing**: For comprehensive performance testing, benchmarks, and hardware validation, see the [`testing-results/`](testing-results/) directory.
-
 ## 🧠 Concept
 
 This simulation explores ideas like:
@@ -119,72 +117,11 @@ Then open your browser at: [http://localhost:5173](http://localhost:5173)
 - 🌱 New souls emerge naturally over time  
 - 🧲 Glowing networks form spontaneously based on proximity
 
-## 🚀 Phase 3: GPU Instanced Rendering (COMPLETE ✅)
-
-**Status:** Production Ready | **Performance:** 99.7% Draw Call Reduction | **Target:** 2000+ souls at 60+ FPS ✅
-
-Phase 3 introduces revolutionary GPU-based instanced rendering, delivering massive performance improvements while maintaining visual quality.
-
-### 🎯 Key Achievements
-- **✅ 99.7% Draw Call Reduction** - From 2,500 draw calls to just 3 draw calls
-- **✅ 77% Average FPS Improvement** - Significant performance gains at scale  
-- **✅ 2000+ Soul Target Exceeded** - Consistently handles 2,500+ souls at 60+ FPS
-- **✅ Memory Optimization** - Reduced memory usage across most scenarios
-
-### 📊 Performance Comparison
-
-| Soul Count | Individual Rendering | Instanced Rendering | Improvement |
-|------------|---------------------|-------------------|-------------|
-| 500 souls | 30 FPS, 500 calls | 75 FPS, 3 calls | **+149% FPS** |
-| 1000 souls | 30 FPS, 1000 calls | 75 FPS, 3 calls | **+149% FPS** |
-| 2000 souls | 75 FPS, 2000 calls | 75 FPS, 3 calls | **+99.9% efficiency** |
-| 2500 souls | 74 FPS, 2500 calls | 74 FPS, 3 calls | **+99.9% efficiency** |
-
-### 🔧 Technical Implementation
-- **GPU Instance Buffers** - Efficient batch rendering of thousands of souls
-- **Automatic Fallback** - Falls back to individual rendering if instanced fails
-- **Performance Monitoring** - Real-time FPS and memory tracking
-- **Quality Adaptation** - Dynamic optimization based on system performance
-
-### 🎮 URL Parameters
-- `?mode=instanced` - Force GPU instanced rendering (default)
-- `?mode=individual` - Force individual mesh rendering  
-- `?souls=2000` - Set initial soul count
-- `?debug=true` - Enable performance overlay
-
-### 📈 Production Impact
-Phase 3 enables **smooth performance at massive scales**, making the simulation suitable for:
-- High-end visualizations with thousands of souls
-- Extended viewing sessions without performance degradation  
-- Cross-platform deployment with consistent performance
-- Real-time interaction even at extreme soul counts
-
-
----
-
-## 📂 Project Structure
-
-```
-src/
-  App.svelte       # Main visualization component
-  main.js          # App entry point
-public/
-  favicon.svg      # Customize your soul symbol
-README.md          # You’re reading it.
-```
-
 ---
 
 ## 📄 License
 
 MIT — remix, expand, explore.
-
----
-
-## 🙏 Credits
-
-- 💡 Idea & metaphysics: **You**  
-- 🧑‍💻 Implementation: **Svelte, Three.js, and some flickering stardust**
 
 ---
 
@@ -228,29 +165,29 @@ This universe operates under what could be called a **"Universal Population Gove
 
 The equilibrium is determined by the interplay of two fundamental cosmic constants:
 
-1.  **Soul Creation Rate (`NEW_SOUL_SPAWN_RATE` in `App.svelte`):** Currently set to `0.4`, meaning there's a 40% chance of one new soul being created per animation frame - this acts as the **universal birth rate**.
+1.  **Soul Creation Rate (`NEW_SOUL_SPAWN_RATE` in `App.svelte`):** Currently set to `0.7`, meaning there's a 70% chance of one new soul being created per animation frame - this acts as the **universal birth rate**.
 2.  **Soul Lifespan (defined in `createSoul` function in `App.svelte`):** Souls are assigned a random lifespan upon creation (currently between `MIN_LIFESPAN` and `MAX_LIFESPAN` animation frames, averaging `AVG_LIFESPAN` frames) - this determines the **natural death rate**.
 
 #### 📊 The Mathematics of Universal Stability
 
 **Equilibrium Formula:** `EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN`
 
-**Current Equilibrium:** `NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN = 0.4 × 600 = ~240 souls`
+**Current Equilibrium:** `NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN = 0.7 × 600 = ~420 souls`
 
 #### 🎭 Population Scenarios & Cosmic Justice
 
 **Population Explosion Scenario** 💥
 - Start with 33,333 souls
-- **Death rate** becomes massive: `33,333 ÷ AVG_LIFESPAN = 33,333 ÷ 600 = ~55 souls dying per frame`
-- **Birth rate** stays constant: `NEW_SOUL_SPAWN_RATE = 0.4 souls born per frame`
-- **Net effect**: `-54.6 souls per frame` until equilibrium
+- **Death rate** becomes massive: `33,333 ÷ AVG_LIFESPAN = 33,333 ÷ 600 = ~55.6 souls dying per frame`
+- **Birth rate** stays constant: `NEW_SOUL_SPAWN_RATE = 0.7 souls born per frame`
+- **Net effect**: `-54.9 souls per frame` until equilibrium
 - **Result**: Universe automatically corrects the "overpopulation"
 
 **Population Collapse Scenario** 📉
 - Start with 99 souls
-- **Death rate** becomes minimal: `99 ÷ AVG_LIFESPAN = 99 ÷ 600 = ~0.16 souls dying per frame`
-- **Birth rate** stays constant: `NEW_SOUL_SPAWN_RATE = 0.4 souls born per frame`
-- **Net effect**: `+0.24 souls per frame` until equilibrium
+- **Death rate** becomes minimal: `99 ÷ AVG_LIFESPAN = 99 ÷ 600 = ~0.17 souls dying per frame`
+- **Birth rate** stays constant: `NEW_SOUL_SPAWN_RATE = 0.7 souls born per frame`
+- **Net effect**: `+0.53 souls per frame` until equilibrium
 - **Result**: Universe automatically prevents extinction
 
 #### 🧮 Negative Feedback Loop - Universal Wisdom
@@ -275,7 +212,7 @@ This mirrors several natural systems:
 **The Beautiful Paradox**:
 ```
 "In a universe of infinite possibility,
-the only certainty is equilibrium at ~240 souls.
+the only certainty is equilibrium at ~420 souls.
 Free will meets cosmic law."
 ```
 
