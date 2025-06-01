@@ -1188,6 +1188,8 @@
     transform: translateY(-20px);
     opacity: 0;
     pointer-events: none;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
   }
   
   .equilibrium-info.show-mobile {
@@ -1524,7 +1526,7 @@
     <div>
       <quote>
         TL;DR: Thomas Malthus (conceptually, 1798) and Pierre François Verhulst (mathematically, 1838) in the 18th-19th century found out about this.
-        Yes, this universe is explosion-proof and collapse-proof. Time heals all population wounds.
+        <br /><br />Yes, this universe is explosion-proof and collapse-proof. Time heals all population wounds.
       </quote>
     </div>
   </div>
