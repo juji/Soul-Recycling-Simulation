@@ -1525,7 +1525,7 @@
     <p>A stable system.</p>
     <div>
       <quote>
-        TL;DR: Thomas Malthus (conceptually, 1798) and Pierre François Verhulst (mathematically, 1838) in the 18th-19th century found out about this.
+        Thomas Malthus (conceptually, 1798) and Pierre François Verhulst (mathematically, 1838) in the 18th-19th century found out about this.
         <br /><br />Yes, this universe is explosion-proof and collapse-proof. Time heals all population wounds.
       </quote>
     </div>
