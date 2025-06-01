@@ -139,7 +139,14 @@ export class AdaptivePerformanceManager {
                 updateRate: 60,
                 enableAdvancedEffects: true,
                 spatialGridSize: 2.0,
-                maxLines: 1000
+                maxLines: 1000,
+                // Phase 4: LOD System Configuration
+                lodDistances: { medium: 40, low: 80, culled: 150 },
+                lodGeometryDetail: { high: 1.0, medium: 0.8, low: 0.5 },
+                lodPhysicsRates: { high: 1.0, medium: 0.7, low: 0.4 },
+                lodConnectionMultipliers: { high: 1.0, medium: 0.8, low: 0.5 },
+                physicsLOD: true,
+                aggressiveCulling: false
             },
             high: {
                 maxSouls: 1500,
@@ -149,7 +156,14 @@ export class AdaptivePerformanceManager {
                 updateRate: 60,
                 enableAdvancedEffects: true,
                 spatialGridSize: 3.0,
-                maxLines: 500
+                maxLines: 500,
+                // Phase 4: LOD System Configuration
+                lodDistances: { medium: 30, low: 60, culled: 120 },
+                lodGeometryDetail: { high: 1.0, medium: 0.6, low: 0.3 },
+                lodPhysicsRates: { high: 1.0, medium: 0.5, low: 0.25 },
+                lodConnectionMultipliers: { high: 1.0, medium: 0.7, low: 0.3 },
+                physicsLOD: true,
+                aggressiveCulling: false
             },
             medium: {
                 maxSouls: 1000,
@@ -159,7 +173,14 @@ export class AdaptivePerformanceManager {
                 updateRate: 45,
                 enableAdvancedEffects: false,
                 spatialGridSize: 4.0,
-                maxLines: 300
+                maxLines: 300,
+                // Phase 4: LOD System Configuration
+                lodDistances: { medium: 25, low: 50, culled: 100 },
+                lodGeometryDetail: { high: 0.8, medium: 0.5, low: 0.25 },
+                lodPhysicsRates: { high: 1.0, medium: 0.5, low: 0.25 },
+                lodConnectionMultipliers: { high: 1.0, medium: 0.6, low: 0.2 },
+                physicsLOD: true,
+                aggressiveCulling: false
             },
             low: {
                 maxSouls: 500,
@@ -169,7 +190,14 @@ export class AdaptivePerformanceManager {
                 updateRate: 30,
                 enableAdvancedEffects: false,
                 spatialGridSize: 5.0,
-                maxLines: 150
+                maxLines: 150,
+                // Phase 4: LOD System Configuration
+                lodDistances: { medium: 20, low: 40, culled: 80 },
+                lodGeometryDetail: { high: 0.6, medium: 0.4, low: 0.2 },
+                lodPhysicsRates: { high: 1.0, medium: 0.4, low: 0.2 },
+                lodConnectionMultipliers: { high: 1.0, medium: 0.5, low: 0.1 },
+                physicsLOD: true,
+                aggressiveCulling: true
             },
             minimal: {
                 maxSouls: 200,
@@ -179,7 +207,14 @@ export class AdaptivePerformanceManager {
                 updateRate: 24,
                 enableAdvancedEffects: false,
                 spatialGridSize: 6.0,
-                maxLines: 75
+                maxLines: 75,
+                // Phase 4: LOD System Configuration
+                lodDistances: { medium: 15, low: 30, culled: 60 },
+                lodGeometryDetail: { high: 0.5, medium: 0.3, low: 0.15 },
+                lodPhysicsRates: { high: 0.8, medium: 0.3, low: 0.1 },
+                lodConnectionMultipliers: { high: 0.8, medium: 0.3, low: 0.05 },
+                physicsLOD: false, // Disable advanced physics LOD on minimal quality
+                aggressiveCulling: true
             }
         };
 
