@@ -5,11 +5,68 @@
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
   // Global settings
-  const DEFAULT_SOUL_COUNT = 999;
-  const NEW_SOUL_SPAWN_RATE = 0.4; // Increased from 0.2
-  const MIN_LIFESPAN = 300; // Minimum lifespan of souls in frames
-  const MAX_LIFESPAN = 900; // Maximum lifespan of souls in frames
-  const AVG_LIFESPAN = (MIN_LIFESPAN + MAX_LIFESPAN) / 2; // Average lifespan of souls in frames
+  const DEFAULT_SOUL_COUNT = 888;
+  
+  // localStorage keys for parameter persistence
+  const STORAGE_KEYS = {
+    SPAWN_RATE: 'soul_simulation_spawn_rate',
+    MIN_LIFESPAN: 'soul_simulation_min_lifespan',
+    MAX_LIFESPAN: 'soul_simulation_max_lifespan'
+  };
+  
+  // Load saved values from localStorage or use defaults
+  let NEW_SOUL_SPAWN_RATE = loadFromStorage(STORAGE_KEYS.SPAWN_RATE, 0.7);
+  let MIN_LIFESPAN = loadFromStorage(STORAGE_KEYS.MIN_LIFESPAN, 300);
+  let MAX_LIFESPAN = loadFromStorage(STORAGE_KEYS.MAX_LIFESPAN, 900);
+  
+  // Helper functions for localStorage
+  function loadFromStorage(key, defaultValue) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = localStorage.getItem(key);
+      if (saved !== null) {
+        const parsed = parseFloat(saved);
+        if (isNaN(parsed)) return defaultValue;
+        
+        // Validate bounds for each parameter
+        if (key === STORAGE_KEYS.SPAWN_RATE) {
+          return Math.max(0.1, Math.min(2.0, parsed));
+        } else if (key === STORAGE_KEYS.MIN_LIFESPAN) {
+          return Math.max(100, Math.min(800, parsed));
+        } else if (key === STORAGE_KEYS.MAX_LIFESPAN) {
+          return Math.max(200, Math.min(1500, parsed));
+        }
+        
+        return parsed;
+      }
+    }
+    return defaultValue;
+  }
+  
+  function saveToStorage(key, value) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem(key, value.toString());
+    }
+  }
+  
+  // Reset function to restore default values
+  function resetParameters() {
+    NEW_SOUL_SPAWN_RATE = 0.4;
+    MIN_LIFESPAN = 300;
+    MAX_LIFESPAN = 900;
+    showToastMessage('Parameters reset to defaults');
+  }
+  
+  // Reactive statements to save values when they change
+  $: saveToStorage(STORAGE_KEYS.SPAWN_RATE, NEW_SOUL_SPAWN_RATE);
+  $: saveToStorage(STORAGE_KEYS.MIN_LIFESPAN, MIN_LIFESPAN);
+  $: saveToStorage(STORAGE_KEYS.MAX_LIFESPAN, MAX_LIFESPAN);
+  
+  // Reactive validation to ensure MIN_LIFESPAN < MAX_LIFESPAN
+  $: if (MIN_LIFESPAN >= MAX_LIFESPAN) {
+    MIN_LIFESPAN = MAX_LIFESPAN - 50;
+  }
+  
+  $: AVG_LIFESPAN = (MIN_LIFESPAN + MAX_LIFESPAN) / 2; // Average lifespan of souls in frames
 
   // POPULATION EQUILIBRIUM NOTE:
   // The soul population tends towards an equilibrium.
@@ -53,6 +110,18 @@
   
   // Equilibrium info toggle for mobile
   let showEquilibriumInfo = false;
+  
+  // Toast notification for localStorage operations
+  let showToast = false;
+  let toastMessage = '';
+  
+  function showToastMessage(message) {
+    toastMessage = message;
+    showToast = true;
+    setTimeout(() => {
+      showToast = false;
+    }, 2000);
+  }
   
   function adjustQualityBasedOnFPS() {
     if (fps < 30 && currentQuality !== 'low') {
@@ -102,6 +171,19 @@
   }
 
   onMount(() => {
+    // Check if values were loaded from localStorage and show notification
+    const hasStoredValues = 
+      (typeof window !== 'undefined' && window.localStorage) &&
+      (localStorage.getItem(STORAGE_KEYS.SPAWN_RATE) ||
+       localStorage.getItem(STORAGE_KEYS.MIN_LIFESPAN) ||
+       localStorage.getItem(STORAGE_KEYS.MAX_LIFESPAN));
+    
+    if (hasStoredValues) {
+      setTimeout(() => {
+        showToastMessage('Settings loaded from storage');
+      }, 1000);
+    }
+    
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.set(0, 30, 60);
@@ -775,6 +857,112 @@
     }
   }
   
+  /* Parameter Controls Styling */
+  .parameter-controls {
+    margin: 16px 0;
+    padding: 12px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .parameter-control {
+    margin-bottom: 12px;
+  }
+  
+  .parameter-control:last-child {
+    margin-bottom: 0;
+  }
+  
+  .parameter-control label {
+    display: block;
+    font-size: 12px;
+    color: #e0e0e0;
+    margin-bottom: 6px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  
+  .parameter-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .parameter-slider:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  .parameter-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #4a90e2;
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+  }
+  
+  .parameter-slider::-webkit-slider-thumb:hover {
+    background: #5ba0f2;
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+  }
+  
+  .parameter-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #4a90e2;
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+  }
+  
+  .parameter-slider::-moz-range-thumb:hover {
+    background: #5ba0f2;
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+  }
+  
+  .reset-button {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(74, 144, 226, 0.2);
+    color: #e0e0e0;
+    border: 1px solid rgba(74, 144, 226, 0.4);
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .reset-button:hover {
+    background: rgba(74, 144, 226, 0.3);
+    border-color: rgba(74, 144, 226, 0.6);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(74, 144, 226, 0.2);
+  }
+  
+  .reset-button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(74, 144, 226, 0.3);
+  }
+  
   .entity-link {
     background: rgba(0, 0, 0, 0.7);
     color: #ffffff;
@@ -833,6 +1021,32 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(4px);
   }
+  
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(74, 144, 226, 0.9);
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: bold;
+    z-index: 2000;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
 </style>
 
 <div id="container" bind:this={container}></div>
@@ -841,9 +1055,9 @@
 
 <div class="entity-links">
   <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99 <span>Souls</span></a>
-  <a href="?val=333" class="entity-link" class:active={getActiveCount() === 333}>333 <span>Souls</span></a>
-  <a href="?val=777" class="entity-link" class:active={getActiveCount() === 777}>777 <span>Souls</span></a>
-  <a href="/" class="entity-link" class:active={getActiveCount() === 999}>Auto</a>
+  <a href="?val=999" class="entity-link" class:active={getActiveCount() === 999}>999 <span>Souls</span></a>
+  <a href="?val=9999" class="entity-link" class:active={getActiveCount() === 9999}>9999 <span>Souls</span></a>
+  <a href="/" class="entity-link" class:active={getActiveCount() === 888}>Auto</a>
 </div>
 
 <!-- Toggle button for mobile equilibrium info -->
@@ -856,6 +1070,55 @@
   <div class="equilibrium-title">Population Equilibrium</div>
   <div class="equilibrium-formula">EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN</div>
   <div class="equilibrium-calculation">Current: {NEW_SOUL_SPAWN_RATE} × {AVG_LIFESPAN} = ~{Math.round(NEW_SOUL_SPAWN_RATE*AVG_LIFESPAN)} souls</div>
+  
+  <!-- Interactive Parameter Controls -->
+  <div class="parameter-controls">
+    <div class="parameter-control">
+      <label for="spawn-rate-slider">Soul Spawn Rate: {NEW_SOUL_SPAWN_RATE.toFixed(2)}</label>
+      <input 
+        id="spawn-rate-slider"
+        type="range" 
+        min="0.1" 
+        max="2.0" 
+        step="0.05" 
+        bind:value={NEW_SOUL_SPAWN_RATE}
+        class="parameter-slider"
+      />
+    </div>
+    
+    <div class="parameter-control">
+      <label for="min-lifespan-slider">Min Lifespan: {MIN_LIFESPAN} frames</label>
+      <input 
+        id="min-lifespan-slider"
+        type="range" 
+        min="100" 
+        max="800" 
+        step="50" 
+        bind:value={MIN_LIFESPAN}
+        class="parameter-slider"
+      />
+    </div>
+    
+    <div class="parameter-control">
+      <label for="max-lifespan-slider">Max Lifespan: {MAX_LIFESPAN} frames</label>
+      <input 
+        id="max-lifespan-slider"
+        type="range" 
+        min="200" 
+        max="1500" 
+        step="50" 
+        bind:value={MAX_LIFESPAN}
+        class="parameter-slider"
+      />
+    </div>
+    
+    <div class="parameter-control">
+      <button class="reset-button" on:click={resetParameters}>
+        Reset to Defaults
+      </button>
+    </div>
+  </div>
+  
   <div class="equilibrium-text">
     <p>A stable system.</p>
     <div>
@@ -870,3 +1133,8 @@
 <a href="https://github.com/juji/Soul-Recycling-Simulation" target="_blank" class="github-link">
   GitHub
 </a>
+
+<!-- Toast notification for localStorage operations -->
+<div class="toast" class:show={showToast}>
+  {toastMessage}
+</div>
