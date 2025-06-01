@@ -1260,6 +1260,12 @@
       margin-top: 10px; 
       display: block;
       font-size: small;
+
+      a{
+        color: #ffcc00;
+        text-decoration: underline;
+        font-weight: bold;
+      }
     }
   }
   
