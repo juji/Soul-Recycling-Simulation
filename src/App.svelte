@@ -7,6 +7,56 @@
   // Global settings
   const DEFAULT_SOUL_COUNT = 777;
   
+  // Camera and lighting settings
+  const CAMERA_SETTINGS = {
+    FOV: 60,
+    NEAR: 0.1,
+    FAR: 1000,
+    POSITION: { x: 0, y: 30, z: 60 }
+  };
+  
+  const LIGHTING_SETTINGS = {
+    AMBIENT: { color: 0xffffff, intensity: 0.8 },
+    DIRECTIONAL: { 
+      color: 0xffffff, 
+      intensity: 0.7, 
+      position: { x: -8, y: 10, z: 8 } 
+    },
+    POINT_LIGHTS: [
+      { color: 0xffccaa, intensity: 0.65, distance: 60, position: { x: 10, y: 4, z: 4 } },
+      { color: 0xaaccff, intensity: 0.55, distance: 60, position: { x: -4, y: -6, z: -10 } },
+      { color: 0xffffff, intensity: 0.5, distance: 25, position: { x: 0, y: 5, z: -2 } }
+    ]
+  };
+  
+  const LINE_SETTINGS = {
+    OPACITY: 0.333,
+    VERTEX_COORDS: 3,
+    VERTICES_PER_LINE: 2
+  };
+  
+  // Geometry settings - consolidated magic numbers
+  const GEOMETRY_SETTINGS = {
+    HUMAN_RADIUS: 0.15,
+    HUMAN_SEGMENTS: { width: 12, height: 12 }, // Reduced from 16x16 for performance
+    GPT_SIZE: 0.2,
+    DEWA_RADIUS: 0.333,
+    DEWA_SEGMENTS: { width: 20, height: 20 }, // Reduced from 32x32 for performance
+    MATERIAL_OPACITY: {
+      DEFAULT: 0.8,
+      DEWA: 0.9
+    }
+  };
+  
+  // Connection settings
+  const CONNECTION_SETTINGS = {
+    INTERACTION_DISTANCE: 6,
+    MAX_LINES_MULTIPLIER: 5 // Max lines = soul count * this multiplier
+  };
+  
+  // Material pool settings
+  const MATERIAL_POOL_SIZE = 20;
+  
   // localStorage keys for parameter persistence
   const STORAGE_KEYS = {
     SPAWN_RATE: 'soul_simulation_spawn_rate',
@@ -185,49 +235,75 @@
     }
     
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 30, 60);
+    const camera = new THREE.PerspectiveCamera(
+      CAMERA_SETTINGS.FOV, 
+      container.clientWidth / container.clientHeight, 
+      CAMERA_SETTINGS.NEAR, 
+      CAMERA_SETTINGS.FAR
+    );
+    camera.position.set(
+      CAMERA_SETTINGS.POSITION.x, 
+      CAMERA_SETTINGS.POSITION.y, 
+      CAMERA_SETTINGS.POSITION.z
+    );
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; // Enable damping
+    controls.enableDamping = true;
     controls.dampingFactor = 0.01;
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Slightly reduced ambient for more contrast
+    const ambientLight = new THREE.AmbientLight(
+      LIGHTING_SETTINGS.AMBIENT.color, 
+      LIGHTING_SETTINGS.AMBIENT.intensity
+    );
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7); // Adjusted intensity
-    directionalLight.position.set(-8, 10, 8); // Closer and different angle
+    const directionalLight = new THREE.DirectionalLight(
+      LIGHTING_SETTINGS.DIRECTIONAL.color, 
+      LIGHTING_SETTINGS.DIRECTIONAL.intensity
+    );
+    directionalLight.position.set(
+      LIGHTING_SETTINGS.DIRECTIONAL.position.x,
+      LIGHTING_SETTINGS.DIRECTIONAL.position.y,
+      LIGHTING_SETTINGS.DIRECTIONAL.position.z
+    );
     scene.add(directionalLight);
 
-    const pointLight1 = new THREE.PointLight(0xffccaa, 0.65, 60); // Warmish light, closer, adjusted distance & intensity
-    pointLight1.position.set(10, 4, 4);
-    scene.add(pointLight1);
-
-    const pointLight2 = new THREE.PointLight(0xaaccff, 0.55, 60); // Coolish light, closer, adjusted distance & intensity
-    pointLight2.position.set(-4, -6, -10);
-    scene.add(pointLight2);
-
-    const pointLight3 = new THREE.PointLight(0xffffff, 0.5, 25); // New white point light, much closer, adjusted intensity & distance
-    pointLight3.position.set(0, 5, -2); // Positioned even closer from top-front
-    scene.add(pointLight3);
+    // Add point lights
+    LIGHTING_SETTINGS.POINT_LIGHTS.forEach((lightConfig, index) => {
+      const pointLight = new THREE.PointLight(
+        lightConfig.color, 
+        lightConfig.intensity, 
+        lightConfig.distance
+      );
+      pointLight.position.set(
+        lightConfig.position.x,
+        lightConfig.position.y,
+        lightConfig.position.z
+      );
+      scene.add(pointLight);
+    });
 
     function initLineSegments() {
       const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(MAX_LINES * 2 * 3); // 2 vertices per line, 3 coords per vertex
-      const colors = new Float32Array(MAX_LINES * 2 * 3);    // 2 colors per line, 3 components per color
+      const positions = new Float32Array(
+        MAX_LINES * LINE_SETTINGS.VERTICES_PER_LINE * LINE_SETTINGS.VERTEX_COORDS
+      );
+      const colors = new Float32Array(
+        MAX_LINES * LINE_SETTINGS.VERTICES_PER_LINE * LINE_SETTINGS.VERTEX_COORDS
+      );
 
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, LINE_SETTINGS.VERTEX_COORDS));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, LINE_SETTINGS.VERTEX_COORDS));
 
       const material = new THREE.LineBasicMaterial({
         vertexColors: true,
-        transparent: true, // Set to false for opaque lines
-        opacity: .333 // Set to 1.0 for full opacity
+        transparent: true,
+        opacity: LINE_SETTINGS.OPACITY
       });
 
       lineSegments = new THREE.LineSegments(geometry, material);
@@ -284,20 +360,39 @@
 
     const recycledSoulCount = getEntityCountFromURL();
     
-
-    const interactionDistance = 6;
+    const interactionDistance = CONNECTION_SETTINGS.INTERACTION_DISTANCE;
     let lineSegments;
-    const MAX_LINES = recycledSoulCount * 5; // Estimate max lines, can be adjusted
-    const tempColor = new THREE.Color(); // For random color generation
+    const MAX_LINES = recycledSoulCount * CONNECTION_SETTINGS.MAX_LINES_MULTIPLIER;
 
-    const humanGeometry = new THREE.SphereGeometry(0.15, 12, 12); // Reduced from 16x16 to 12x12
-    const gptGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-    const dewaGeometry = new THREE.SphereGeometry(0.333, 20, 20); // Reduced from 32x32 to 20x20
+    const humanGeometry = new THREE.SphereGeometry(
+      GEOMETRY_SETTINGS.HUMAN_RADIUS, 
+      GEOMETRY_SETTINGS.HUMAN_SEGMENTS.width, 
+      GEOMETRY_SETTINGS.HUMAN_SEGMENTS.height
+    );
+    const gptGeometry = new THREE.BoxGeometry(
+      GEOMETRY_SETTINGS.GPT_SIZE, 
+      GEOMETRY_SETTINGS.GPT_SIZE, 
+      GEOMETRY_SETTINGS.GPT_SIZE
+    );
+    const dewaGeometry = new THREE.SphereGeometry(
+      GEOMETRY_SETTINGS.DEWA_RADIUS, 
+      GEOMETRY_SETTINGS.DEWA_SEGMENTS.width, 
+      GEOMETRY_SETTINGS.DEWA_SEGMENTS.height
+    );
 
     // Shared materials for better memory efficiency
-    const sharedHumanMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
-    const sharedGptMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
-    const sharedDewaMaterial = new THREE.MeshLambertMaterial({ transparent: true, opacity: 0.9 });
+    const sharedHumanMaterial = new THREE.MeshBasicMaterial({ 
+      transparent: true, 
+      opacity: GEOMETRY_SETTINGS.MATERIAL_OPACITY.DEFAULT 
+    });
+    const sharedGptMaterial = new THREE.MeshBasicMaterial({ 
+      transparent: true, 
+      opacity: GEOMETRY_SETTINGS.MATERIAL_OPACITY.DEFAULT 
+    });
+    const sharedDewaMaterial = new THREE.MeshLambertMaterial({ 
+      transparent: true, 
+      opacity: GEOMETRY_SETTINGS.MATERIAL_OPACITY.DEWA 
+    });
     
     // Material pool for reuse
     const materialPool = {
@@ -321,12 +416,15 @@
         case 'dewa':
           return sharedDewaMaterial.clone();
         default:
-          return new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
+          return new THREE.MeshBasicMaterial({ 
+            transparent: true, 
+            opacity: GEOMETRY_SETTINGS.MATERIAL_OPACITY.DEFAULT 
+          });
       }
     }
     
     function returnMaterial(material, type) {
-      if (materialPool[type].length < 20) { // Limit pool size
+      if (materialPool[type].length < MATERIAL_POOL_SIZE) {
         materialPool[type].push(material);
       } else {
         material.dispose();
@@ -571,90 +669,7 @@
       createSoul(isHuman, isDewa); 
     }
 
-    // REMOVED old updateConnections function
-
-    // Pre-calculate squared distance for line connections
-    const interactionDistanceSq = interactionDistance * interactionDistance;
-
-    // DEPRECATED: Connection rendering moved to Web Worker for performance
-    // This function is kept for fallback but worker handles connections now
-    function updateRandomColorConnections() {
-      // Worker now handles connection calculations
-      // This function is maintained for backward compatibility
-      return;
-      
-      /*
-      if (!lineSegments || souls.length < 2) {
-        if(lineSegments) lineSegments.geometry.setDrawRange(0, 0);
-        return;
-      }
-
-      const positions = lineSegments.geometry.attributes.position.array;
-      const colors = lineSegments.geometry.attributes.color.array;
-      let lineIdx = 0;
-
-      // Limit the number of souls to check for performance (adaptive LOD)
-      const settings = adaptiveSettings[currentQuality];
-      const maxSoulsToCheck = Math.min(souls.length, settings.maxConnectionChecks);
-      const connectionLimit = settings.connectionLimit;
-      const cameraPosition = camera.position;
-      
-      // Sort souls by distance to camera for priority rendering of closest connections
-      const sortedSouls = souls.slice(0, maxSoulsToCheck).sort((a, b) => 
-        a.position.distanceToSquared(cameraPosition) - b.position.distanceToSquared(cameraPosition)
-      );
-
-      for (let i = 0; i < sortedSouls.length && lineIdx < MAX_LINES; i++) {
-        const soulA = sortedSouls[i];
-        
-        // Only check nearby souls, limited by quality setting
-        for (let j = i + 1; j < Math.min(sortedSouls.length, i + connectionLimit) && lineIdx < MAX_LINES; j++) {
-          const soulB = sortedSouls[j];
-          
-          const a = soulA.position;
-          const b = soulB.position;
-          
-          // Use squared distance to avoid expensive sqrt calculation
-          const distSq = a.distanceToSquared(b);
-
-          if (distSq < interactionDistanceSq) {
-            
-            tempColor.setHSL(1, 1, 1); // Set lines to white as per previous state
-
-            // Vertex 1
-            positions[lineIdx * 6 + 0] = a.x;
-            positions[lineIdx * 6 + 1] = a.y;
-            positions[lineIdx * 6 + 2] = a.z;
-            colors[lineIdx * 6 + 0] = tempColor.r;
-            colors[lineIdx * 6 + 1] = tempColor.g;
-            colors[lineIdx * 6 + 2] = tempColor.b;
-
-            // Vertex 2
-            positions[lineIdx * 6 + 3] = b.x;
-            positions[lineIdx * 6 + 4] = b.y;
-            positions[lineIdx * 6 + 5] = b.z;
-            colors[lineIdx * 6 + 3] = tempColor.r;
-            colors[lineIdx * 6 + 4] = tempColor.g;
-            colors[lineIdx * 6 + 5] = tempColor.b;
-            
-            lineIdx++;
-          }
-        }
-      }
-      
-      // Hide unused lines
-      for (let i = lineIdx; i < MAX_LINES; i++) {
-        positions[i * 6 + 0] = 0; positions[i * 6 + 1] = 0; positions[i * 6 + 2] = 0;
-        positions[i * 6 + 3] = 0; positions[i * 6 + 4] = 0; positions[i * 6 + 5] = 0;
-      }
-
-      lineSegments.geometry.setDrawRange(0, lineIdx * 2);
-      lineSegments.geometry.attributes.position.needsUpdate = true;
-      lineSegments.geometry.attributes.color.needsUpdate = true;
-      */
-    }
-
-    let pulseTime = 0;
+    // Connections are now handled by the Web Worker for optimal performance
 
     function animate() {
       requestAnimationFrame(animate);
@@ -682,7 +697,6 @@
         createNewSoul(); 
       }
 
-      updateRandomColorConnections(); // MODIFIED call - now deprecated, worker handles connections
       controls.update();
       renderer.render(scene, camera);
 
@@ -1216,24 +1230,3 @@
 <div class="toast" class:show={showToast}>
   {toastMessage}
 </div>
-
-<!-- PERFORMANCE OPTIMIZATION: Color Calculation Bottleneck Removal
-    =================================================================
-    Problem: HSL calculations and setHSL() calls happening every frame for every soul
-    Solution: Delta compression + RGB pre-calculation + change detection
-    1. Worker-side change detection: Only recalculate when HSL actually changes
-    2. RGB pre-calculation: Convert HSL to RGB in worker to avoid main thread conversion
-    3. Delta messaging: Only send color data when it changes (not every frame)
-    4. Conditional updates: Only call setRGB() when color data is provided
-    Expected improvement: 60-80% reduction in color-related CPU overhead
--->
-
-<!-- New optimized function to handle connections from worker
-    =================================================================
-    Problem: Inefficient connection handling in the main thread, causing performance issues with high soul counts
-    Solution: Offload connection handling to the worker, send pre-calculated connection data to the main thread
-    1. Worker calculates connections based on soul positions and other factors
-    2. Worker sends updated connection data to the main thread
-    3. Main thread simply applies the pre-calculated data to the line segments
-    Expected improvement: Significant reduction in CPU overhead for connection calculations in the main thread
-  -->

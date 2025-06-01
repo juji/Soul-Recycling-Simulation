@@ -1,12 +1,54 @@
+// Soul Recycling Simulation - Web Worker
+// Handles physics simulation, color calculations, and connection rendering
+// Optimized for performance with spatial partitioning and delta compression
+
+// Worker state
 let souls = [];
+let pulseTime = 0;
+
+// Worker constants - configured from main thread
+const WORKER_SETTINGS = {
+    // Pulse and animation
+    PULSE_INCREMENT: 0.02,
+    PULSE_MULTIPLIER: 2,
+    FLICKER_MULTIPLIER: 3,
+    
+    // Color change detection thresholds
+    HSL_PRECISION: 0.01,  // 1% threshold for color changes
+    OPACITY_PRECISION: 0.01,  // 1% threshold for opacity changes
+    
+    // Visual effects
+    LIGHTNESS_PULSE_AMPLITUDE: 0.2,
+    OPACITY_BASE: 0.5,
+    OPACITY_RANGE: 0.5,
+    
+    // Movement perturbation
+    REGULAR_SOUL_PERTURBATION: 0.2,
+    DEWA_PERTURBATION: 0.01,
+    DISTANCE_EPSILON: 0.0001,  // Small value to prevent division by zero
+    
+    // Connection calculation defaults
+    DEFAULT_INTERACTION_DISTANCE: 6,
+    DEFAULT_MAX_CONNECTIONS: 1000,
+    DEFAULT_MAX_SOULS_TO_CHECK: 150,
+    
+    // Spatial grid
+    SPATIAL_GRID_CELL_SIZE: 8.0,  // Cell size slightly larger than max interaction radius
+    
+    // Precision for data transmission
+    POSITION_PRECISION: 100,  // Round to 2 decimal places
+    RGB_PRECISION: 255,       // RGB color precision
+    OPACITY_PRECISION_OUT: 255 // Opacity precision for output
+};
+
+// Physics constants (initialized from main thread)
 let POINTER_INTERACTION_RADIUS, POINTER_INFLUENCE_STRENGTH;
 let NEIGHBOR_SPEED_INFLUENCE_RADIUS, NEIGHBOR_SPEED_INFLUENCE_STRENGTH;
 let SEPARATION_DISTANCE, SEPARATION_STRENGTH;
-let DEWA_ATTRACTION_RADIUS, DEWA_ATTRACTION_STRENGTH; // Added dewa constants
-let DEWA_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST; // Added
-let pulseTime = 0;
+let DEWA_ATTRACTION_RADIUS, DEWA_ATTRACTION_STRENGTH;
+let DEWA_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST;
 
-// Pre-calculate squared distances to avoid sqrt calls
+// Pre-calculated squared distances for performance
 let NEIGHBOR_SPEED_INFLUENCE_RADIUS_SQ, SEPARATION_DISTANCE_SQ, DEWA_ATTRACTION_RADIUS_SQ, DEWA_ENHANCEMENT_RADIUS_SQ, POINTER_INTERACTION_RADIUS_SQ;
 
 // HSL to RGB conversion function to avoid main thread conversion overhead
@@ -92,7 +134,7 @@ class SpatialGrid {
     }
 }
 
-const spatialGrid = new SpatialGrid(8.0); // Cell size slightly larger than max interaction radius
+const spatialGrid = new SpatialGrid(WORKER_SETTINGS.SPATIAL_GRID_CELL_SIZE);
 
 // Minimal THREE.Vector3-like operations for plain objects
 const vec = {
@@ -150,8 +192,8 @@ self.onmessage = function(e) {
         POINTER_INTERACTION_RADIUS_SQ = POINTER_INTERACTION_RADIUS * POINTER_INTERACTION_RADIUS;
     } else if (type === 'update') {
         const pointerPosition3D = data.pointerPosition3D ? vec.create(data.pointerPosition3D.x, data.pointerPosition3D.y, data.pointerPosition3D.z) : null;
-        pulseTime += 0.02;
-        const pulse = (Math.sin(pulseTime * 2) + 1) / 2;
+        pulseTime += WORKER_SETTINGS.PULSE_INCREMENT;
+        const pulse = (Math.sin(pulseTime * WORKER_SETTINGS.PULSE_MULTIPLIER) + 1) / 2;
 
         // Clear and rebuild spatial grid for this frame
         spatialGrid.clear();
@@ -193,7 +235,7 @@ self.onmessage = function(e) {
                     const distanceToNeighbor = Math.sqrt(distanceToNeighborSq); // Only calculate sqrt when needed
                     let awayVector = vec.subVectors(soul.position, otherSoul.position);
                     awayVector = vec.normalize(awayVector);
-                    awayVector = vec.multiplyScalar(awayVector, 1 / (distanceToNeighbor + 0.0001));
+                    awayVector = vec.multiplyScalar(awayVector, 1 / (distanceToNeighbor + WORKER_SETTINGS.DISTANCE_EPSILON));
                     separationForce.x += awayVector.x;
                     separationForce.y += awayVector.y;
                     separationForce.z += awayVector.z;
@@ -248,13 +290,13 @@ self.onmessage = function(e) {
             
             // Slightly perturb the velocity
             if (!soul.isDewa) {
-                soul.velocity.x += (Math.random() - 0.5) * 0.2;
-                soul.velocity.y += (Math.random() - 0.5) * 0.2;
-                soul.velocity.z += (Math.random() - 0.5) * 0.2;
+                soul.velocity.x += (Math.random() - 0.5) * WORKER_SETTINGS.REGULAR_SOUL_PERTURBATION;
+                soul.velocity.y += (Math.random() - 0.5) * WORKER_SETTINGS.REGULAR_SOUL_PERTURBATION;
+                soul.velocity.z += (Math.random() - 0.5) * WORKER_SETTINGS.REGULAR_SOUL_PERTURBATION;
             } else {
-                soul.velocity.x += (Math.random() - 0.5) * 0.01;
-                soul.velocity.y += (Math.random() - 0.5) * 0.01;
-                soul.velocity.z += (Math.random() - 0.5) * 0.01;
+                soul.velocity.x += (Math.random() - 0.5) * WORKER_SETTINGS.DEWA_PERTURBATION;
+                soul.velocity.y += (Math.random() - 0.5) * WORKER_SETTINGS.DEWA_PERTURBATION;
+                soul.velocity.z += (Math.random() - 0.5) * WORKER_SETTINGS.DEWA_PERTURBATION;
             }
 
             // Pointer interaction logic (optimized)
@@ -294,8 +336,8 @@ self.onmessage = function(e) {
             }
 
             // Flicker and color animation
-            const flicker = 0.5 + 0.5 * Math.sin(pulseTime * 3 + soul.flickerPhase);
-            const newOpacity = 0.5 + 0.5 * flicker;
+            const flicker = WORKER_SETTINGS.OPACITY_BASE + WORKER_SETTINGS.OPACITY_RANGE * Math.sin(pulseTime * WORKER_SETTINGS.FLICKER_MULTIPLIER + soul.flickerPhase);
+            const newOpacity = WORKER_SETTINGS.OPACITY_BASE + WORKER_SETTINGS.OPACITY_RANGE * flicker;
 
             // Use the potentially boosted lightness for pulsing, unless it's a dewa or already enhanced to max
             // Dewas retain their base lightness. Enhanced souls use their boosted lightness for pulsing.
@@ -305,10 +347,10 @@ self.onmessage = function(e) {
                 pulsedLightness = soul.baseHSL.l;
             } else if (isEnhanced) {
                 // If enhanced, pulse based on the boosted lightness
-                pulsedLightness = Math.min(Math.max(currentLightness + 0.2 * (pulse - 0.5), 0), 1);
+                pulsedLightness = Math.min(Math.max(currentLightness + WORKER_SETTINGS.LIGHTNESS_PULSE_AMPLITUDE * (pulse - 0.5), 0), 1);
             } else {
                 // If not enhanced, pulse based on original base lightness
-                pulsedLightness = Math.min(Math.max(soul.baseHSL.l + 0.2 * (pulse - 0.5), 0), 1);
+                pulsedLightness = Math.min(Math.max(soul.baseHSL.l + WORKER_SETTINGS.LIGHTNESS_PULSE_AMPLITUDE * (pulse - 0.5), 0), 1);
             }
             
             // Calculate new HSL values
@@ -319,16 +361,13 @@ self.onmessage = function(e) {
             };
 
             // Color change detection - only update if HSL or opacity actually changed
-            const HSL_PRECISION = 0.01; // 1% threshold for color changes
-            const OPACITY_PRECISION = 0.01; // 1% threshold for opacity changes
-            
             const colorChanged = !soul.finalHSL || 
-                Math.abs(soul.finalHSL.h - newHSL.h) > HSL_PRECISION ||
-                Math.abs(soul.finalHSL.s - newHSL.s) > HSL_PRECISION ||
-                Math.abs(soul.finalHSL.l - newHSL.l) > HSL_PRECISION;
+                Math.abs(soul.finalHSL.h - newHSL.h) > WORKER_SETTINGS.HSL_PRECISION ||
+                Math.abs(soul.finalHSL.s - newHSL.s) > WORKER_SETTINGS.HSL_PRECISION ||
+                Math.abs(soul.finalHSL.l - newHSL.l) > WORKER_SETTINGS.HSL_PRECISION;
                 
             const opacityChanged = soul.finalOpacity === undefined || 
-                Math.abs(soul.finalOpacity - newOpacity) > OPACITY_PRECISION;
+                Math.abs(soul.finalOpacity - newOpacity) > WORKER_SETTINGS.OPACITY_PRECISION;
 
             // Store color change flags for main thread optimization
             soul.colorChanged = colorChanged;
@@ -371,9 +410,9 @@ self.onmessage = function(e) {
             
             // Always send position (position changes are frequent and important)
             data.pos = [
-                Math.round(soul.position.x * 100) / 100,
-                Math.round(soul.position.y * 100) / 100,
-                Math.round(soul.position.z * 100) / 100
+                Math.round(soul.position.x * WORKER_SETTINGS.POSITION_PRECISION) / WORKER_SETTINGS.POSITION_PRECISION,
+                Math.round(soul.position.y * WORKER_SETTINGS.POSITION_PRECISION) / WORKER_SETTINGS.POSITION_PRECISION,
+                Math.round(soul.position.z * WORKER_SETTINGS.POSITION_PRECISION) / WORKER_SETTINGS.POSITION_PRECISION
             ];
             
             // Only send HSL if color actually changed
@@ -382,16 +421,16 @@ self.onmessage = function(e) {
                 // Validate RGB values before sending
                 if (soul.finalRGB.length === 3 && soul.finalRGB.every(val => typeof val === 'number' && !isNaN(val))) {
                     data.rgb = [
-                        Math.round(soul.finalRGB[0] * 255) / 255,
-                        Math.round(soul.finalRGB[1] * 255) / 255,
-                        Math.round(soul.finalRGB[2] * 255) / 255
+                        Math.round(soul.finalRGB[0] * WORKER_SETTINGS.RGB_PRECISION) / WORKER_SETTINGS.RGB_PRECISION,
+                        Math.round(soul.finalRGB[1] * WORKER_SETTINGS.RGB_PRECISION) / WORKER_SETTINGS.RGB_PRECISION,
+                        Math.round(soul.finalRGB[2] * WORKER_SETTINGS.RGB_PRECISION) / WORKER_SETTINGS.RGB_PRECISION
                     ];
                 }
             }
             
             // Only send opacity if it actually changed
             if (soul.opacityChanged) {
-                data.opacity = Math.round(soul.finalOpacity * 255) / 255;
+                data.opacity = Math.round(soul.finalOpacity * WORKER_SETTINGS.OPACITY_PRECISION_OUT) / WORKER_SETTINGS.OPACITY_PRECISION_OUT;
             }
             
             return data;
@@ -406,9 +445,9 @@ self.onmessage = function(e) {
         // Calculate connections in worker to reduce main thread load
         const connections = calculateConnections(
             souls, 
-            6, // interactionDistance - should match main thread value
-            1000, // maxConnections - adjust based on performance needs
-            150 // maxSoulsToCheck - adaptive based on quality
+            WORKER_SETTINGS.DEFAULT_INTERACTION_DISTANCE,
+            WORKER_SETTINGS.DEFAULT_MAX_CONNECTIONS,
+            WORKER_SETTINGS.DEFAULT_MAX_SOULS_TO_CHECK
         );
 
         self.postMessage({ type: 'soulsUpdated', data: updatedSoulsData });
