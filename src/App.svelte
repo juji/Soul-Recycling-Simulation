@@ -991,10 +991,15 @@
     backdrop-filter: blur(4px);
   }
 
-  .github-link {
+  .left-bottom-link{
     position: fixed;
     bottom: 10px;
     left: 10px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .github-link, .jujiplay-link {
     background: rgba(0, 0, 0, 0.7);
     color: #ffffff; /* Changed to white */
     padding: 8px 12px;
@@ -1427,10 +1432,14 @@
   </div>
 </div>
 
-
-<a href="https://github.com/juji/Soul-Recycling-Simulation" target="_blank" class="github-link">
-  GitHub
-</a>
+<div class="left-bottom-link">
+  <a href="https://jujiplay.com" target="_blank" class="jujiplay-link">
+    JujiPlay
+  </a>
+  <a href="https://github.com/juji/Soul-Recycling-Simulation" target="_blank" class="github-link">
+    GitHub
+  </a>
+</div>
 
 <!-- Toast notification for localStorage operations -->
 <div class="toast" class:show={showToast}>
