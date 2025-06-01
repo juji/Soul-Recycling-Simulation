@@ -3,7 +3,14 @@
   import { onMount } from 'svelte';
   import * as THREE from 'three';
   import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
+  import { InstancedSoulRenderer } from './InstancedSoulRenderer.js';
   import './ai-test-bridge.js';  // Import AI test bridge for performance testing
+
+  // Phase 3: Feature Flags
+  const FEATURE_FLAGS = {
+    USE_INSTANCED_RENDERING: true, // Enable Phase 3 instanced rendering
+    FALLBACK_TO_INDIVIDUAL_MESHES: true // Emergency fallback
+  };
 
   // Global settings
   const DEFAULT_SOUL_COUNT = 777;
@@ -175,6 +182,37 @@
   let showToast = false;
   let toastMessage = '';
   
+  // Phase 3: Performance Metrics for Instanced Rendering
+  let performanceMetrics = {
+    renderingMode: 'individual',
+    drawCalls: 0,
+    instancedUpdateTime: 0,
+    individualUpdateTime: 0,
+    soulsUpdated: 0,
+    framesSinceLastLog: 0,
+    instancedFrameCount: 0,
+    individualFrameCount: 0,
+    averageInstancedTime: 0,
+    averageIndividualTime: 0
+  };
+
+  // Phase 3: Declare variables needed by reactive statements
+  let renderingMode = FEATURE_FLAGS.USE_INSTANCED_RENDERING ? 'instanced' : 'individual';
+  let instancedRenderer = null;
+  let renderer = null;
+  
+  // Phase 3: Performance tracking functions
+  function trackDrawCalls(renderer) {
+    if (renderer && renderer.info && renderer.info.render) {
+      return renderer.info.render.calls;
+    }
+    return 0;
+  }
+  
+  function logPhase3Performance() {
+    // Performance logging removed for production
+  }
+  
   function showToastMessage(message) {
     toastMessage = message;
     showToast = true;
@@ -257,7 +295,7 @@
       CAMERA_SETTINGS.POSITION.z
     );
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
@@ -306,6 +344,45 @@
       );
       scene.add(pointLight);
     });
+
+    // Phase 3: Initialize Instanced Rendering
+    renderingMode = FEATURE_FLAGS.USE_INSTANCED_RENDERING ? 'instanced' : 'individual';
+
+    // Phase 3: Performance tracking functions
+    function trackDrawCalls(renderer) {
+      // Track draw calls for Phase 3 performance validation
+      if (renderer && renderer.info && renderer.info.render) {
+        return renderer.info.render.calls;
+      }
+      // Fallback estimation based on rendering mode
+      return renderingMode === 'instanced' ? 3 : souls.length;
+    }
+
+    function logPhase3Performance() {
+      // Performance logging removed for production
+    }
+
+    if (renderingMode === 'instanced') {
+      try {
+        instancedRenderer = new InstancedSoulRenderer(scene, 2000);
+        
+        // Hide any existing individual meshes from scene
+        souls.forEach(soul => {
+          if (soul.parent === scene) {
+            scene.remove(soul);
+          }
+        });
+      } catch (error) {
+        renderingMode = 'individual';
+        
+        // Show individual meshes again on fallback
+        souls.forEach(soul => {
+          if (soul.parent !== scene) {
+            scene.add(soul);
+          }
+        });
+      }
+    }
 
     function initLineSegments() {
       const geometry = new THREE.BufferGeometry();
@@ -567,7 +644,10 @@
         simulationWorker.postMessage({ type: 'addSoul', data: { soul: soulDataForWorker } });
       }
 
-      scene.add(mesh);
+      // Phase 3: Only add individual meshes to scene when not using instanced rendering
+      if (renderingMode !== 'instanced') {
+        scene.add(mesh);
+      }
       souls.push(mesh); 
       return mesh; 
     }
@@ -619,57 +699,106 @@
     simulationWorker.onmessage = function(e) {
         const { type, data } = e.data;
         if (type === 'soulsUpdated') {
-            data.forEach(updatedSoulData => {
-                const soulMesh = souls.find(s => s.userData.id === updatedSoulData.id);
-                if (soulMesh) {
-                    // Always update position (most frequent change)
-                    soulMesh.position.set(updatedSoulData.pos[0], updatedSoulData.pos[1], updatedSoulData.pos[2]);
-                    
-                    // Ensure material exists before trying to set properties
-                    if (soulMesh.material) {
-                        let materialNeedsUpdate = false;
+            // Phase 3: Performance tracking start
+            const updateStartTime = performance.now();
+            performanceMetrics.soulsUpdated = data.length;
+            
+            // Phase 3: Dual rendering path - instanced vs individual meshes
+            if (renderingMode === 'instanced' && instancedRenderer) {
+                // Update individual soul mesh positions for compatibility first
+                // (needed for connections, raycasting, etc.)
+                data.forEach(updatedSoulData => {
+                    const soulMesh = souls.find(s => s.userData.id === updatedSoulData.id);
+                    if (soulMesh) {
+                        soulMesh.position.set(updatedSoulData.pos[0], updatedSoulData.pos[1], updatedSoulData.pos[2]);
                         
-                        // Only update RGB color if it actually changed (delta optimization)
-                        // Use setRGB instead of setHSL to avoid conversion overhead
-                        if (updatedSoulData.rgb && Array.isArray(updatedSoulData.rgb) && updatedSoulData.rgb.length === 3 && 
-                            soulMesh.material.color && typeof soulMesh.material.color.setRGB === 'function') {
+                        // Update userData for instanced renderer access
+                        if (updatedSoulData.rgb) {
+                          soulMesh.userData.finalRGB = updatedSoulData.rgb;
+                        }
+                        if (updatedSoulData.opacity !== undefined) {
+                          soulMesh.userData.finalOpacity = updatedSoulData.opacity;
+                        }
+                    }
+                });
+                
+                // NEW: Update all souls through instanced renderer with updated mesh data
+                instancedRenderer.updateInstances(souls);
+                
+                // Track instanced performance
+                const instancedTime = performance.now() - updateStartTime;
+                performanceMetrics.instancedUpdateTime += instancedTime;
+                performanceMetrics.instancedFrameCount++;
+                performanceMetrics.averageInstancedTime = performanceMetrics.instancedUpdateTime / performanceMetrics.instancedFrameCount;
+                performanceMetrics.renderingMode = 'instanced';            } else {
+                // EXISTING: Individual mesh rendering (fallback)
+                data.forEach(updatedSoulData => {
+                    const soulMesh = souls.find(s => s.userData.id === updatedSoulData.id);
+                    if (soulMesh) {
+                        // Always update position (most frequent change)
+                        soulMesh.position.set(updatedSoulData.pos[0], updatedSoulData.pos[1], updatedSoulData.pos[2]);
+                        
+                        // Ensure material exists before trying to set properties
+                        if (soulMesh.material) {
+                          let materialNeedsUpdate = false;
+                          
+                          // Only update RGB color if it actually changed (delta optimization)
+                          // Use setRGB instead of setHSL to avoid conversion overhead
+                          if (updatedSoulData.rgb && Array.isArray(updatedSoulData.rgb) && updatedSoulData.rgb.length === 3 && 
+                              soulMesh.material.color && typeof soulMesh.material.color.setRGB === 'function') {
                             // Validate RGB values before applying
                             const [r, g, b] = updatedSoulData.rgb;
                             if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number' &&
                                 !isNaN(r) && !isNaN(g) && !isNaN(b)) {
-                                soulMesh.material.color.setRGB(r, g, b);
-                                materialNeedsUpdate = true;
+                              soulMesh.material.color.setRGB(r, g, b);
+                              materialNeedsUpdate = true;
                             }
-                        }
-                        
-                        // Only update opacity if it actually changed (delta optimization)
-                        if (updatedSoulData.opacity !== undefined && typeof updatedSoulData.opacity === 'number' && 
-                            !isNaN(updatedSoulData.opacity) && soulMesh.material.opacity !== undefined) {
+                          }
+                          
+                          // Only update opacity if it actually changed (delta optimization)
+                          if (updatedSoulData.opacity !== undefined && typeof updatedSoulData.opacity === 'number' && 
+                              !isNaN(updatedSoulData.opacity) && soulMesh.material.opacity !== undefined) {
                             soulMesh.material.opacity = Math.max(0, Math.min(1, updatedSoulData.opacity));
                             materialNeedsUpdate = true;
-                        }
-                        
-                        // Only mark material for update if we actually changed something
-                        if (materialNeedsUpdate && soulMesh.material.needsUpdate !== undefined) {
+                          }
+                          
+                          // Only mark material for update if we actually changed something
+                          if (materialNeedsUpdate && soulMesh.material.needsUpdate !== undefined) {
                             soulMesh.material.needsUpdate = true;
+                          }
                         }
                     }
-                }
-            });
+                });
+                
+                // Track individual mesh performance
+                const individualTime = performance.now() - updateStartTime;
+                performanceMetrics.individualUpdateTime += individualTime;
+                performanceMetrics.individualFrameCount++;
+                performanceMetrics.averageIndividualTime = performanceMetrics.individualUpdateTime / performanceMetrics.individualFrameCount;
+                performanceMetrics.renderingMode = 'individual';
+            }
         } else if (type === 'soulRemoved') {
             const soulIdToRemove = data.soulId;
             const soulMeshToRemove = souls.find(s => s.userData.id === soulIdToRemove);
             if (soulMeshToRemove) {
-                scene.remove(soulMeshToRemove);
-                if (soulMeshToRemove.geometry) {
-                    soulMeshToRemove.geometry.dispose();
-                }
-                if (soulMeshToRemove.material) {
-                    // If material is an array (e.g. multi-material), dispose each
-                    if (Array.isArray(soulMeshToRemove.material)) {
-                        soulMeshToRemove.material.forEach(material => material.dispose());
-                    } else {
-                        soulMeshToRemove.material.dispose();
+                // Phase 3: Handle soul removal for both rendering modes
+                if (renderingMode === 'instanced') {
+                    // In instanced mode, remove from scene but don't dispose shared resources
+                    scene.remove(soulMeshToRemove);
+                    // Instanced renderer will handle the update in next frame
+                } else {
+                    // Individual mesh mode: dispose resources as before
+                    scene.remove(soulMeshToRemove);
+                    if (soulMeshToRemove.geometry) {
+                        soulMeshToRemove.geometry.dispose();
+                    }
+                    if (soulMeshToRemove.material) {
+                        // If material is an array (e.g. multi-material), dispose each
+                        if (Array.isArray(soulMeshToRemove.material)) {
+                            soulMeshToRemove.material.forEach(material => material.dispose());
+                        } else {
+                            soulMeshToRemove.material.dispose();
+                        }
                     }
                 }
                 souls = souls.filter(s => s.userData.id !== soulIdToRemove);
@@ -717,8 +846,12 @@
       }
 
       controls.update();
+      
+      // Phase 3: Track draw calls before render
+      const drawCallsBefore = trackDrawCalls(renderer);
       renderer.render(scene, camera);
-
+      performanceMetrics.drawCalls = trackDrawCalls(renderer);
+      
       // FPS counting logic with enhanced metrics and adaptive quality adjustment
       frameCount++;
       const currentTime = performance.now();
@@ -750,6 +883,11 @@
         
         // Adjust quality based on performance every second
         adjustQualityBasedOnFPS();
+        
+        // Phase 3: Log performance metrics every 5 seconds
+        if (frameCount % 300 === 0) { // Every 5 seconds at 60fps
+          logPhase3Performance();
+        }
       }
     }
 
@@ -786,6 +924,22 @@
       }
     };
   });
+
+  // Phase 3: Reactive statement for performance metrics debugging
+  $: if (import.meta.env.DEV && performanceMetrics && renderingMode) {
+    // Update performance metrics for logging
+    performanceMetrics.renderingMode = renderingMode;
+    if (renderer) {
+      performanceMetrics.drawCalls = trackDrawCalls(renderer);
+    }
+    performanceMetrics.framesSinceLastLog++;
+    
+    // Log metrics at regular intervals
+    if (performanceMetrics.framesSinceLastLog >= 60) {
+      logPhase3Performance();
+      performanceMetrics.framesSinceLastLog = 0;
+    }
+  }
 </script>
 
 <style>
@@ -1258,3 +1412,19 @@
 <div class="toast" class:show={showToast}>
   {toastMessage}
 </div>
+
+<!-- Phase 3: Performance Metrics & Logging -->
+{#if FEATURE_FLAGS.USE_INSTANCED_RENDERING && performanceMetrics}
+<div class="performance-metrics">
+  <div>Rendering Mode: {performanceMetrics.renderingMode}</div>
+  <div>Draw Calls: {performanceMetrics.drawCalls}</div>
+  <div>Instanced Update Time: {performanceMetrics.instancedUpdateTime} ms</div>
+  <div>Individual Update Time: {performanceMetrics.individualUpdateTime} ms</div>
+  <div>Souls Updated: {performanceMetrics.soulsUpdated}</div>
+  <div>Frames Since Last Log: {performanceMetrics.framesSinceLastLog}</div>
+  <div>Instanced Frame Count: {performanceMetrics.instancedFrameCount}</div>
+  <div>Individual Frame Count: {performanceMetrics.individualFrameCount}</div>
+  <div>Average Instanced Time: {performanceMetrics.averageInstancedTime} ms</div>
+  <div>Average Individual Time: {performanceMetrics.averageIndividualTime} ms</div>
+</div>
+{/if}
