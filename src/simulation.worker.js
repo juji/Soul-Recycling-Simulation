@@ -403,7 +403,20 @@ self.onmessage = function(e) {
             soul.opacityChanged = false;
         });
         
+        // Calculate connections in worker to reduce main thread load
+        const connections = calculateConnections(
+            souls, 
+            6, // interactionDistance - should match main thread value
+            1000, // maxConnections - adjust based on performance needs
+            150 // maxSoulsToCheck - adaptive based on quality
+        );
+
         self.postMessage({ type: 'soulsUpdated', data: updatedSoulsData });
+        
+        // Send connections separately to main thread
+        if (connections.length > 0) {
+            self.postMessage({ type: 'connectionsUpdated', data: connections });
+        }
     } else if (type === 'addSoul') {
         const newSoul = {
             ...data.soul,
@@ -419,3 +432,37 @@ self.onmessage = function(e) {
         souls.push(newSoul);
     }
 };
+
+// Add connection calculation function after the existing functions
+function calculateConnections(souls, interactionDistance, maxConnections, maxSoulsToCheck) {
+    const connections = [];
+    const maxDistSq = interactionDistance * interactionDistance;
+    
+    // Use spatial grid for O(n) complexity instead of O(n²)
+    const maxSouls = Math.min(souls.length, maxSoulsToCheck);
+    const soulsToCheck = souls.slice(0, maxSouls);
+    
+    for (let i = 0; i < soulsToCheck.length && connections.length < maxConnections; i++) {
+        const soul = soulsToCheck[i];
+        
+        // Use spatial grid to find nearby souls efficiently
+        const nearby = spatialGrid.getNearby(soul.position, interactionDistance);
+        
+        for (const other of nearby) {
+            if (soul.id >= other.id) continue; // Avoid duplicates
+            if (connections.length >= maxConnections) break;
+            
+            const distSq = vec.lengthSq(vec.subVectors(soul.position, other.position));
+            if (distSq < maxDistSq) {
+                // Send pre-calculated line data to main thread
+                connections.push({
+                    start: [soul.position.x, soul.position.y, soul.position.z],
+                    end: [other.position.x, other.position.y, other.position.z],
+                    color: [1, 1, 1] // White color as current implementation
+                });
+            }
+        }
+    }
+    
+    return connections;
+}

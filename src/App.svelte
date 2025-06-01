@@ -234,6 +234,54 @@
       scene.add(lineSegments);
     }
 
+    // Function to handle connections calculated in Web Worker
+    function updateConnectionsFromWorker(connections) {
+      if (!lineSegments || !connections || connections.length === 0) {
+        if (lineSegments) lineSegments.geometry.setDrawRange(0, 0);
+        return;
+      }
+
+      const positions = lineSegments.geometry.attributes.position.array;
+      const colors = lineSegments.geometry.attributes.color.array;
+      
+      let lineIdx = 0;
+      const maxLines = Math.min(connections.length, MAX_LINES);
+
+      // Apply pre-calculated connection data from worker
+      for (let i = 0; i < maxLines; i++) {
+        const connection = connections[i];
+        
+        // Vertex 1 (start)
+        positions[lineIdx * 6 + 0] = connection.start[0];
+        positions[lineIdx * 6 + 1] = connection.start[1];
+        positions[lineIdx * 6 + 2] = connection.start[2];
+        colors[lineIdx * 6 + 0] = connection.color[0];
+        colors[lineIdx * 6 + 1] = connection.color[1];
+        colors[lineIdx * 6 + 2] = connection.color[2];
+
+        // Vertex 2 (end)
+        positions[lineIdx * 6 + 3] = connection.end[0];
+        positions[lineIdx * 6 + 4] = connection.end[1];
+        positions[lineIdx * 6 + 5] = connection.end[2];
+        colors[lineIdx * 6 + 3] = connection.color[0];
+        colors[lineIdx * 6 + 4] = connection.color[1];
+        colors[lineIdx * 6 + 5] = connection.color[2];
+        
+        lineIdx++;
+      }
+
+      // Hide unused lines by setting them to zero
+      for (let i = lineIdx; i < MAX_LINES; i++) {
+        positions[i * 6 + 0] = 0; positions[i * 6 + 1] = 0; positions[i * 6 + 2] = 0;
+        positions[i * 6 + 3] = 0; positions[i * 6 + 4] = 0; positions[i * 6 + 5] = 0;
+      }
+
+      // Update the geometry
+      lineSegments.geometry.setDrawRange(0, lineIdx * 2);
+      lineSegments.geometry.attributes.position.needsUpdate = true;
+      lineSegments.geometry.attributes.color.needsUpdate = true;
+    }
+
     const recycledSoulCount = getEntityCountFromURL();
     
 
@@ -509,6 +557,9 @@
                 }
                 souls = souls.filter(s => s.userData.id !== soulIdToRemove);
             }
+        } else if (type === 'connectionsUpdated') {
+            // Handle connections calculated in worker
+            updateConnectionsFromWorker(data);
         }
     };
 
@@ -525,7 +576,14 @@
     // Pre-calculate squared distance for line connections
     const interactionDistanceSq = interactionDistance * interactionDistance;
 
+    // DEPRECATED: Connection rendering moved to Web Worker for performance
+    // This function is kept for fallback but worker handles connections now
     function updateRandomColorConnections() {
+      // Worker now handles connection calculations
+      // This function is maintained for backward compatibility
+      return;
+      
+      /*
       if (!lineSegments || souls.length < 2) {
         if(lineSegments) lineSegments.geometry.setDrawRange(0, 0);
         return;
@@ -593,6 +651,7 @@
       lineSegments.geometry.setDrawRange(0, lineIdx * 2);
       lineSegments.geometry.attributes.position.needsUpdate = true;
       lineSegments.geometry.attributes.color.needsUpdate = true;
+      */
     }
 
     let pulseTime = 0;
@@ -623,7 +682,7 @@
         createNewSoul(); 
       }
 
-      updateRandomColorConnections(); // MODIFIED call
+      updateRandomColorConnections(); // MODIFIED call - now deprecated, worker handles connections
       controls.update();
       renderer.render(scene, camera);
 
@@ -1074,7 +1133,7 @@
 
 <div class="entity-links">
   <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99 <span>Souls</span></a>
-  <a href="?val=888" class="entity-link" class:active={getActiveCount() === 999}>999 <span>Souls</span></a>
+  <a href="?val=999" class="entity-link" class:active={getActiveCount() === 999}>999 <span>Souls</span></a>
   <a href="?val=9999" class="entity-link" class:active={getActiveCount() === 9999}>9999 <span>Souls</span></a>
   <a href="/" class="entity-link" class:active={getActiveCount() === 777}>Auto</a>
 </div>
@@ -1168,3 +1227,13 @@
     4. Conditional updates: Only call setRGB() when color data is provided
     Expected improvement: 60-80% reduction in color-related CPU overhead
 -->
+
+<!-- New optimized function to handle connections from worker
+    =================================================================
+    Problem: Inefficient connection handling in the main thread, causing performance issues with high soul counts
+    Solution: Offload connection handling to the worker, send pre-calculated connection data to the main thread
+    1. Worker calculates connections based on soul positions and other factors
+    2. Worker sends updated connection data to the main thread
+    3. Main thread simply applies the pre-calculated data to the line segments
+    Expected improvement: Significant reduction in CPU overhead for connection calculations in the main thread
+  -->
