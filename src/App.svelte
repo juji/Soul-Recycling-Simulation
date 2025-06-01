@@ -253,8 +253,8 @@
 
     const controls = new ArcballControls(camera, renderer.domElement, scene);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.5;  // Much lower for smoother, more responsive feel
-    controls.wMax = 1;             // Higher for faster rotation capability
+    controls.dampingFactor = 0.333;  // Much lower for smoother, more responsive feel
+    controls.wMax = 1.3;             // Higher for faster rotation capability
     controls.setGizmosVisible(false);
     
     // Additional recommended ArcballControls settings
