@@ -385,7 +385,6 @@ self.onmessage = function(e) {
                 } else {
                     // Fallback to white if RGB conversion fails
                     soul.finalRGB = [1, 1, 1];
-                    console.warn('HSL to RGB conversion failed, using fallback color');
                 }
             }
             if (opacityChanged) {

@@ -76,9 +76,6 @@ export class InstancedSoulRenderer {
         
         // Safety check: prevent buffer overflow
         const soulCount = Math.min(souls.length, this.maxSouls);
-        if (souls.length > this.maxSouls) {
-            console.warn(`⚠️ Soul count (${souls.length}) exceeds maxSouls (${this.maxSouls}). Clamping to ${this.maxSouls}.`);
-        }
 
         souls.slice(0, soulCount).forEach((soul, index) => {
             // Set transformation matrix (position only for now)

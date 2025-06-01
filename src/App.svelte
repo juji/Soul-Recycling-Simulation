@@ -4,11 +4,14 @@
   import * as THREE from 'three';
   import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
   import { InstancedSoulRenderer } from './InstancedSoulRenderer.js';
+  import { LODManager } from './LODManager.js';  // Phase 4: LOD System
+  import { AdaptivePerformanceManager } from './adaptive-performance.js';  // Phase 4: Adaptive Performance
   import './ai-test-bridge.js';  // Import AI test bridge for performance testing
 
-  // Phase 3: Feature Flags
+  // Phase 4: Feature Flags
   const FEATURE_FLAGS = {
     USE_INSTANCED_RENDERING: true, // Enable Phase 3 instanced rendering
+    USE_LOD_SYSTEM: true, // Enable Phase 4 LOD system
     FALLBACK_TO_INDIVIDUAL_MESHES: true // Emergency fallback
   };
 
@@ -201,6 +204,10 @@
   let instancedRenderer = null;
   let renderer = null;
   
+  // Phase 4: LOD and Performance Management
+  let lodManager = null;
+  let adaptivePerformanceManager = null;
+  
   // Phase 3: Performance tracking functions
   function trackDrawCalls(renderer) {
     if (renderer && renderer.info && renderer.info.render) {
@@ -344,6 +351,27 @@
       );
       scene.add(pointLight);
     });
+
+    // Phase 4: Initialize Adaptive Performance Manager
+    if (FEATURE_FLAGS.USE_LOD_SYSTEM) {
+      adaptivePerformanceManager = new AdaptivePerformanceManager({
+        debug: import.meta.env.DEV,
+        enableLearning: true,
+        adaptationAggression: 'moderate'
+      });
+      
+      // Phase 4: Initialize LOD Manager with camera and performance manager
+      lodManager = new LODManager(camera, adaptivePerformanceManager);
+      
+      // Configure LOD distances based on initial hardware quality
+      const initialQuality = adaptivePerformanceManager.getCurrentQuality();
+      lodManager.configureForQuality(initialQuality);
+      
+      // Make performance manager globally accessible for AI test bridge
+      if (typeof window !== 'undefined') {
+        window.performanceManager = adaptivePerformanceManager;
+      }
+    }
 
     // Phase 3: Check URL parameters for rendering mode override (for testing)
     const urlParams = new URLSearchParams(window.location.search);
@@ -675,8 +703,6 @@
         const dynamicMaxSouls = recycledSoulCount * 2;
         instancedRenderer = new InstancedSoulRenderer(scene, dynamicMaxSouls);
         
-        console.log(`✅ Phase 3: Instanced renderer initialized with maxSouls=${dynamicMaxSouls} for ${souls.length} existing souls`);
-        
         // Hide individual meshes from scene since we'll use instanced rendering
         souls.forEach(soul => {
           if (soul.parent === scene) {
@@ -688,7 +714,6 @@
         instancedRenderer.updateInstances(souls);
         
       } catch (error) {
-        console.warn('⚠️ Phase 3: Instanced rendering failed, falling back to individual meshes:', error);
         renderingMode = 'individual';
         
         // Show individual meshes again on fallback
@@ -846,6 +871,13 @@
     function animate() {
       requestAnimationFrame(animate);
 
+      // Phase 4: LOD calculations (before worker update for physics scaling)
+      let lodData = null;
+      if (FEATURE_FLAGS.USE_LOD_SYSTEM && lodManager && souls.length > 0) {
+        // Update LOD levels for all souls
+        lodData = lodManager.updateSoulLOD(souls);
+      }
+
       // Update pointer position in 3D space for main thread (raycasting)
       raycaster.setFromCamera(mouse, camera);
       const intersectionPoint = new THREE.Vector3();
@@ -885,6 +917,30 @@
         fps = frameCount;
         frameCount = 0;
         lastTime = currentTime;
+        
+        // Phase 4: Update adaptive performance manager with current metrics
+        if (FEATURE_FLAGS.USE_LOD_SYSTEM && adaptivePerformanceManager) {
+          const frameTime = elapsed / fps;
+          const workerTime = 0; // TODO: Track worker time
+          const renderTime = 0; // TODO: Track render time
+          
+          adaptivePerformanceManager.updateMetrics(
+            fps, 
+            frameTime, 
+            memoryUsage, 
+            workerTime, 
+            renderTime, 
+            souls.length
+          );
+          
+          // Update current quality from adaptive manager
+          currentQuality = adaptivePerformanceManager.getCurrentQuality();
+          
+          // Update LOD distances if quality changed
+          if (lodManager) {
+            lodManager.configureForQuality(currentQuality);
+          }
+        }
         
         // Update global variables for AI test bridge
         if (typeof window !== 'undefined') {
@@ -945,6 +1001,14 @@
       // REMOVED old linesGroup cleanup
       if (simulationWorker) {
         simulationWorker.terminate();
+      }
+      
+      // Phase 4: Cleanup LOD and Performance managers
+      if (lodManager) {
+        lodManager = null;
+      }
+      if (adaptivePerformanceManager) {
+        adaptivePerformanceManager = null;
       }
     };
   });
@@ -1354,7 +1418,16 @@
 </style>
 
 <div id="container" bind:this={container}></div>
-<div class="fps-counter">FPS: {fps}</div>
+<div class="fps-counter">
+  FPS: {fps}
+  {#if FEATURE_FLAGS.USE_LOD_SYSTEM && lodManager}
+    <br/>Quality: {currentQuality}
+    <br/>LOD: H{lodManager.lodStats.high} M{lodManager.lodStats.medium} L{lodManager.lodStats.low} C{lodManager.lodStats.culled}
+    {#if lodManager.lodStats.performanceGain > 0}
+      <br/>Gain: {Math.round(lodManager.lodStats.performanceGain * 100)}%
+    {/if}
+  {/if}
+</div>
 <div class="population-counter">Population: {souls.length}</div>
 
 <div class="entity-links">
