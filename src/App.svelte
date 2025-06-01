@@ -1421,13 +1421,6 @@
 <div id="container" bind:this={container}></div>
 <div class="fps-counter">
   FPS: {fps}
-  {#if FEATURE_FLAGS.USE_LOD_SYSTEM && lodManager}
-    <br/>Quality: {currentQuality}
-    <br/>LOD: H{lodManager.lodStats.high} M{lodManager.lodStats.medium} L{lodManager.lodStats.low} C{lodManager.lodStats.culled}
-    {#if lodManager.lodStats.performanceGain > 0}
-      <br/>Gain: {Math.round(lodManager.lodStats.performanceGain * 100)}%
-    {/if}
-  {/if}
 </div>
 <div class="population-counter">Population: {souls.length}</div>
 
