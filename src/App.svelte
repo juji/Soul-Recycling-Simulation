@@ -2,7 +2,7 @@
 
   import { onMount } from 'svelte';
   import * as THREE from 'three';
-  import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+  import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
 
   // Global settings
   const DEFAULT_SOUL_COUNT = 777;
@@ -251,9 +251,18 @@
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
+    const controls = new ArcballControls(camera, renderer.domElement, scene);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.01;
+    controls.dampingFactor = 0.5;  // Much lower for smoother, more responsive feel
+    controls.wMax = 1;             // Higher for faster rotation capability
+    controls.setGizmosVisible(false);
+    
+    // Additional recommended ArcballControls settings
+    controls.enablePan = true;      // Allow panning
+    controls.enableZoom = true;     // Allow zooming
+    controls.enableRotate = true;   // Allow rotation
+    controls.minDistance = 10;      // Minimum zoom distance
+    controls.maxDistance = 300;     // Maximum zoom distance
 
     // Lights
     const ambientLight = new THREE.AmbientLight(
