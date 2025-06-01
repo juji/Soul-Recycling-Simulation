@@ -481,23 +481,33 @@ function calculateConnections(souls, interactionDistance, maxConnections, maxSou
     const maxSouls = Math.min(souls.length, maxSoulsToCheck);
     const soulsToCheck = souls.slice(0, maxSouls);
     
+    // To keep connection color stable, we need a deterministic color for each pair (id1, id2)
+    function getStableColor(id1, id2) {
+        // Always order ids the same way
+        const a = Math.min(id1, id2);
+        const b = Math.max(id1, id2);
+        // Use a simple hash function for deterministic color
+        const hash = ((a * 73856093) ^ (b * 19349663)) >>> 0;
+        // Map hash to [0,1]
+        const hue = (hash % 360) / 360;
+        const saturation = 1;
+        const lightness = 0.5; // 0.5-0.7
+        return hslToRgb(hue, saturation, lightness);
+    }
+
     for (let i = 0; i < soulsToCheck.length && connections.length < maxConnections; i++) {
         const soul = soulsToCheck[i];
-        
-        // Use spatial grid to find nearby souls efficiently
         const nearby = spatialGrid.getNearby(soul.position, interactionDistance);
-        
         for (const other of nearby) {
             if (soul.id >= other.id) continue; // Avoid duplicates
             if (connections.length >= maxConnections) break;
-            
             const distSq = vec.lengthSq(vec.subVectors(soul.position, other.position));
             if (distSq < maxDistSq) {
-                // Send pre-calculated line data to main thread
+                const rgb = getStableColor(soul.id, other.id);
                 connections.push({
                     start: [soul.position.x, soul.position.y, soul.position.z],
                     end: [other.position.x, other.position.y, other.position.z],
-                    color: [1, 1, 1] // White color as current implementation
+                    color: rgb
                 });
             }
         }

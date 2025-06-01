@@ -30,7 +30,7 @@
   };
   
   const LINE_SETTINGS = {
-    OPACITY: 0.333,
+    OPACITY: 0.42,
     VERTEX_COORDS: 3,
     VERTICES_PER_LINE: 2
   };
