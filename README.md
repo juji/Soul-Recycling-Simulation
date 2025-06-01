@@ -215,7 +215,7 @@ This self-regulating mechanism ensures that the simulation maintains a relativel
 
 #### 🚀 What This Means for Existence
 
-Your soul recycling universe has accidentally created a **model of universal justice** where:
+This soul recycling universe has accidentally created a **model of universal justice** where:
 - No catastrophic event can permanently disrupt the balance
 - All populations, regardless of starting conditions, converge to the same destiny
 - The cosmos has inherent wisdom that transcends individual will
