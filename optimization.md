@@ -87,16 +87,21 @@
 **Testing Tools Created**: Complete automated performance testing infrastructure  
 **Test Coverage**: Hardware detection, real-time metrics, automated benchmarks  
 **Validation Method**: Live performance data collection with 20-second stress tests  
+**Organization**: All testing tools and documentation organized in [`testing-results/`](testing-results/) directory
+
+> **📊 Detailed Testing Documentation**: For comprehensive testing instructions, methodology, and usage examples, see [`testing-results/README.md`](testing-results/README.md)  
 
 #### ✅ **Testing Components Implemented**
 
-**1. Enhanced Performance Benchmark (`performance-benchmark.html`)**
+> **🗂️ Testing File Locations**: All testing tools are organized in the `testing-results/` directory for easy access and maintenance.
+
+**1. Enhanced Performance Benchmark (`testing-results/performance-benchmark.html`)**
 - Real-time iframe communication with running simulation
 - Live FPS, memory, and quality metrics collection
 - Fallback data simulation for offline testing
 - Cross-platform hardware detection
 
-**2. Comprehensive Test Suite (`comprehensive-performance-test.html`)**
+**2. Comprehensive Test Suite (`testing-results/comprehensive-performance-test.html`)**
 - **Automated Test Sequences**: 6 soul count configurations (99→1500)
 - **Hardware Detection**: CPU cores, memory, GPU identification, device classification
 - **Real-time Dashboard**: Live performance monitoring with visual indicators
@@ -109,7 +114,7 @@
 - Seamless integration with existing simulation architecture
 - Zero-impact performance monitoring
 
-**4. Automated Test Runner (`run-performance-tests.js`)**
+**4. Automated Test Runner (`testing-results/run-performance-tests.js`)**
 - Node.js/Puppeteer-based automated execution
 - Cross-browser compatibility testing
 - Batch testing across multiple configurations
@@ -128,6 +133,10 @@
 - **Hardware Compatibility**: Validated performance across hardware tiers
 - **Optimization Verification**: Quantified improvement measurements
 - **Future Benchmarking**: Baseline established for Phase 3 development
+
+> **📋 Additional Testing Documentation**: 
+> - [`testing-results/performance-test-results.md`](testing-results/performance-test-results.md) - Detailed performance analysis and methodology
+> - [`testing-results/PERFORMANCE-TESTING-COMPLETE.md`](testing-results/PERFORMANCE-TESTING-COMPLETE.md) - Complete testing summary and achievements
 
 ---
 
