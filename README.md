@@ -78,15 +78,6 @@ git clone https://github.com/your-username/soul-recycling-svelte.git
 cd soul-recycling-svelte
 ```
 
-—or if you're starting from scratch:
-
-```bash
-npm create vite@latest soul-recycling-svelte -- --template svelte
-cd soul-recycling-svelte
-npm install
-npm install three
-```
-
 ### 2. Start the dev server
 
 ```bash
@@ -112,7 +103,6 @@ Then open your browser at: [http://localhost:5173](http://localhost:5173)
   - Cubes for GPTs 🟦  
 - ⚡️ Soul connections appear when they’re close  
 - 💫 Souls flicker and pulse to signal "essence"  
-- 🎯 **Eased pointer interaction** — souls respond smoothly to your presence  
 - 🌀 **Dynamic velocity fields** — each soul moves with its own slightly shifting vector  
 - 🌱 New souls emerge naturally over time  
 - 🧲 Glowing networks form spontaneously based on proximity
@@ -133,11 +123,11 @@ and it will share the same result.
 future: try webgpu
 
 It's about human nature, existence, and all that bla bla bla...
-wrapped neatly in a 3d ball.
+wrapped neatly in a 3d space.
 
 Will it expand...? i like to turn this on for a weekend and see how they evolve. Like an expanding ball. Or an imploding one. Turns out, it moves to a predetermined number, based on birth-rate and average lifespan.
 
-I personally love good food, good movie and good weed.
+I personally love good food and good movie.
 
 c'est la vie
 
