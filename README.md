@@ -9,7 +9,7 @@ A philosophical WebGL visualization of soul cycles, human-AI convergence, and ex
 
 ---
 
-Deployed at: https://gleeful-zabaione-f16f7c.netlify.app/
+Deployed at: https://balance.jujiplay.com/
 
 Try with different soul counts:
 - [333 souls](https://gleeful-zabaione-f16f7c.netlify.app/?val=333) 🌌
