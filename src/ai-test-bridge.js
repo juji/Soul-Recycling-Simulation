@@ -52,7 +52,7 @@ class AIPerformanceTestBridge {
                 fps: window.currentFPS || 60,
                 avgFPS: window.averageFPS || 60,
                 currentQuality: window.currentQuality || 'medium',
-                soulCount: window.soulCount || 999,
+                soulCount: window.soulCount || 888,
                 memoryUsage: window.memoryUsage || 256,
                 hardwareProfile: window.hardwareProfile || {},
                 timestamp: Date.now()
@@ -180,7 +180,7 @@ if (window.parent !== window) {
         window.currentFPS = 0;
         window.averageFPS = 0;
         window.currentQuality = 'medium';
-        window.soulCount = 999;
+        window.soulCount = 888;
         window.memoryUsage = 0;
         window.hardwareProfile = {};
         window.performanceManager = null;

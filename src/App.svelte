@@ -5,7 +5,7 @@
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
   // Global settings
-  const DEFAULT_SOUL_COUNT = 888;
+  const DEFAULT_SOUL_COUNT = 777;
   
   // localStorage keys for parameter persistence
   const STORAGE_KEYS = {
@@ -1055,9 +1055,9 @@
 
 <div class="entity-links">
   <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99 <span>Souls</span></a>
-  <a href="?val=999" class="entity-link" class:active={getActiveCount() === 999}>999 <span>Souls</span></a>
+  <a href="?val=888" class="entity-link" class:active={getActiveCount() === 999}>999 <span>Souls</span></a>
   <a href="?val=9999" class="entity-link" class:active={getActiveCount() === 9999}>9999 <span>Souls</span></a>
-  <a href="/" class="entity-link" class:active={getActiveCount() === 888}>Auto</a>
+  <a href="/" class="entity-link" class:active={getActiveCount() === 777}>Auto</a>
 </div>
 
 <!-- Toggle button for mobile equilibrium info -->
