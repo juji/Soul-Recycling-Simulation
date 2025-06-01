@@ -759,7 +759,10 @@
                 data.forEach(updatedSoulData => {
                     const soulMesh = souls.find(s => s.userData.id === updatedSoulData.id);
                     if (soulMesh) {
-                        soulMesh.position.set(updatedSoulData.pos[0], updatedSoulData.pos[1], updatedSoulData.pos[2]);
+                        // Only update position if it was sent (moved significantly)
+                        if (updatedSoulData.pos && Array.isArray(updatedSoulData.pos) && updatedSoulData.pos.length === 3) {
+                            soulMesh.position.set(updatedSoulData.pos[0], updatedSoulData.pos[1], updatedSoulData.pos[2]);
+                        }
                         
                         // Update userData for instanced renderer access
                         if (updatedSoulData.rgb) {
@@ -784,8 +787,10 @@
                 data.forEach(updatedSoulData => {
                     const soulMesh = souls.find(s => s.userData.id === updatedSoulData.id);
                     if (soulMesh) {
-                        // Always update position (most frequent change)
-                        soulMesh.position.set(updatedSoulData.pos[0], updatedSoulData.pos[1], updatedSoulData.pos[2]);
+                        // Only update position if it was sent (moved significantly)
+                        if (updatedSoulData.pos && Array.isArray(updatedSoulData.pos) && updatedSoulData.pos.length === 3) {
+                            soulMesh.position.set(updatedSoulData.pos[0], updatedSoulData.pos[1], updatedSoulData.pos[2]);
+                        }
                         
                         // Ensure material exists before trying to set properties
                         if (soulMesh.material) {

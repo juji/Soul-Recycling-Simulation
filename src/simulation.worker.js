@@ -7,6 +7,124 @@ let souls = [];
 let pulseTime = 0;
 let frameCount = 0; // For LOD physics update rate calculations
 
+// Phase 5: Advanced Worker Communication - Delta Compression Manager
+class DeltaCompressionManager {
+    constructor() {
+        this.previousStates = new Map();
+        this.POSITION_THRESHOLD = 0.01; // 1cm movement threshold
+        this.VELOCITY_THRESHOLD = 0.05; // Velocity change threshold
+        this.messageId = 0; // For message ordering and deduplication
+    }
+    
+    // Check if position changed significantly
+    positionChanged(newPos, prevPos) {
+        if (!prevPos) return true;
+        
+        const dx = Math.abs(newPos.x - prevPos.x);
+        const dy = Math.abs(newPos.y - prevPos.y);
+        const dz = Math.abs(newPos.z - prevPos.z);
+        
+        return dx > this.POSITION_THRESHOLD || 
+               dy > this.POSITION_THRESHOLD || 
+               dz > this.POSITION_THRESHOLD;
+    }
+    
+    // Check if velocity changed significantly
+    velocityChanged(newVel, prevVel) {
+        if (!prevVel) return true;
+        
+        const dx = Math.abs(newVel.x - prevVel.x);
+        const dy = Math.abs(newVel.y - prevVel.y);
+        const dz = Math.abs(newVel.z - prevVel.z);
+        
+        return dx > this.VELOCITY_THRESHOLD || 
+               dy > this.VELOCITY_THRESHOLD || 
+               dz > this.VELOCITY_THRESHOLD;
+    }
+    
+    // Quantize position for consistent precision
+    quantizePosition(pos) {
+        return [
+            Math.round(pos.x * WORKER_SETTINGS.POSITION_PRECISION) / WORKER_SETTINGS.POSITION_PRECISION,
+            Math.round(pos.y * WORKER_SETTINGS.POSITION_PRECISION) / WORKER_SETTINGS.POSITION_PRECISION,
+            Math.round(pos.z * WORKER_SETTINGS.POSITION_PRECISION) / WORKER_SETTINGS.POSITION_PRECISION
+        ];
+    }
+    
+    // Compress soul data with enhanced delta compression
+    compressSoulData(souls) {
+        const changedSouls = [];
+        const messageId = this.messageId++;
+        
+        souls.forEach(soul => {
+            const prevState = this.previousStates.get(soul.id);
+            const data = { id: soul.id };
+            let hasChanges = false;
+            
+            // Position delta compression - only send if moved significantly
+            if (this.positionChanged(soul.position, prevState?.position)) {
+                data.pos = this.quantizePosition(soul.position);
+                hasChanges = true;
+            }
+            
+            // Velocity delta compression - only send if changed significantly
+            if (this.velocityChanged(soul.velocity, prevState?.velocity)) {
+                data.vel = this.quantizePosition(soul.velocity); // Reuse position precision
+                hasChanges = true;
+            }
+            
+            // Color delta compression (already implemented)
+            if (soul.colorChanged && soul.finalRGB) {
+                data.rgb = [
+                    Math.round(soul.finalRGB[0] * WORKER_SETTINGS.RGB_PRECISION) / WORKER_SETTINGS.RGB_PRECISION,
+                    Math.round(soul.finalRGB[1] * WORKER_SETTINGS.RGB_PRECISION) / WORKER_SETTINGS.RGB_PRECISION,
+                    Math.round(soul.finalRGB[2] * WORKER_SETTINGS.RGB_PRECISION) / WORKER_SETTINGS.RGB_PRECISION
+                ];
+                hasChanges = true;
+            }
+            
+            // Opacity delta compression (already implemented)
+            if (soul.opacityChanged) {
+                data.opacity = Math.round(soul.finalOpacity * WORKER_SETTINGS.OPACITY_PRECISION_OUT) / WORKER_SETTINGS.OPACITY_PRECISION_OUT;
+                hasChanges = true;
+            }
+            
+            // Only include souls with actual changes
+            if (hasChanges) {
+                changedSouls.push(data);
+                
+                // Update previous state
+                this.previousStates.set(soul.id, {
+                    position: vec.copy(soul.position),
+                    velocity: vec.copy(soul.velocity),
+                    rgb: soul.finalRGB ? [...soul.finalRGB] : null,
+                    opacity: soul.finalOpacity
+                });
+            }
+        });
+        
+        return {
+            messageId,
+            souls: changedSouls,
+            totalSouls: souls.length, // For validation on main thread
+            compressionRatio: changedSouls.length / souls.length
+        };
+    }
+    
+    // Clean up old states for removed souls
+    cleanupRemovedSouls(activeSoulIds) {
+        const activeIds = new Set(activeSoulIds);
+        for (const [soulId] of this.previousStates) {
+            if (!activeIds.has(soulId)) {
+                this.previousStates.delete(soulId);
+            }
+        }
+    }
+}
+
+// Initialize delta compression manager
+const deltaCompressionManager = new DeltaCompressionManager();
+
 // Worker constants - configured from main thread
 const WORKER_SETTINGS = {
     // Pulse and animation
@@ -437,39 +555,12 @@ self.onmessage = function(e) {
         // Remove souls marked for removal from the worker's list
         if (soulsToRemove.length > 0) {
             souls = souls.filter(soul => !soulsToRemove.includes(soul.id));
+            // Clean up delta compression states for removed souls
+            deltaCompressionManager.cleanupRemovedSouls(souls.map(s => s.id));
         }
 
-        const updatedSoulsData = souls.map(soul => {
-            // Use delta compression - only send changed data
-            const data = { id: soul.id };
-            
-            // Always send position (position changes are frequent and important)
-            data.pos = [
-                Math.round(soul.position.x * WORKER_SETTINGS.POSITION_PRECISION) / WORKER_SETTINGS.POSITION_PRECISION,
-                Math.round(soul.position.y * WORKER_SETTINGS.POSITION_PRECISION) / WORKER_SETTINGS.POSITION_PRECISION,
-                Math.round(soul.position.z * WORKER_SETTINGS.POSITION_PRECISION) / WORKER_SETTINGS.POSITION_PRECISION
-            ];
-            
-            // Only send HSL if color actually changed
-            if (soul.colorChanged && soul.finalRGB) {
-                // Send pre-calculated RGB instead of HSL to avoid conversion overhead
-                // Validate RGB values before sending
-                if (soul.finalRGB.length === 3 && soul.finalRGB.every(val => typeof val === 'number' && !isNaN(val))) {
-                    data.rgb = [
-                        Math.round(soul.finalRGB[0] * WORKER_SETTINGS.RGB_PRECISION) / WORKER_SETTINGS.RGB_PRECISION,
-                        Math.round(soul.finalRGB[1] * WORKER_SETTINGS.RGB_PRECISION) / WORKER_SETTINGS.RGB_PRECISION,
-                        Math.round(soul.finalRGB[2] * WORKER_SETTINGS.RGB_PRECISION) / WORKER_SETTINGS.RGB_PRECISION
-                    ];
-                }
-            }
-            
-            // Only send opacity if it actually changed
-            if (soul.opacityChanged) {
-                data.opacity = Math.round(soul.finalOpacity * WORKER_SETTINGS.OPACITY_PRECISION_OUT) / WORKER_SETTINGS.OPACITY_PRECISION_OUT;
-            }
-            
-            return data;
-        });
+        // Phase 5: Enhanced delta compression with position tracking
+        const compressedData = deltaCompressionManager.compressSoulData(souls);
         
         // Reset change flags after processing to ensure clean state for next frame
         souls.forEach(soul => {
@@ -486,7 +577,17 @@ self.onmessage = function(e) {
             lodData // Pass LOD data for connection optimization
         );
 
-        self.postMessage({ type: 'soulsUpdated', data: updatedSoulsData });
+        // Send enhanced delta-compressed soul data
+        self.postMessage({ 
+            type: 'soulsUpdated', 
+            data: compressedData.souls,
+            metadata: {
+                messageId: compressedData.messageId,
+                totalSouls: compressedData.totalSouls,
+                compressionRatio: compressedData.compressionRatio,
+                changedSouls: compressedData.souls.length
+            }
+        });
         
         // Send connections separately to main thread
         if (connections.length > 0) {
@@ -505,6 +606,14 @@ self.onmessage = function(e) {
             opacityChanged: true // Force initial opacity update
         };
         souls.push(newSoul);
+        
+        // Initialize delta compression state for new soul
+        deltaCompressionManager.previousStates.set(newSoul.id, {
+            position: vec.copy(newSoul.position),
+            velocity: vec.copy(newSoul.velocity),
+            rgb: null,
+            opacity: undefined
+        });
     }
 };
 
