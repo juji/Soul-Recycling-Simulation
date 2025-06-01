@@ -345,8 +345,20 @@
       scene.add(pointLight);
     });
 
+    // Phase 3: Check URL parameters for rendering mode override (for testing)
+    const urlParams = new URLSearchParams(window.location.search);
+    const modeParam = urlParams.get('mode');
+    
+    // Override feature flag if mode parameter is provided
+    let useInstancedRendering = FEATURE_FLAGS.USE_INSTANCED_RENDERING;
+    if (modeParam === 'individual') {
+      useInstancedRendering = false;
+    } else if (modeParam === 'instanced') {
+      useInstancedRendering = true;
+    }
+
     // Phase 3: Initialize Instanced Rendering
-    renderingMode = FEATURE_FLAGS.USE_INSTANCED_RENDERING ? 'instanced' : 'individual';
+    renderingMode = useInstancedRendering ? 'instanced' : 'individual';
 
     // Phase 3: Performance tracking functions
     function trackDrawCalls(renderer) {
