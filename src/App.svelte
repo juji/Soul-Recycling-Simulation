@@ -1350,6 +1350,7 @@
     transform: translateX(-50%) translateY(0);
     opacity: 1;
   }
+
 </style>
 
 <div id="container" bind:this={container}></div>
@@ -1445,19 +1446,3 @@
 <div class="toast" class:show={showToast}>
   {toastMessage}
 </div>
-
-<!-- Phase 3: Performance Metrics & Logging -->
-{#if FEATURE_FLAGS.USE_INSTANCED_RENDERING && performanceMetrics}
-<div class="performance-metrics">
-  <div>Rendering Mode: {performanceMetrics.renderingMode}</div>
-  <div>Draw Calls: {performanceMetrics.drawCalls}</div>
-  <div>Instanced Update Time: {performanceMetrics.instancedUpdateTime} ms</div>
-  <div>Individual Update Time: {performanceMetrics.individualUpdateTime} ms</div>
-  <div>Souls Updated: {performanceMetrics.soulsUpdated}</div>
-  <div>Frames Since Last Log: {performanceMetrics.framesSinceLastLog}</div>
-  <div>Instanced Frame Count: {performanceMetrics.instancedFrameCount}</div>
-  <div>Individual Frame Count: {performanceMetrics.individualFrameCount}</div>
-  <div>Average Instanced Time: {performanceMetrics.averageInstancedTime} ms</div>
-  <div>Average Individual Time: {performanceMetrics.averageIndividualTime} ms</div>
-</div>
-{/if}
