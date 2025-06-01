@@ -373,6 +373,7 @@
           }
         });
       } catch (error) {
+        console.warn('⚠️ Phase 3: Instanced rendering failed, falling back to individual meshes');
         renderingMode = 'individual';
         
         // Show individual meshes again on fallback
