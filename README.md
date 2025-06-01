@@ -64,7 +64,8 @@ Here's a summary of key features and changes developed with Gem's assistance:
     *   Added a GitHub repository link in the bottom left corner of the application.
     *   The link features consistent styling with the existing FPS counter (dark background with blur effect).
     *   Includes hover effects and opens in a new tab for better user experience.
-
+*   **And more:**
+    *   Too much... it is the main AI used in helping to build this.
 ---
 
 ## 🛠️ Setup Instructions (macOS)
