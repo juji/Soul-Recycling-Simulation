@@ -9,6 +9,43 @@ let pulseTime = 0;
 // Pre-calculate squared distances to avoid sqrt calls
 let NEIGHBOR_SPEED_INFLUENCE_RADIUS_SQ, SEPARATION_DISTANCE_SQ, DEWA_ATTRACTION_RADIUS_SQ, DEWA_ENHANCEMENT_RADIUS_SQ, POINTER_INTERACTION_RADIUS_SQ;
 
+// HSL to RGB conversion function to avoid main thread conversion overhead
+function hslToRgb(h, s, l) {
+    // Normalize inputs to valid ranges
+    h = h % 1; // Ensure hue is in [0, 1] range
+    if (h < 0) h += 1; // Handle negative hue values
+    s = Math.max(0, Math.min(1, s)); // Clamp saturation to [0, 1]
+    l = Math.max(0, Math.min(1, l)); // Clamp lightness to [0, 1]
+    
+    let r, g, b;
+
+    if (s === 0) {
+        r = g = b = l; // achromatic
+    } else {
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+
+    // Ensure RGB values are in valid range [0, 1]
+    return [
+        Math.max(0, Math.min(1, r)),
+        Math.max(0, Math.min(1, g)),
+        Math.max(0, Math.min(1, b))
+    ];
+}
+
 // Spatial partitioning system
 class SpatialGrid {
     constructor(cellSize) {
@@ -258,7 +295,7 @@ self.onmessage = function(e) {
 
             // Flicker and color animation
             const flicker = 0.5 + 0.5 * Math.sin(pulseTime * 3 + soul.flickerPhase);
-            soul.finalOpacity = 0.5 + 0.5 * flicker; // Store opacity directly on soul for mapping
+            const newOpacity = 0.5 + 0.5 * flicker;
 
             // Use the potentially boosted lightness for pulsing, unless it's a dewa or already enhanced to max
             // Dewas retain their base lightness. Enhanced souls use their boosted lightness for pulsing.
@@ -274,11 +311,47 @@ self.onmessage = function(e) {
                 pulsedLightness = Math.min(Math.max(soul.baseHSL.l + 0.2 * (pulse - 0.5), 0), 1);
             }
             
-            soul.finalHSL = { // Store the HSL to be sent, directly on soul for mapping
+            // Calculate new HSL values
+            const newHSL = {
                 h: soul.baseHSL.h,
                 s: soul.isDewa ? soul.baseHSL.s : currentSaturation, 
                 l: pulsedLightness
             };
+
+            // Color change detection - only update if HSL or opacity actually changed
+            const HSL_PRECISION = 0.01; // 1% threshold for color changes
+            const OPACITY_PRECISION = 0.01; // 1% threshold for opacity changes
+            
+            const colorChanged = !soul.finalHSL || 
+                Math.abs(soul.finalHSL.h - newHSL.h) > HSL_PRECISION ||
+                Math.abs(soul.finalHSL.s - newHSL.s) > HSL_PRECISION ||
+                Math.abs(soul.finalHSL.l - newHSL.l) > HSL_PRECISION;
+                
+            const opacityChanged = soul.finalOpacity === undefined || 
+                Math.abs(soul.finalOpacity - newOpacity) > OPACITY_PRECISION;
+
+            // Store color change flags for main thread optimization
+            soul.colorChanged = colorChanged;
+            soul.opacityChanged = opacityChanged;
+            
+            // Only update stored values if they actually changed
+            if (colorChanged) {
+                soul.finalHSL = newHSL;
+                // Pre-calculate RGB to avoid HSL-to-RGB conversion on main thread
+                const rgbResult = hslToRgb(newHSL.h, newHSL.s, newHSL.l);
+                // Validate RGB result before storing
+                if (rgbResult && rgbResult.length === 3 && 
+                    rgbResult.every(val => typeof val === 'number' && !isNaN(val))) {
+                    soul.finalRGB = rgbResult;
+                } else {
+                    // Fallback to white if RGB conversion fails
+                    soul.finalRGB = [1, 1, 1];
+                    console.warn('HSL to RGB conversion failed, using fallback color');
+                }
+            }
+            if (opacityChanged) {
+                soul.finalOpacity = newOpacity;
+            }
 
             // Soul recycling: if life is over, mark for removal
             if (soul.life <= 0) {
@@ -293,32 +366,56 @@ self.onmessage = function(e) {
         }
 
         const updatedSoulsData = souls.map(soul => {
-            // Compress data to reduce message payload size
-            return {
-                id: soul.id,
-                // Round positions to reduce precision and payload size
-                pos: [
-                    Math.round(soul.position.x * 100) / 100,
-                    Math.round(soul.position.y * 100) / 100,
-                    Math.round(soul.position.z * 100) / 100
-                ],
-                // Pack HSL into smaller format
-                hsl: [
-                    Math.round(soul.finalHSL.h * 255) / 255,
-                    Math.round(soul.finalHSL.s * 255) / 255,
-                    Math.round(soul.finalHSL.l * 255) / 255
-                ],
-                // Compress opacity
-                opacity: Math.round(soul.finalOpacity * 255) / 255
-            };
+            // Use delta compression - only send changed data
+            const data = { id: soul.id };
+            
+            // Always send position (position changes are frequent and important)
+            data.pos = [
+                Math.round(soul.position.x * 100) / 100,
+                Math.round(soul.position.y * 100) / 100,
+                Math.round(soul.position.z * 100) / 100
+            ];
+            
+            // Only send HSL if color actually changed
+            if (soul.colorChanged && soul.finalRGB) {
+                // Send pre-calculated RGB instead of HSL to avoid conversion overhead
+                // Validate RGB values before sending
+                if (soul.finalRGB.length === 3 && soul.finalRGB.every(val => typeof val === 'number' && !isNaN(val))) {
+                    data.rgb = [
+                        Math.round(soul.finalRGB[0] * 255) / 255,
+                        Math.round(soul.finalRGB[1] * 255) / 255,
+                        Math.round(soul.finalRGB[2] * 255) / 255
+                    ];
+                }
+            }
+            
+            // Only send opacity if it actually changed
+            if (soul.opacityChanged) {
+                data.opacity = Math.round(soul.finalOpacity * 255) / 255;
+            }
+            
+            return data;
         });
+        
+        // Reset change flags after processing to ensure clean state for next frame
+        souls.forEach(soul => {
+            soul.colorChanged = false;
+            soul.opacityChanged = false;
+        });
+        
         self.postMessage({ type: 'soulsUpdated', data: updatedSoulsData });
     } else if (type === 'addSoul') {
-        souls.push({
+        const newSoul = {
             ...data.soul,
             position: vec.create(data.soul.position.x, data.soul.position.y, data.soul.position.z),
             velocity: vec.create(data.soul.velocity.x, data.soul.velocity.y, data.soul.velocity.z),
-            chosenDewaId: null // Initialize chosenDewaId for new souls
-        });
+            chosenDewaId: null, // Initialize chosenDewaId for new souls
+            finalHSL: null, // Initialize for color change detection
+            finalRGB: null, // Initialize for RGB pre-calculation
+            finalOpacity: undefined, // Initialize for opacity change detection
+            colorChanged: true, // Force initial color update
+            opacityChanged: true // Force initial opacity update
+        };
+        souls.push(newSoul);
     }
 };
