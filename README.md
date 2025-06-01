@@ -198,7 +198,7 @@ future: try webgpu
 It's about human nature, existence, and all that bla bla bla...
 wrapped neatly in a 3d ball.
 
-Will it expand...? i like to turn this on for a weekend and see how they evolve. Like an expanding ball.
+Will it expand...? i like to turn this on for a weekend and see how they evolve. Like an expanding ball. Or an imploding one. Turns out, it moves to a predetermined number, based on birth-rate and average lifespan.
 
 I personally love good food, good movie and good weed.
 

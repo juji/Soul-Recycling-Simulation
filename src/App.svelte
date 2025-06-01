@@ -1436,9 +1436,8 @@
 <div class="population-counter">Population: {souls.length}</div>
 
 <div class="entity-links">
-  <a href="?val=99" class="entity-link" class:active={getActiveCount() === 99}>99</a>
-  <a href="?val=999" class="entity-link" class:active={getActiveCount() === 999}>999</a>
-  <a href="?val=2222" class="entity-link" class:active={getActiveCount() === 2222}>2222</a>
+  <a href="?val=33" class="entity-link" class:active={getActiveCount() === 33}>33</a>
+  <a href="?val=333" class="entity-link" class:active={getActiveCount() === 333}>333</a>
   <a href="?val=3333" class="entity-link" class:active={getActiveCount() === 3333}>3333</a>
   <a href="/" class="entity-link" class:active={isAutomaticSoulCount}>{isAutomaticSoulCount ? `Auto: ${isAutomaticSoulCount}` : 'Auto'}</a>
 </div>
