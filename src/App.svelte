@@ -1530,7 +1530,7 @@
 </div>
 
 <div class="left-bottom-link">
-  <a href="https://jujiplay.com" target="_blank" class="jujiplay-link">
+  <a href="https://jujiplay.com" class="jujiplay-link">
     JujiPlay
   </a>
   <a href="https://github.com/juji/Soul-Recycling-Simulation" target="_blank" class="github-link">
