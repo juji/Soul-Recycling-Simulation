@@ -16,7 +16,7 @@
   };
 
   // Global settings
-  const DEFAULT_SOUL_COUNT = 333; // Fallback value when adaptive performance manager is not available
+  const DEFAULT_SOUL_COUNT = 999; // Fallback value when adaptive performance manager is not available
   
   // Camera and lighting settings
   const CAMERA_SETTINGS = {
