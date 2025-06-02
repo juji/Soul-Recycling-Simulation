@@ -16,7 +16,7 @@
   };
 
   // Global settings
-  const DEFAULT_SOUL_COUNT = 9; // Fallback value when adaptive performance manager is not available
+  const DEFAULT_SOUL_COUNT = 333; // Fallback value when adaptive performance manager is not available
   
   // Camera and lighting settings
   const CAMERA_SETTINGS = {
@@ -90,7 +90,7 @@
         
         // Validate bounds for each parameter
         if (key === STORAGE_KEYS.SPAWN_RATE) {
-          return Math.max(0.1, Math.min(2.0, parsed));
+          return Math.max(0.1, Math.min(3.0, parsed));
         } else if (key === STORAGE_KEYS.MIN_LIFESPAN) {
           return Math.max(100, Math.min(800, parsed));
         } else if (key === STORAGE_KEYS.MAX_LIFESPAN) {
@@ -111,7 +111,7 @@
   
   // Reset function to restore default values
   function resetParameters() {
-    NEW_SOUL_SPAWN_RATE = 0.4;
+    NEW_SOUL_SPAWN_RATE = 0.7;
     MIN_LIFESPAN = 300;
     MAX_LIFESPAN = 900;
     showToastMessage('Parameters reset to defaults');
