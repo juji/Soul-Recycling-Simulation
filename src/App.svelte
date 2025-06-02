@@ -1231,7 +1231,7 @@
     letter-spacing: 0.5px;
   }
   
-  .equilibrium-formula {
+  /* .equilibrium-formula {
     font-size: 13px;
     color: #e0e0e0;
     margin-bottom: 8px;
@@ -1251,7 +1251,7 @@
     padding: 6px 10px;
     border-radius: 6px;
     border-left: 3px solid #00ff88;
-  }
+  } */
 
   .equilibrium-text{
     font-weight: bold;
@@ -1482,8 +1482,8 @@
 
 <div class="equilibrium-info" class:show-mobile={showEquilibriumInfo}>
   <div class="equilibrium-title">Population Equilibrium</div>
-  <div class="equilibrium-formula">EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN</div>
-  <div class="equilibrium-calculation">Current: {NEW_SOUL_SPAWN_RATE} × {AVG_LIFESPAN} = ~{Math.round(NEW_SOUL_SPAWN_RATE*AVG_LIFESPAN)} souls</div>
+  <!-- <div class="equilibrium-formula">EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN</div>
+  <div class="equilibrium-calculation">Current: {NEW_SOUL_SPAWN_RATE} × {AVG_LIFESPAN} = ~{Math.round(NEW_SOUL_SPAWN_RATE*AVG_LIFESPAN)} souls</div> -->
   
   <!-- Interactive Parameter Controls -->
   <div class="parameter-controls">

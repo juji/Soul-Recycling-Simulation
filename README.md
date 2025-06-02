@@ -159,7 +159,7 @@ The equilibrium is determined by the interplay of two fundamental cosmic constan
 1.  **Soul Creation Rate (`NEW_SOUL_SPAWN_RATE` in `App.svelte`):** Currently set to `0.7`, meaning there's a 70% chance of one new soul being created per animation frame - this acts as the **universal birth rate**.
 2.  **Soul Lifespan (defined in `createSoul` function in `App.svelte`):** Souls are assigned a random lifespan upon creation (currently between `MIN_LIFESPAN` and `MAX_LIFESPAN` animation frames, averaging `AVG_LIFESPAN` frames) - this determines the **natural death rate**.
 
-#### 📊 The Mathematics of Universal Stability
+<!-- #### 📊 The Mathematics of Universal Stability
 
 **Equilibrium Formula:** `EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN`
 
@@ -179,7 +179,7 @@ The equilibrium is determined by the interplay of two fundamental cosmic constan
 - **Death rate** becomes minimal: `99 ÷ AVG_LIFESPAN = 99 ÷ 600 = ~0.17 souls dying per frame`
 - **Birth rate** stays constant: `NEW_SOUL_SPAWN_RATE = 0.7 souls born per frame`
 - **Net effect**: `+0.53 souls per frame` until equilibrium
-- **Result**: Universe automatically prevents extinction
+- **Result**: Universe automatically prevents extinction -->
 
 #### 🧮 Negative Feedback Loop - Universal Wisdom
 
