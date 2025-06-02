@@ -931,7 +931,12 @@
         });
       }
 
-      if (Math.random() < NEW_SOUL_SPAWN_RATE) {
+      let spawnRate = NEW_SOUL_SPAWN_RATE
+      while (spawnRate > 1) {
+        createNewSoul(); 
+        spawnRate--;
+      }
+      if (Math.random() < spawnRate) {
         createNewSoul(); 
       }
 
@@ -1482,12 +1487,12 @@
   <!-- Interactive Parameter Controls -->
   <div class="parameter-controls">
     <div class="parameter-control">
-      <label for="spawn-rate-slider">Soul Spawn Rate: {NEW_SOUL_SPAWN_RATE.toFixed(2)}</label>
+      <label for="spawn-rate-slider">Soul Spawn Rate: {NEW_SOUL_SPAWN_RATE.toFixed(2)} per frame</label>
       <input 
         id="spawn-rate-slider"
         type="range" 
         min="0.1" 
-        max="2.0" 
+        max="3.0" 
         step="0.05" 
         bind:value={NEW_SOUL_SPAWN_RATE}
         class="parameter-slider"
