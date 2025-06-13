@@ -3,9 +3,13 @@
   
   const dispatch = createEventDispatcher();
   
-  export let NEW_SOUL_SPAWN_RATE = 0.7;
-  export let MIN_LIFESPAN = 300;
-  export let MAX_LIFESPAN = 900;
+  // Convert to runes with $bindable for two-way binding
+  let {
+    NEW_SOUL_SPAWN_RATE = $bindable(),
+    MIN_LIFESPAN = $bindable(),
+    MAX_LIFESPAN = $bindable()
+  } = $props();
+  
   const MAX_AGE_GAP = 600; // Maximum gap between min and max lifespan
 
   function resetParameters() {
@@ -68,7 +72,7 @@
       max="3.0" 
       step="0.05" 
       bind:value={NEW_SOUL_SPAWN_RATE}
-      on:change={handleSpawnRateChange}
+      onchange={handleSpawnRateChange}
       class="parameter-slider"
     />
   </div>
@@ -84,7 +88,7 @@
       max={900} 
       step="50" 
       bind:value={MIN_LIFESPAN}
-      on:change={handleMinLifespanChange}
+      onchange={handleMinLifespanChange}
       class="parameter-slider"
     />
   </div>
@@ -100,13 +104,13 @@
       max="1000" 
       step="50" 
       bind:value={MAX_LIFESPAN}
-      on:change={handleMaxLifespanChange}
+      onchange={handleMaxLifespanChange}
       class="parameter-slider"
     />
   </div>
   
   <div class="parameter-control">
-    <button class="reset-button" on:click={resetParameters}>
+    <button class="reset-button" onclick={resetParameters}>
       Reset to Defaults
     </button>
   </div>

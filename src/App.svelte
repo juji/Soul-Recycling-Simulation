@@ -76,10 +76,10 @@
     MAX_LIFESPAN: 'soul_simulation_max_lifespan'
   };
   
-  // Load saved values from localStorage or use defaults
-  let NEW_SOUL_SPAWN_RATE = loadFromStorage(STORAGE_KEYS.SPAWN_RATE, 0.7);
-  let MIN_LIFESPAN = loadFromStorage(STORAGE_KEYS.MIN_LIFESPAN, 300);
-  let MAX_LIFESPAN = loadFromStorage(STORAGE_KEYS.MAX_LIFESPAN, 900);
+  // Load saved values from localStorage or use defaults - migrated to runes
+  let NEW_SOUL_SPAWN_RATE = $state(loadFromStorage(STORAGE_KEYS.SPAWN_RATE, 0.7));
+  let MIN_LIFESPAN = $state(loadFromStorage(STORAGE_KEYS.MIN_LIFESPAN, 300));
+  let MAX_LIFESPAN = $state(loadFromStorage(STORAGE_KEYS.MAX_LIFESPAN, 900));
   
   // Helper functions for localStorage
   function loadFromStorage(key, defaultValue) {
@@ -140,13 +140,21 @@
     showToastMessage('Parameters reset to defaults');
   }
   
-  // Reactive statements to save values when they change
-  $: saveToStorage(STORAGE_KEYS.SPAWN_RATE, NEW_SOUL_SPAWN_RATE);
-  $: saveToStorage(STORAGE_KEYS.MIN_LIFESPAN, MIN_LIFESPAN);
-  $: saveToStorage(STORAGE_KEYS.MAX_LIFESPAN, MAX_LIFESPAN); 
+  // Convert reactive statements to effects and derived runes
+  $effect(() => {
+    saveToStorage(STORAGE_KEYS.SPAWN_RATE, NEW_SOUL_SPAWN_RATE);
+  });
   
-  $: AVG_LIFESPAN = (MIN_LIFESPAN + MAX_LIFESPAN) / 2; // Average lifespan of souls in frames
-  $: EQUILIBRIUM_POPULATION = NEW_SOUL_SPAWN_RATE * AVG_LIFESPAN; // Target equilibrium population
+  $effect(() => {
+    saveToStorage(STORAGE_KEYS.MIN_LIFESPAN, MIN_LIFESPAN);
+  });
+  
+  $effect(() => {
+    saveToStorage(STORAGE_KEYS.MAX_LIFESPAN, MAX_LIFESPAN);
+  });
+  
+  let AVG_LIFESPAN = $derived((MIN_LIFESPAN + MAX_LIFESPAN) / 2); // Average lifespan of souls in frames
+  let EQUILIBRIUM_POPULATION = $derived(NEW_SOUL_SPAWN_RATE * AVG_LIFESPAN); // Target equilibrium population
 
   // POPULATION EQUILIBRIUM NOTE:
   // The soul population tends towards an equilibrium.
@@ -164,48 +172,43 @@
   // If the initial population is above this, it will decrease towards equilibrium.
   // If the initial population is below this, it will increase towards equilibrium.
 
-  let souls = []; // Declare souls here to make it accessible to the template
-  let container;
+  let souls = $state([]); // Declare souls here to make it accessible to the template
+  let soulLookupMap = $state(new Map()); // O(1) lookup map for soul IDs to mesh objects
+  let container = $state();
   
-  // FPS counter variables with enhanced metrics
-  let fps = 0;
-  let frameCount = 0;
-  let lastTime = performance.now();
-  let averageFPS = 0;
-  let fpsHistory = [];
-  let memoryUsage = 0;
+  // FPS counter variables with enhanced metrics - convert to runes
+  let fps = $state(0);
+  let frameCount = $state(0);
+  let lastTime = $state(performance.now());
+  let averageFPS = $state(0);
+  let fpsHistory = $state([]);
+  let memoryUsage = $state(0);
   
-  // Performance tracking
-  let renderTime = 0;
-  let workerUpdateTime = 0;
-  let lastFrameStart = 0;
+  // Performance tracking - convert to runes
+  let renderTime = $state(0);
+  let workerUpdateTime = $state(0);
+  let lastFrameStart = $state(0);
   
-  // Adaptive quality settings
-  let currentQuality = 'high';
-  let adaptiveSettings = {
+  // Adaptive quality settings - convert to runes
+  let currentQuality = $state('high');
+  let adaptiveSettings = $state({
     high: { maxConnectionChecks: 150, connectionLimit: 20 },
     medium: { maxConnectionChecks: 100, connectionLimit: 15 },
     low: { maxConnectionChecks: 50, connectionLimit: 10 }
-  };
+  });
   
-  // Expose performance variables globally for AI test bridge
-  if (typeof window !== 'undefined') {
-    window.currentFPS = 0;
-    window.averageFPS = 0;
-    window.currentQuality = currentQuality;
-    window.soulCount = souls.length;
-    window.memoryUsage = 0;
-  }
+  // Global variables for AI test bridge will be updated in animation loop
+  // to prevent effect_update_depth_exceeded errors
   
-  // Equilibrium info toggle for mobile
-  let showEquilibriumInfo = false;
+  // Equilibrium info toggle for mobile - convert to runes
+  let showEquilibriumInfo = $state(false);
   
-  // Toast notification for localStorage operations
-  let showToast = false;
-  let toastMessage = '';
+  // Toast notification for localStorage operations - convert to runes
+  let showToast = $state(false);
+  let toastMessage = $state('');
   
-  // Phase 3: Performance Metrics for Instanced Rendering
-  let performanceMetrics = {
+  // Phase 3: Performance Metrics for Instanced Rendering - convert to runes
+  let performanceMetrics = $state({
     renderingMode: 'individual',
     drawCalls: 0,
     instancedUpdateTime: 0,
@@ -216,16 +219,16 @@
     individualFrameCount: 0,
     averageInstancedTime: 0,
     averageIndividualTime: 0
-  };
+  });
 
-  // Phase 3: Declare variables needed by reactive statements
-  let renderingMode = FEATURE_FLAGS.USE_INSTANCED_RENDERING ? 'instanced' : 'individual';
-  let instancedRenderer = null;
-  let renderer = null;
+  // Phase 3: Declare variables needed by reactive statements - convert to runes
+  let renderingMode = $state(FEATURE_FLAGS.USE_INSTANCED_RENDERING ? 'instanced' : 'individual');
+  let instancedRenderer = $state(null);
+  let renderer = $state(null);
   
-  // Phase 4: LOD and Performance Management
-  let lodManager = null;
-  let adaptivePerformanceManager = null;
+  // Phase 4: LOD and Performance Management - convert to runes
+  let lodManager = $state(null);
+  let adaptivePerformanceManager = $state(null);
   
   // Phase 3: Performance tracking functions
   function trackDrawCalls(renderer) {
@@ -277,7 +280,7 @@
 
   // Helper function to get entity count from URL parameter
   // Uses adaptive performance management to determine optimal soul count when no URL parameter is provided
-  let isAutomaticSoulCount = 0; // Flag to indicate if adaptive performance manager is used
+  let isAutomaticSoulCount = $state(0); // Flag to indicate if adaptive performance manager is used
   function getEntityCountFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
     const val = urlParams.get('val');
@@ -352,6 +355,25 @@
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
+
+    // Fix passive event listener warning BEFORE creating controls
+    // Apply global fix for wheel events to prevent passive listener warnings
+    const originalAddEventListener = EventTarget.prototype.addEventListener;
+    const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
+    
+    // Track if we've already patched to avoid double-patching
+    if (!window.__wheelEventPatched) {
+      EventTarget.prototype.addEventListener = function(type, listener, options) {
+        if (type === 'wheel' && this instanceof HTMLElement) {
+          // Force wheel events to be non-passive for HTML elements
+          const newOptions = typeof options === 'object' ? { ...options, passive: false } : { passive: false };
+          return originalAddEventListener.call(this, type, listener, newOptions);
+        }
+        return originalAddEventListener.call(this, type, listener, options);
+      };
+      
+      window.__wheelEventPatched = true;
+    }
 
     const controls = new ArcballControls(camera, renderer.domElement, scene);
     controls.enableDamping = true;
@@ -716,6 +738,7 @@
         scene.add(mesh);
       }
       souls.push(mesh); 
+      soulLookupMap.set(mesh.userData.id, mesh); // Add to O(1) lookup map
       return mesh; 
     }
 
@@ -804,7 +827,7 @@
                 // Update individual soul mesh positions for compatibility first
                 // (needed for connections, raycasting, etc.)
                 data.forEach(updatedSoulData => {
-                    const soulMesh = souls.find(s => s.userData.id === updatedSoulData.id);
+                    const soulMesh = soulLookupMap.get(updatedSoulData.id); // O(1) lookup
                     if (soulMesh) {
                         // Only update position if it was sent (moved significantly)
                         if (updatedSoulData.pos && Array.isArray(updatedSoulData.pos) && updatedSoulData.pos.length === 3) {
@@ -832,7 +855,7 @@
                 performanceMetrics.renderingMode = 'instanced';            } else {
                 // EXISTING: Individual mesh rendering (fallback)
                 data.forEach(updatedSoulData => {
-                    const soulMesh = souls.find(s => s.userData.id === updatedSoulData.id);
+                    const soulMesh = soulLookupMap.get(updatedSoulData.id); // O(1) lookup
                     if (soulMesh) {
                         // Only update position if it was sent (moved significantly)
                         if (updatedSoulData.pos && Array.isArray(updatedSoulData.pos) && updatedSoulData.pos.length === 3) {
@@ -880,7 +903,7 @@
             }
         } else if (type === 'soulRemoved') {
             const soulIdToRemove = data.soulId;
-            const soulMeshToRemove = souls.find(s => s.userData.id === soulIdToRemove);
+            const soulMeshToRemove = soulLookupMap.get(soulIdToRemove); // O(1) lookup
             if (soulMeshToRemove) {
                 // Phase 3: Handle soul removal for both rendering modes
                 if (renderingMode === 'instanced') {
@@ -903,6 +926,7 @@
                     }
                 }
                 souls = souls.filter(s => s.userData.id !== soulIdToRemove);
+                soulLookupMap.delete(soulIdToRemove); // Remove from lookup map
             }
         } else if (type === 'connectionsUpdated') {
             // Handle connections calculated in worker
@@ -1009,10 +1033,11 @@
           window.memoryUsage = memoryUsage;
         }
         
-        // Track FPS history for average calculation
+        // Track FPS history for average calculation (non-reactive)
         fpsHistory.push(fps);
         if (fpsHistory.length > 10) fpsHistory.shift(); // Keep last 10 seconds
-        averageFPS = Math.round(fpsHistory.reduce((a, b) => a + b) / fpsHistory.length);
+        const calculatedAverageFPS = Math.round(fpsHistory.reduce((a, b) => a + b) / fpsHistory.length);
+        averageFPS = calculatedAverageFPS;
         
         // Memory usage tracking (if available)
         if (performance.memory) {
@@ -1074,21 +1099,8 @@
     };
   });
 
-  // Phase 3: Reactive statement for performance metrics debugging
-  $: if (import.meta.env.DEV && performanceMetrics && renderingMode) {
-    // Update performance metrics for logging
-    performanceMetrics.renderingMode = renderingMode;
-    if (renderer) {
-      performanceMetrics.drawCalls = trackDrawCalls(renderer);
-    }
-    performanceMetrics.framesSinceLastLog++;
-    
-    // Log metrics at regular intervals
-    if (performanceMetrics.framesSinceLastLog >= 60) {
-      logPhase3Performance();
-      performanceMetrics.framesSinceLastLog = 0;
-    }
-  }
+  // Phase 3: Performance metrics debugging - moved to animation loop 
+  // to prevent effect_update_depth_exceeded errors
 </script>
 
 <style>
@@ -1389,7 +1401,7 @@
 </div>
 
 <!-- Toggle button for mobile equilibrium info -->
-<button class="equilibrium-toggle" on:click={() => showEquilibriumInfo = !showEquilibriumInfo}>
+<button class="equilibrium-toggle" onclick={() => showEquilibriumInfo = !showEquilibriumInfo}>
   <span class="toggle-icon">{showEquilibriumInfo ? '✕' : 'ℹ'}</span>
   <span class="toggle-text">Info</span>
 </button>
@@ -1404,8 +1416,8 @@
     bind:NEW_SOUL_SPAWN_RATE
     bind:MIN_LIFESPAN
     bind:MAX_LIFESPAN
-    on:parameterChange={handleParameterChange}
-    on:reset={handleReset}
+    onparameterchange={handleParameterChange}
+    onreset={handleReset}
   />
   
   <div class="equilibrium-text">
