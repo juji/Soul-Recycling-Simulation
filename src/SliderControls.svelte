@@ -11,6 +11,7 @@
   } = $props();
   
   const MAX_AGE_GAP = 600; // Maximum gap between min and max lifespan
+  const MIN_LIFESPAN_VAL = 100
 
   function resetParameters() {
     NEW_SOUL_SPAWN_RATE = 0.7;
@@ -50,12 +51,12 @@
     });
 
     if(MAX_LIFESPAN < MIN_LIFESPAN) {
-      MIN_LIFESPAN = MAX_LIFESPAN - MAX_AGE_GAP; // Ensure max is always greater than min
+      MIN_LIFESPAN = Math.max(MIN_LIFESPAN_VAL, MAX_LIFESPAN - MAX_AGE_GAP); // Ensure max is always greater than min
     }
 
     // ensure age gap is maintained
     if((MAX_LIFESPAN - MIN_LIFESPAN) > MAX_AGE_GAP) {
-      MIN_LIFESPAN = MAX_LIFESPAN - MAX_AGE_GAP; // Ensure gap is maintained
+      MIN_LIFESPAN = Math.max(MIN_LIFESPAN_VAL, MAX_LIFESPAN - MAX_AGE_GAP); // Ensure gap is maintained
     }
   }
 </script>
