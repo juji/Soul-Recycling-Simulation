@@ -6,6 +6,7 @@
   import { InstancedSoulRenderer } from './InstancedSoulRenderer.js';
   import { LODManager } from './LODManager.js';  // Phase 4: LOD System
   import { AdaptivePerformanceManager } from './adaptive-performance.js';  // Phase 4: Adaptive Performance
+  import SliderControls from './SliderControls.svelte';
   import './ai-test-bridge.js';  // Import AI test bridge for performance testing
 
   // Phase 4: Feature Flags
@@ -116,16 +117,33 @@
     MAX_LIFESPAN = 900;
     showToastMessage('Parameters reset to defaults');
   }
+
+  // Handle parameter changes from SliderControls component
+  function handleParameterChange(event) {
+    const { type, value } = event.detail;
+    
+    switch (type) {
+      case 'SPAWN_RATE':
+        NEW_SOUL_SPAWN_RATE = value;
+        break;
+      case 'MIN_LIFESPAN':
+        MIN_LIFESPAN = value;
+        break;
+      case 'MAX_LIFESPAN':
+        MAX_LIFESPAN = value;
+        break;
+    }
+  }
+
+  // Handle reset from SliderControls component
+  function handleReset() {
+    showToastMessage('Parameters reset to defaults');
+  }
   
   // Reactive statements to save values when they change
   $: saveToStorage(STORAGE_KEYS.SPAWN_RATE, NEW_SOUL_SPAWN_RATE);
   $: saveToStorage(STORAGE_KEYS.MIN_LIFESPAN, MIN_LIFESPAN);
-  $: saveToStorage(STORAGE_KEYS.MAX_LIFESPAN, MAX_LIFESPAN);
-  
-  // Reactive validation to ensure MIN_LIFESPAN < MAX_LIFESPAN
-  $: if (MIN_LIFESPAN >= MAX_LIFESPAN) {
-    MIN_LIFESPAN = MAX_LIFESPAN - 50;
-  }
+  $: saveToStorage(STORAGE_KEYS.MAX_LIFESPAN, MAX_LIFESPAN); 
   
   $: AVG_LIFESPAN = (MIN_LIFESPAN + MAX_LIFESPAN) / 2; // Average lifespan of souls in frames
   $: EQUILIBRIUM_POPULATION = NEW_SOUL_SPAWN_RATE * AVG_LIFESPAN; // Target equilibrium population
@@ -1276,111 +1294,6 @@
     }
   }
   
-  /* Parameter Controls Styling */
-  .parameter-controls {
-    margin: 16px 0;
-    padding: 12px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  
-  .parameter-control {
-    margin-bottom: 12px;
-  }
-  
-  .parameter-control:last-child {
-    margin-bottom: 0;
-  }
-  
-  .parameter-control label {
-    display: block;
-    font-size: 12px;
-    color: #e0e0e0;
-    margin-bottom: 6px;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-  }
-  
-  .parameter-slider {
-    width: 100%;
-    height: 6px;
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.2);
-    outline: none;
-    -webkit-appearance: none;
-    appearance: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .parameter-slider:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
-  
-  .parameter-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #4a90e2;
-    cursor: pointer;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease;
-  }
-  
-  .parameter-slider::-webkit-slider-thumb:hover {
-    background: #5ba0f2;
-    transform: scale(1.1);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-  }
-  
-  .parameter-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #4a90e2;
-    cursor: pointer;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease;
-  }
-  
-  .parameter-slider::-moz-range-thumb:hover {
-    background: #5ba0f2;
-    transform: scale(1.1);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-  }
-  
-  .reset-button {
-    width: 100%;
-    padding: 8px 12px;
-    background: rgba(74, 144, 226, 0.2);
-    color: #e0e0e0;
-    border: 1px solid rgba(74, 144, 226, 0.4);
-    border-radius: 6px;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  
-  .reset-button:hover {
-    background: rgba(74, 144, 226, 0.3);
-    border-color: rgba(74, 144, 226, 0.6);
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(74, 144, 226, 0.2);
-  }
-  
-  .reset-button:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 3px rgba(74, 144, 226, 0.3);
-  }
   
   .entity-link {
     background: rgba(0, 0, 0, 0.7);
@@ -1487,58 +1400,13 @@
   <div class="equilibrium-calculation">Current: {NEW_SOUL_SPAWN_RATE} × {AVG_LIFESPAN} = ~{Math.round(EQUILIBRIUM_POPULATION)} souls</div>
   
   <!-- Interactive Parameter Controls -->
-  <div class="parameter-controls">
-    <div class="parameter-control">
-      <label for="spawn-rate-slider">
-        Soul Spawn Rate: {NEW_SOUL_SPAWN_RATE.toFixed(2)} per frame
-      </label>
-      <input 
-        id="spawn-rate-slider"
-        type="range" 
-        min="0.1" 
-        max="3.0" 
-        step="0.05" 
-        bind:value={NEW_SOUL_SPAWN_RATE}
-        class="parameter-slider"
-      />
-    </div>
-    
-    <div class="parameter-control">
-      <label for="min-lifespan-slider">
-        Min Lifespan: {MIN_LIFESPAN} frames
-      </label>
-      <input 
-        id="min-lifespan-slider"
-        type="range" 
-        min="100" 
-        max="800" 
-        step="50" 
-        bind:value={MIN_LIFESPAN}
-        class="parameter-slider"
-      />
-    </div>
-    
-    <div class="parameter-control">
-      <label for="max-lifespan-slider">
-        Max Lifespan: {MAX_LIFESPAN} frames
-      </label>
-      <input 
-        id="max-lifespan-slider"
-        type="range" 
-        min="200" 
-        max="1000" 
-        step="50" 
-        bind:value={MAX_LIFESPAN}
-        class="parameter-slider"
-      />
-    </div>
-    
-    <div class="parameter-control">
-      <button class="reset-button" on:click={resetParameters}>
-        Reset to Defaults
-      </button>
-    </div>
-  </div>
+  <SliderControls 
+    bind:NEW_SOUL_SPAWN_RATE
+    bind:MIN_LIFESPAN
+    bind:MAX_LIFESPAN
+    on:parameterChange={handleParameterChange}
+    on:reset={handleReset}
+  />
   
   <div class="equilibrium-text">
     <p>A stable system.</p>
