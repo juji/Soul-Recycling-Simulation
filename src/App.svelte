@@ -9,6 +9,10 @@
   import SliderControls from './components/SliderControls.svelte';
   import FpsCounter from './components/FpsCounter.svelte';
   import PopulationCounter from './components/PopulationCounter.svelte';
+  import EntityLinks from './components/EntityLinks.svelte';
+  import ToastNotification from './components/ToastNotification.svelte';
+  import BottomLinks from './components/BottomLinks.svelte';
+  import EquilibriumInfo from './components/EquilibriumInfo.svelte';
   import './lib/ai-test-bridge.js';  // Import AI test bridge for performance testing
 
   // Phase 4: Feature Flags
@@ -197,13 +201,6 @@
   // Global variables for AI test bridge will be updated in animation loop
   // to prevent effect_update_depth_exceeded errors
   
-  // Equilibrium info toggle for mobile - convert to runes
-  let showEquilibriumInfo = $state(false);
-  
-  // Toast notification for localStorage operations - convert to runes
-  let showToast = $state(false);
-  let toastMessage = $state('');
-  
   // Phase 3: Performance Metrics for Instanced Rendering - convert to runes
   let performanceMetrics = $state({
     renderingMode: 'individual',
@@ -239,12 +236,11 @@
     // Performance logging removed for production
   }
   
+  // Toast notification component reference
+  let toastNotification;
+  
   function showToastMessage(message) {
-    toastMessage = message;
-    showToast = true;
-    setTimeout(() => {
-      showToast = false;
-    }, 2000);
+    toastNotification?.showToast(message);
   }
   
   function adjustQualityBasedOnFPS(currentFPS) {
@@ -321,21 +317,6 @@
       }, 1000);
     }
 
-    // Auto-open equilibrium info on wider screens
-    if (window.innerWidth > 1200) {
-      showEquilibriumInfo = true;
-    }
-
-    // Handle window resize to show/hide equilibrium info based on screen width
-    const handleResize = () => {
-      if (window.innerWidth > 1200) {
-        showEquilibriumInfo = true;
-      }
-      // Don't auto-close on smaller screens - let user control
-    };
-
-    window.addEventListener('resize', handleResize);
-    
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
       CAMERA_SETTINGS.FOV, 
@@ -1034,9 +1015,6 @@
     });
 
     return () => {
-      // Remove resize event listener to prevent memory leaks
-      window.removeEventListener('resize', handleResize);
-      
       if (container) {
         container.removeEventListener('mousemove', onMouseMove);
         if (renderer.domElement && container.contains(renderer.domElement)) {
@@ -1083,305 +1061,28 @@
     left: 0;
   }
 
-  .left-bottom-link{
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    display: flex;
-    gap: 8px;
-  }
-
-  .github-link, .jujiplay-link {
-    background: rgba(0, 0, 0, 0.7);
-    color: #ffffff; /* Changed to white */
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 14px; /* Increased font size */
-    font-weight: bold;
-    z-index: 1000;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    text-decoration: none;
-    transition: background-color 0.3s ease;
-  }
-
-  .github-link:hover {
-    background: rgba(0, 0, 0, 0.9);
-    color: #ffffff;
-  }
-  
-  .entity-links {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    display: flex;
-    gap: 8px;
-    z-index: 1000;
-  }
-  
-  /* Equilibrium toggle button for all screens */
-  .equilibrium-toggle {
-    position: fixed;
-    top: 60px;
-    left: 10px;
-    background: rgba(0, 0, 0, 0.85);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 1001;
-    backdrop-filter: blur(8px);
-    display: flex; /* Show on all screens */
-    align-items: center;
-    gap: 6px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-  
-  .equilibrium-toggle:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-1px);
-  }
-  
-  .toggle-icon {
-    font-size: 16px;
-    color: #ffd700;
-  }
-  
-  .toggle-text {
-    font-size: 12px;
-  }
-  
-  /* Remove mobile-only display rule */
-  
-  .equilibrium-info {
-    position: fixed;
-    top: 110px;
-    left: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.85);
-    color: #ffffff;
-    padding: 16px 20px;
-    border-radius: 10px;
-    font-family: 'Courier New', monospace;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(8px);
-    z-index: 1000;
-    max-width: 320px;
-    line-height: 1.5;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-    transform: translateY(-20px);
-    opacity: 0;
-    pointer-events: none;
-    max-height: calc(100vh - 160px);
-    max-height: calc(100dvh - 160px);
-    overflow-y: auto;
-  }
-  
-  .equilibrium-info.show-mobile {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-  }
-  
-  /* Desktop specific positioning */
-  @media (min-width: 769px) {
-    .equilibrium-info {
-      top: 110px;
-      max-width: 320px;
-    }
-  }
-  
-  /* Mobile responsive behavior */
-  @media (max-width: 768px) {
-    .equilibrium-info {
-      top: 110px;
-      left: 10px;
-      right: 10px;
-      max-width: none;
-    }
-  }
-  
-  .equilibrium-title {
-    font-weight: bold;
-    font-size: 16px;
-    margin-bottom: 10px;
-    color: #ffd700;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-    letter-spacing: 0.5px;
-  }
-  
-  .equilibrium-formula {
-    font-size: 13px;
-    color: #e0e0e0;
-    margin-bottom: 8px;
-    font-style: italic;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 8px 10px;
-    border-radius: 6px;
-    border-left: 3px solid #4a90e2;
-  }
-  
-  .equilibrium-calculation {
-    font-size: 14px;
-    color: #00ff88;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-    background: rgba(0, 255, 136, 0.1);
-    padding: 6px 10px;
-    border-radius: 6px;
-    border-left: 3px solid #00ff88;
-  }
-
-  .equilibrium-text{
-    font-weight: bold;
-
-    quote{
-      font-style: italic;
-      color: #ffcc00;
-      background: rgba(255, 204, 0, 0.1);
-      padding: 8px 10px;
-      border-radius: 6px;
-      border-left: 3px solid #ffcc00;
-      margin-top: 10px; 
-      display: block;
-      font-size: small;
-
-      a{
-        color: #ffcc00;
-        text-decoration: underline;
-        font-weight: bold;
-      }
-    }
-  }
-  
-  
-  .entity-link {
-    background: rgba(0, 0, 0, 0.7);
-    color: #ffffff;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 15px;
-    font-weight: bold;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    text-decoration: none;
-    transition: all 0.2s ease;
-  }
-  
-  .entity-link:hover {
-    background: rgba(0, 0, 0, 0.9);
-    transform: translateY(-2px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  }
-  
-  .entity-link.active {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
-    /* animation: breathing-animation 2s ease-in-out infinite; */ /* Removed animation */
-  }
-
-  /* Removed keyframes for breathing animation */
-  /* @keyframes breathing-animation {
-    0%, 100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.05);
-    }
-  } */
-
-  .toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: rgba(74, 144, 226, 0.9);
-    color: #ffffff;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    font-weight: bold;
-    z-index: 2000;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(8px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    opacity: 0;
-    transition: all 0.3s ease;
-    pointer-events: none;
-  }
-  
-  .toast.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
-
 </style>
 
 <div id="container" bind:this={container}></div>
+
+<!-- UI Components -->
 <FpsCounter bind:this={fpsCounter} />
 <PopulationCounter soulCount={souls.length} />
+<EntityLinks 
+  activeCount={getActiveCount()} 
+  {isAutomaticSoulCount} 
+/>
 
-<div class="entity-links">
-  <a href="?val=33" class="entity-link" class:active={getActiveCount() === 33}>33</a>
-  <a href="?val=333" class="entity-link" class:active={getActiveCount() === 333}>333</a>
-  <a href="?val=3333" class="entity-link" class:active={getActiveCount() === 3333}>3333</a>
-  <a href="/" class="entity-link" class:active={isAutomaticSoulCount}>{isAutomaticSoulCount ? `Auto: ${isAutomaticSoulCount}` : 'Auto'}</a>
-</div>
+<EquilibriumInfo 
+  bind:spawnRate={NEW_SOUL_SPAWN_RATE}
+  avgLifespan={AVG_LIFESPAN}
+  equilibriumPopulation={EQUILIBRIUM_POPULATION}
+  bind:minLifespan={MIN_LIFESPAN}
+  bind:maxLifespan={MAX_LIFESPAN}
+  onParameterChange={handleParameterChange}
+  onReset={handleReset}
+/>
 
-<!-- Toggle button for mobile equilibrium info -->
-<button class="equilibrium-toggle" onclick={() => showEquilibriumInfo = !showEquilibriumInfo}>
-  <span class="toggle-icon">{showEquilibriumInfo ? '✕' : 'ℹ'}</span>
-  <span class="toggle-text">Info</span>
-</button>
+<BottomLinks />
 
-<div class="equilibrium-info" class:show-mobile={showEquilibriumInfo}>
-  <div class="equilibrium-title">Population Equilibrium</div>
-  <div class="equilibrium-formula">EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN</div>
-  <div class="equilibrium-calculation">Current: {NEW_SOUL_SPAWN_RATE} × {AVG_LIFESPAN} = ~{Math.round(EQUILIBRIUM_POPULATION)} souls</div>
-  
-  <!-- Interactive Parameter Controls -->
-  <SliderControls 
-    bind:NEW_SOUL_SPAWN_RATE
-    bind:MIN_LIFESPAN
-    bind:MAX_LIFESPAN
-    onparameterchange={handleParameterChange}
-    onreset={handleReset}
-  />
-  
-  <div class="equilibrium-text">
-    <p>A stable system.</p>
-    <div>
-      <quote>
-        <a 
-        href="https://en.wikipedia.org/wiki/Thomas_Malthus" 
-        target="_blank">Thomas Malthus</a> (conceptually, 1798) and <a 
-        href="https://en.wikipedia.org/wiki/Pierre-François_Verhulst" 
-        target="_blank">François Verhulst</a> (mathematically, 1838) in the 18th-19th century found out about this.
-        <br /><br />Yes, this universe is explosion-proof and collapse-proof. Time heals all population wounds.
-      </quote>
-    </div>
-  </div>
-</div>
-
-<div class="left-bottom-link">
-  <a href="https://jujiplay.com" class="jujiplay-link">
-    JujiPlay
-  </a>
-  <a href="https://github.com/juji/Soul-Recycling-Simulation" target="_blank" class="github-link">
-    GitHub
-  </a>
-</div>
-
-<!-- Toast notification for localStorage operations -->
-<div class="toast" class:show={showToast}>
-  {toastMessage}
-</div>
+<ToastNotification bind:this={toastNotification} />
