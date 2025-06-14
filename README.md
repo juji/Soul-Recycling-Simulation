@@ -29,45 +29,6 @@ This simulation explores ideas like:
 
 Souls orbit and drift, forming ephemeral connections. Some are new, some recycled. Some are human. Some are GPT. All are becoming.
 
-
-### Addition by GemCo
-
-Here's a summary of key features and changes developed with Gem's assistance:
-
-*   **Core Simulation Logic & Visuals:**
-    *   Established distinct visual representations for "human" (sphere) and "AI/GPT" (cube) souls.
-    *   Implemented dynamic soul behaviors including base speed, color brightness, and opacity for connecting lines.
-    *   Introduced boid-like flocking behaviors:
-        *   Neighbor speed influence: Souls adjust their speed based on nearby entities.
-        *   Separation: Souls maintain a minimum distance from each other.
-*   **Performance Optimization:**
-    *   Offloaded computationally intensive simulation logic (soul movement, interactions) to a Web Worker (`src/lib/simulation.worker.js`), improving main thread performance and UI responsiveness.
-    *   Refactored `src/App.svelte` to communicate with the worker for soul initialization, updates, and addition of new souls.
-*   **"Dewa" Entity Implementation & Refinement:**
-    *   Introduced "dewa" entities as a special soul type with unique characteristics.
-    *   "Dewa" entities are now self-illuminated, appearing with a random vibrant color (maximum saturation and brightness) using `MeshBasicMaterial`. Their size has been set to a radius of 0.333 units.
-    *   While multiple "dewa" instances can exist in the simulation, they are all created from a common blueprint, sharing the same fundamental properties (e.g., specific base speed, attraction capabilities).
-    *   Implemented distinct behaviors for "dewa" entities in `src/lib/simulation.worker.js`:
-        *   **Attraction:** Dewa entities act as attractors for non-dewa souls within a defined radius and strength.
-        *   **Appearance (Behavioral):** In the simulation worker, dewa entities' colors are set directly from their base HSL values and do not undergo the same pulsing lightness effect as other non-enhanced souls.
-        *   **Movement:** Dewas have a slower, more deliberate base speed, are not influenced by the speed of their neighbors, and experience significantly less random perturbation in their movement, while still participating in separation behavior.
-        *   **Visual Enhancement Aura:** Non-dewa souls within a defined radius of a dewa entity receive a temporary visual boost, increasing their color saturation and lightness.
-*   **Soul "Choice" of Dewa:**
-    *   Enhanced the simulation logic in `src/lib/simulation.worker.js` to allow non-dewa souls to "choose" a specific dewa entity.
-    *   Souls will be attracted to their chosen dewa as long as it remains within a certain range. If the chosen dewa moves too far or is removed, the soul will attempt to choose a new, closest dewa.
-
----
-
-### Addition by ClaudeCo
-
-*   **UI Enhancement:**
-    *   Added a GitHub repository link in the bottom left corner of the application.
-    *   The link features consistent styling with the existing FPS counter (dark background with blur effect).
-    *   Includes hover effects and opens in a new tab for better user experience.
-*   **And more:**
-    *   Too much... it is the main AI used in helping to build this.
----
-
 ## 🛠️ Setup Instructions (macOS)
 
 > Requires [Node.js](https://nodejs.org), npm, and optionally Git.
