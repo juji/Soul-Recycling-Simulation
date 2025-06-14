@@ -6,6 +6,7 @@
   import { InstancedSoulRenderer } from './lib/InstancedSoulRenderer.js';
   import { LODManager } from './lib/LODManager.js';  // Phase 4: LOD System
   import { AdaptivePerformanceManager } from './lib/adaptive-performance.js';  // Phase 4: Adaptive Performance
+  import { loadFromStorage, saveToStorage, STORAGE_KEYS } from './lib/localStorage.js'; // Import from new module
   import SliderControls from './components/SliderControls.svelte';
   import FpsCounter from './components/FpsCounter.svelte';
   import PopulationCounter from './components/PopulationCounter.svelte';
@@ -75,47 +76,18 @@
   // Material pool settings
   const MATERIAL_POOL_SIZE = 20;
   
-  // localStorage keys for parameter persistence
-  const STORAGE_KEYS = {
-    SPAWN_RATE: 'soul_simulation_spawn_rate',
-    MIN_LIFESPAN: 'soul_simulation_min_lifespan',
-    MAX_LIFESPAN: 'soul_simulation_max_lifespan'
-  };
-  
   // Load saved values from localStorage or use defaults - migrated to runes
   let NEW_SOUL_SPAWN_RATE = $state(loadFromStorage(STORAGE_KEYS.SPAWN_RATE, 0.7));
   let MIN_LIFESPAN = $state(loadFromStorage(STORAGE_KEYS.MIN_LIFESPAN, 300));
   let MAX_LIFESPAN = $state(loadFromStorage(STORAGE_KEYS.MAX_LIFESPAN, 900));
   
-  // Helper functions for localStorage
-  function loadFromStorage(key, defaultValue) {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const saved = localStorage.getItem(key);
-      if (saved !== null) {
-        const parsed = parseFloat(saved);
-        if (isNaN(parsed)) return defaultValue;
-        
-        // Validate bounds for each parameter
-        if (key === STORAGE_KEYS.SPAWN_RATE) {
-          return Math.max(0.1, Math.min(3.0, parsed));
-        } else if (key === STORAGE_KEYS.MIN_LIFESPAN) {
-          return Math.max(100, Math.min(800, parsed));
-        } else if (key === STORAGE_KEYS.MAX_LIFESPAN) {
-          return Math.max(200, Math.min(1500, parsed));
-        }
-        
-        return parsed;
-      }
-    }
-    return defaultValue;
+  let currentQuality = $state('high'); // Ensure this is the one being used
+
+  // Helper function to update currentQuality state
+  function updateCurrentQuality(newValue) {
+    currentQuality = newValue;
   }
-  
-  function saveToStorage(key, value) {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem(key, value.toString());
-    }
-  }
-  
+
   // Reset function to restore default values
   function resetParameters() {
     NEW_SOUL_SPAWN_RATE = 0.7;
@@ -186,33 +158,12 @@
   let fpsCounter = $state();
   
   // Performance tracking - convert to runes
-  let renderTime = $state(0);
-  let workerUpdateTime = $state(0);
-  let lastFrameStart = $state(0);
-  
-  // Adaptive quality settings - convert to runes
-  let currentQuality = $state('high');
-  let adaptiveSettings = $state({
-    high: { maxConnectionChecks: 150, connectionLimit: 20 },
-    medium: { maxConnectionChecks: 100, connectionLimit: 15 },
-    low: { maxConnectionChecks: 50, connectionLimit: 10 }
-  });
-  
-  // Global variables for AI test bridge will be updated in animation loop
-  // to prevent effect_update_depth_exceeded errors
-  
-  // Phase 3: Performance Metrics for Instanced Rendering - convert to runes
   let performanceMetrics = $state({
     renderingMode: 'individual',
     drawCalls: 0,
     instancedUpdateTime: 0,
     individualUpdateTime: 0,
-    soulsUpdated: 0,
-    framesSinceLastLog: 0,
-    instancedFrameCount: 0,
-    individualFrameCount: 0,
-    averageInstancedTime: 0,
-    averageIndividualTime: 0
+    soulsUpdated: 0
   });
 
   // Phase 3: Declare variables needed by reactive statements - convert to runes
@@ -226,16 +177,14 @@
   
   // Phase 3: Performance tracking functions
   function trackDrawCalls(renderer) {
+    // Track draw calls for Phase 3 performance validation
     if (renderer && renderer.info && renderer.info.render) {
       return renderer.info.render.calls;
     }
-    return 0;
+    // Fallback estimation based on rendering mode
+    return renderingMode === 'instanced' ? 3 : souls.length;
   }
-  
-  function logPhase3Performance() {
-    // Performance logging removed for production
-  }
-  
+
   // Toast notification component reference
   let toastNotification;
   
@@ -434,20 +383,6 @@
 
     // Phase 3: Initialize Instanced Rendering
     renderingMode = useInstancedRendering ? 'instanced' : 'individual';
-
-    // Phase 3: Performance tracking functions
-    function trackDrawCalls(renderer) {
-      // Track draw calls for Phase 3 performance validation
-      if (renderer && renderer.info && renderer.info.render) {
-        return renderer.info.render.calls;
-      }
-      // Fallback estimation based on rendering mode
-      return renderingMode === 'instanced' ? 3 : souls.length;
-    }
-
-    function logPhase3Performance() {
-      // Performance logging removed for production
-    }
 
     // Instanced renderer initialization will happen after souls are created
 
@@ -828,8 +763,6 @@
                 // Track instanced performance
                 const instancedTime = performance.now() - updateStartTime;
                 performanceMetrics.instancedUpdateTime += instancedTime;
-                performanceMetrics.instancedFrameCount++;
-                performanceMetrics.averageInstancedTime = performanceMetrics.instancedUpdateTime / performanceMetrics.instancedFrameCount;
                 performanceMetrics.renderingMode = 'instanced';            } else {
                 // EXISTING: Individual mesh rendering (fallback)
                 data.forEach(updatedSoulData => {
@@ -875,8 +808,6 @@
                 // Track individual mesh performance
                 const individualTime = performance.now() - updateStartTime;
                 performanceMetrics.individualUpdateTime += individualTime;
-                performanceMetrics.individualFrameCount++;
-                performanceMetrics.averageIndividualTime = performanceMetrics.individualUpdateTime / performanceMetrics.individualFrameCount;
                 performanceMetrics.renderingMode = 'individual';
             }
         } else if (type === 'soulRemoved') {
@@ -897,9 +828,9 @@
                     if (soulMeshToRemove.material) {
                         // If material is an array (e.g. multi-material), dispose each
                         if (Array.isArray(soulMeshToRemove.material)) {
-                            soulMeshToRemove.material.forEach(material => material.dispose());
+                          soulMeshToRemove.material.forEach(material => material.dispose());
                         } else {
-                            soulMeshToRemove.material.dispose();
+                          soulMeshToRemove.material.dispose();
                         }
                     }
                 }
@@ -964,7 +895,6 @@
       controls.update();
       
       // Phase 3: Track draw calls before render
-      const drawCallsBefore = trackDrawCalls(renderer);
       renderer.render(scene, camera);
       performanceMetrics.drawCalls = trackDrawCalls(renderer);
       
@@ -987,8 +917,11 @@
           souls.length
         );
         
-        // Update current quality from adaptive manager
-        currentQuality = adaptivePerformanceManager.getCurrentQuality();
+        // Update current quality from adaptive manager using the helper function
+        if (adaptivePerformanceManager) {
+          const newQualityValue = adaptivePerformanceManager.getCurrentQuality();
+          updateCurrentQuality(newQualityValue);
+        }
         
         // Update LOD distances if quality changed
         if (lodManager) {
