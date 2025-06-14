@@ -19,26 +19,91 @@
   import EquilibriumInfo from './components/EquilibriumInfo.svelte';
   import ThreeContainer from './components/ThreeContainer.svelte';
   import './lib/ai-test-bridge.js';  // Import AI test bridge for performance testing
-
-  // Load saved values from localStorage or use defaults - migrated to runes
-  let NEW_SOUL_SPAWN_RATE = $state(loadFromStorage(STORAGE_KEYS.SPAWN_RATE, 0.7));
-  let MIN_LIFESPAN = $state(loadFromStorage(STORAGE_KEYS.MIN_LIFESPAN, 300));
-  let MAX_LIFESPAN = $state(loadFromStorage(STORAGE_KEYS.MAX_LIFESPAN, 900));
   
-  let currentQuality = $state('high'); // Ensure this is the one being used
+  // Import state management store
+  import { 
+    souls as getSouls, 
+    soulLookupMap as getSoulLookupMap, 
+    renderingMode as getRenderingMode, 
+    currentQuality as getCurrentQuality, 
+    isAutomaticSoulCount as getIsAutomaticSoulCount,
+    performanceMetrics as getPerformanceMetrics,
+    container as getContainer,
+    mouse as getMouse,
+    NEW_SOUL_SPAWN_RATE as getNEW_SOUL_SPAWN_RATE,
+    MIN_LIFESPAN as getMIN_LIFESPAN,
+    MAX_LIFESPAN as getMAX_LIFESPAN,
+    AVG_LIFESPAN as getAVG_LIFESPAN,
+    EQUILIBRIUM_POPULATION as getEQUILIBRIUM_POPULATION,
+    toastNotification as getToastNotification,
+    fpsCounter as getFpsCounter,
+    instancedRenderer as getInstancedRenderer,
+    lodManager as getLodManager,
+    adaptivePerformanceManager as getAdaptivePerformanceManager,
+    resetParameters,
+    updateCurrentQuality,
+    showToastMessage,
+    adjustQualityBasedOnFPS,
+    setSpawnRate,
+    setMinLifespan,
+    setMaxLifespan,
+    setAutomaticSoulCount,
+    setInstancedRenderer,
+    setLodManager,
+    setAdaptivePerformanceManager,
+    setRenderingMode,
+    setContainer,
+    setToastNotification,
+    setFpsCounter,
+    addSoul,
+    removeSoulById,
+    clearSouls
+  } from './lib/stores/simulationState.svelte.js';
 
-  // Helper function to update currentQuality state
-  function updateCurrentQuality(newValue) {
-    currentQuality = newValue;
-  }
+  // Local reactive variables that call the getter functions
+  let souls = $derived(getSouls());
+  let soulLookupMap = $derived(getSoulLookupMap());
+  let renderingMode = $derived(getRenderingMode());
+  let currentQuality = $derived(getCurrentQuality());
+  let isAutomaticSoulCount = $derived(getIsAutomaticSoulCount());
+  let performanceMetrics = $derived(getPerformanceMetrics());
+  let container = $derived(getContainer());
+  let mouse = $derived(getMouse());
+  let NEW_SOUL_SPAWN_RATE = $derived(getNEW_SOUL_SPAWN_RATE());
+  let MIN_LIFESPAN = $derived(getMIN_LIFESPAN());
+  let MAX_LIFESPAN = $derived(getMAX_LIFESPAN());
+  let AVG_LIFESPAN = $derived(getAVG_LIFESPAN());
+  let EQUILIBRIUM_POPULATION = $derived(getEQUILIBRIUM_POPULATION());
+  let toastNotification = $derived(getToastNotification());
+  let fpsCounter = $derived(getFpsCounter());
+  let instancedRenderer = $derived(getInstancedRenderer());
+  let lodManager = $derived(getLodManager());
+  let adaptivePerformanceManager = $derived(getAdaptivePerformanceManager());
 
-  // Reset function to restore default values
-  function resetParameters() {
-    NEW_SOUL_SPAWN_RATE = DEFAULT_PARAMETERS.SPAWN_RATE;
-    MIN_LIFESPAN = DEFAULT_PARAMETERS.MIN_LIFESPAN;
-    MAX_LIFESPAN = DEFAULT_PARAMETERS.MAX_LIFESPAN;
-    showToastMessage('Parameters reset to defaults');
-  }
+  // Local variable for container binding (cannot bind to imports)
+  let localContainer = $state();
+  let localToastNotification = $state();
+  let localFpsCounter = $state();
+
+  // Sync local container to store when it changes
+  $effect(() => {
+    if (localContainer) {
+      setContainer(localContainer);
+    }
+  });
+
+  // Sync local component references to store
+  $effect(() => {
+    if (localToastNotification) {
+      setToastNotification(localToastNotification);
+    }
+  });
+
+  $effect(() => {
+    if (localFpsCounter) {
+      setFpsCounter(localFpsCounter);
+    }
+  });
 
   // Handle parameter changes from SliderControls component
   function handleParameterChange(event) {
@@ -46,33 +111,19 @@
     
     switch (type) {
       case 'SPAWN_RATE':
-        NEW_SOUL_SPAWN_RATE = value;
+        setSpawnRate(value);
         break;
       case 'MIN_LIFESPAN':
-        MIN_LIFESPAN = value;
+        setMinLifespan(value);
         break;
       case 'MAX_LIFESPAN':
-        MAX_LIFESPAN = value;
+        setMaxLifespan(value);
         break;
     }
   }
   
-  // Convert reactive statements to effects and derived runes
-  $effect(() => {
-    saveToStorage(STORAGE_KEYS.SPAWN_RATE, NEW_SOUL_SPAWN_RATE);
-  });
+  // Note: Effects for localStorage sync are now handled in the state store
   
-  $effect(() => {
-    saveToStorage(STORAGE_KEYS.MIN_LIFESPAN, MIN_LIFESPAN);
-  });
-  
-  $effect(() => {
-    saveToStorage(STORAGE_KEYS.MAX_LIFESPAN, MAX_LIFESPAN);
-  });
-  
-  let AVG_LIFESPAN = $derived((MIN_LIFESPAN + MAX_LIFESPAN) / 2); // Average lifespan of souls in frames
-  let EQUILIBRIUM_POPULATION = $derived(NEW_SOUL_SPAWN_RATE * AVG_LIFESPAN); // Target equilibrium population
-
   // POPULATION EQUILIBRIUM NOTE:
   // The soul population tends towards an equilibrium.
   // This equilibrium is determined by:
@@ -89,33 +140,8 @@
   // If the initial population is above this, it will decrease towards equilibrium.
   // If the initial population is below this, it will increase towards equilibrium.
 
-  let souls = $state([]); // Declare souls here to make it accessible to the template
-  let soulLookupMap = $state(new Map()); // O(1) lookup map for soul IDs to mesh objects
-  let container = $state();
-  
-  // FPS Counter component reference
-  let fpsCounter = $state();
-  
-  // Performance tracking - convert to runes
-  let performanceMetrics = $state({
-    renderingMode: 'individual',
-    drawCalls: 0,
-    instancedUpdateTime: 0,
-    individualUpdateTime: 0,
-    soulsUpdated: 0
-  });
-
-  // Phase 3: Declare variables needed by reactive statements - convert to runes
-  let renderingMode = $state(FEATURE_FLAGS.USE_INSTANCED_RENDERING ? 'instanced' : 'individual');
-  let instancedRenderer = $state(null);
+  // Local state for Three.js renderer (not shared in store)
   let renderer = $state(null);
-  
-  // Phase 4: LOD and Performance Management - convert to runes
-  let lodManager = $state(null);
-  let adaptivePerformanceManager = $state(null);
-  
-  // Define mouse at component level so it's accessible to handleMouseMove
-  let mouse = $state(new THREE.Vector2());
   
   // Phase 3: Performance tracking functions
   function trackDrawCalls(renderer) {
@@ -127,22 +153,8 @@
     return renderingMode === 'instanced' ? 3 : souls.length;
   }
 
-  // Toast notification component reference
-  let toastNotification;
-  
-  function showToastMessage(message) {
-    toastNotification?.showToast(message);
-  }
-  
-  function adjustQualityBasedOnFPS(currentFPS) {
-    if (currentFPS < 30 && currentQuality !== 'low') {
-      currentQuality = 'medium';
-      if (currentFPS < 20) currentQuality = 'low';
-    } else if (currentFPS > 50 && currentQuality !== 'high') {
-      if (currentQuality === 'low') currentQuality = 'medium';
-      else if (currentQuality === 'medium') currentQuality = 'high';
-    }
-  }
+  // Functions now reference the store imports
+  // Note: showToastMessage and adjustQualityBasedOnFPS are now imported from store
   
   // Helper functions for parameter reset
   function handleReset() {
@@ -176,7 +188,6 @@
 
   // Helper function to get entity count from URL parameter
   // Uses adaptive performance management to determine optimal soul count when no URL parameter is provided
-  let isAutomaticSoulCount = $state(0); // Flag to indicate if adaptive performance manager is used
   function getEntityCountFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
     const val = urlParams.get('val');
@@ -185,7 +196,7 @@
       // Use adaptive performance manager to determine optimal soul count
       if (adaptivePerformanceManager) {
         const currentQualitySettings = adaptivePerformanceManager.getQualitySettings();
-        isAutomaticSoulCount = currentQualitySettings.maxSouls
+        setAutomaticSoulCount(currentQualitySettings.maxSouls);
         return currentQualitySettings.maxSouls;
       }
       return DEFAULT_SOUL_COUNT; // Fallback if adaptive performance manager not available
@@ -306,14 +317,14 @@
 
     // Phase 4: Initialize Adaptive Performance Manager
     if (FEATURE_FLAGS.USE_LOD_SYSTEM) {
-      adaptivePerformanceManager = new AdaptivePerformanceManager({
+      setAdaptivePerformanceManager(new AdaptivePerformanceManager({
         debug: import.meta.env.DEV,
         enableLearning: true,
         adaptationAggression: 'moderate'
-      });
+      }));
       
       // Phase 4: Initialize LOD Manager with camera and performance manager
-      lodManager = new LODManager(camera, adaptivePerformanceManager);
+      setLodManager(new LODManager(camera, adaptivePerformanceManager));
       
       // Configure LOD distances based on initial hardware quality
       const initialQuality = adaptivePerformanceManager.getCurrentQuality();
@@ -338,7 +349,7 @@
     }
 
     // Phase 3: Initialize Instanced Rendering
-    renderingMode = useInstancedRendering ? 'instanced' : 'individual';
+    setRenderingMode(useInstancedRendering ? 'instanced' : 'individual');
 
     // Instanced renderer initialization will happen after souls are created
 
@@ -611,7 +622,7 @@
       try {
         // Dynamic buffer size based on URL parameter with 2x safety margin
         const dynamicMaxSouls = recycledSoulCount * 2;
-        instancedRenderer = new InstancedSoulRenderer(scene, dynamicMaxSouls);
+        setInstancedRenderer(new InstancedSoulRenderer(scene, dynamicMaxSouls));
         
         // Hide individual meshes from scene since we'll use instanced rendering
         souls.forEach(soul => {
@@ -624,7 +635,7 @@
         instancedRenderer.updateInstances(souls);
         
       } catch (error) {
-        renderingMode = 'individual';
+        setRenderingMode('individual');
         
         // Show individual meshes again on fallback
         souls.forEach(soul => {
@@ -761,8 +772,7 @@
                         }
                     }
                 }
-                souls = souls.filter(s => s.userData.id !== soulIdToRemove);
-                soulLookupMap.delete(soulIdToRemove); // Remove from lookup map
+                removeSoulById(soulIdToRemove);
             }
         } else if (type === 'connectionsUpdated') {
             // Handle connections calculated in worker
@@ -905,10 +915,10 @@
       
       // Phase 4: Cleanup LOD and Performance managers
       if (lodManager) {
-        lodManager = null;
+        setLodManager(null);
       }
       if (adaptivePerformanceManager) {
-        adaptivePerformanceManager = null;
+        setAdaptivePerformanceManager(null);
       }
     };
   });
@@ -916,13 +926,13 @@
 </script>
 
 <ThreeContainer 
-  bind:container 
+  bind:container={localContainer} 
   on:mousemove={handleMouseMove} 
   on:resize={handleResize} 
 />
 
 <!-- UI Components -->
-<FpsCounter bind:this={fpsCounter} />
+<FpsCounter bind:this={localFpsCounter} />
 <PopulationCounter soulCount={souls.length} />
 <EntityLinks 
   activeCount={getActiveCount()} 
@@ -930,15 +940,15 @@
 />
 
 <EquilibriumInfo 
-  bind:spawnRate={NEW_SOUL_SPAWN_RATE}
+  spawnRate={NEW_SOUL_SPAWN_RATE}
   avgLifespan={AVG_LIFESPAN}
   equilibriumPopulation={EQUILIBRIUM_POPULATION}
-  bind:minLifespan={MIN_LIFESPAN}
-  bind:maxLifespan={MAX_LIFESPAN}
+  minLifespan={MIN_LIFESPAN}
+  maxLifespan={MAX_LIFESPAN}
   onParameterChange={handleParameterChange}
   onReset={handleReset}
 />
 
 <BottomLinks />
 
-<ToastNotification bind:this={toastNotification} />
+<ToastNotification bind:this={localToastNotification} />
