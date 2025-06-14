@@ -16,7 +16,7 @@ The Soul Recycling Simulation is a high-performance 3D particle simulation built
 
 ## Incremental Refactoring Achievement
 
-### Completed Refactoring Phases (6/8 Complete)
+### Completed Refactoring Phases (7/8 Complete)
 
 ✅ **Phase 1: Project Setup and File Structure** (1 hour)
 - Created organized directory structure (`src/lib/stores`, `src/lib/constants`, `src/components/simulation`)
@@ -50,14 +50,15 @@ The Soul Recycling Simulation is a high-performance 3D particle simulation built
 - Implemented proper memory management for both rendering modes
 - Created efficient soul update functions with worker data integration
 
-### Remaining Refactoring Phases (2/8 Remaining)
+✅ **Phase 6a: Create Worker Communication Manager** (1 hour)
+- Created `src/lib/utils/workerManager.js` with comprehensive worker communication management
+- Extracted Web Worker initialization and message handling from App.svelte
+- Implemented message handler registration system for extensibility
+- Maintained all performance optimizations and error handling
 
-🚧 **Phase 6a: Create Worker Communication Manager** (NEXT - 1 hour)
-- Create `workerManager.js` with Web Worker communication
-- Extract worker initialization and message handling
-- Test physics simulation and worker communication
+### Remaining Refactoring Phases (1/8 Remaining)
 
-⏳ **Phase 6b: Extract Animation Loop** (1 hour)
+🚧 **Phase 6b: Extract Animation Loop** (NEXT - 1 hour)
 - Create `animationController.js` with animation loop
 - Extract performance tracking and interaction logic
 - Test smooth animation and performance metrics

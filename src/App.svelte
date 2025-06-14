@@ -34,6 +34,9 @@
     disposeConnectionLines
   } from './lib/utils/soulManager.js';
   
+  // Import worker communication manager
+  import { workerManager } from './lib/utils/workerManager.js';
+  
   // Import state management store
   import { 
     souls as getSouls, 
@@ -284,19 +287,14 @@
     let pointerPosition3D = null;
     const interactionPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
-    let simulationWorker;
-
-    // Initialize the Web Worker
-    simulationWorker = new Worker(new URL('./lib/simulation.worker.js', import.meta.url), { type: 'module' });
-
-    // Create initial souls using soulManager
+    // Create initial souls using soulManager (worker will be passed later)
     const initialSoulsForWorkerInit = createInitialSouls(
       recycledSoulCount, 
       scene, 
       renderingMode, 
       MIN_LIFESPAN, 
       MAX_LIFESPAN, 
-      simulationWorker
+      null // Worker reference not needed for initial creation
     );
     
     // Initialize instanced renderer AFTER souls are created
@@ -328,71 +326,49 @@
       }
     }
     
-    // Initialize worker with souls and constants
-    simulationWorker.postMessage({
-        type: 'init',
-        data: {
-            souls: initialSoulsForWorkerInit, 
-            constants: {
-                POINTER_INTERACTION_RADIUS, 
-                POINTER_INFLUENCE_STRENGTH, 
-                NEIGHBOR_SPEED_INFLUENCE_RADIUS,
-                NEIGHBOR_SPEED_INFLUENCE_STRENGTH,
-                SEPARATION_DISTANCE,
-                SEPARATION_STRENGTH,
-                DEWA_ATTRACTION_RADIUS, 
-                DEWA_ATTRACTION_STRENGTH,
-                DEWA_ENHANCEMENT_RADIUS,
-                ENHANCEMENT_SATURATION_BOOST,
-                ENHANCEMENT_LIGHTNESS_BOOST
-            }
-        }
-    });
-
-    // Worker message handling
-    simulationWorker.onmessage = function(e) {
-        const { type, data } = e.data;
-        if (type === 'soulsUpdated') {
-            const updateStartTime = performance.now();
-            performanceMetrics.soulsUpdated = data.length;
-            
-            // Dual rendering path - instanced vs individual meshes
-            if (renderingMode === 'instanced' && instancedRenderer) {
-                // Update individual soul mesh positions for compatibility using soulManager
-                data.forEach(updatedSoulData => {
-                    updateSoulFromWorker(updatedSoulData, renderingMode);
-                });
-                
-                // Update all souls through instanced renderer with updated mesh data
-                instancedRenderer.updateInstances(souls);
-                
-                // Track instanced performance
-                const instancedTime = performance.now() - updateStartTime;
-                performanceMetrics.instancedUpdateTime += instancedTime;
-                performanceMetrics.renderingMode = 'instanced';
-            } else {
-                // Individual mesh rendering (fallback) using soulManager
-                data.forEach(updatedSoulData => {
-                    updateSoulFromWorker(updatedSoulData, renderingMode);
-                });
-                
-                // Track individual mesh performance
-                const individualTime = performance.now() - updateStartTime;
-                performanceMetrics.individualUpdateTime += individualTime;
-                performanceMetrics.renderingMode = 'individual';
-            }
-        } else if (type === 'soulRemoved') {
-            // Handle soul removal using soulManager
-            const soulIdToRemove = data.soulId;
-            handleSoulRemoval(soulIdToRemove, scene, renderingMode);
-        } else if (type === 'connectionsUpdated') {
-            // Handle connections calculated in worker using soulManager
-            updateConnectionLines(lineSegments, data, MAX_LINES);
-        }
+    // Initialize worker with souls and constants using WorkerManager
+    const workerConstants = {
+      POINTER_INTERACTION_RADIUS, 
+      POINTER_INFLUENCE_STRENGTH, 
+      NEIGHBOR_SPEED_INFLUENCE_RADIUS,
+      NEIGHBOR_SPEED_INFLUENCE_STRENGTH,
+      SEPARATION_DISTANCE,
+      SEPARATION_STRENGTH,
+      DEWA_ATTRACTION_RADIUS, 
+      DEWA_ATTRACTION_STRENGTH,
+      DEWA_ENHANCEMENT_RADIUS,
+      ENHANCEMENT_SATURATION_BOOST,
+      ENHANCEMENT_LIGHTNESS_BOOST
     };
 
+    // Initialize WorkerManager
+    workerManager.initializeWorker(initialSoulsForWorkerInit, workerConstants);
+    
+    // Set scene references for WorkerManager
+    workerManager.setSceneReferences(scene, lineSegments, MAX_LINES);
+
+    // Worker message handling is now managed by WorkerManager
+    // Custom handlers could be registered here if needed
+
     function createNewSoulWrapper() {
-      createNewSoul(scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, simulationWorker);
+      const newSoul = createNewSoul(scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, null);
+      
+      // Send the new soul to the worker via WorkerManager
+      if (newSoul && newSoul.userData) {
+        const soulDataForWorker = {
+          id: newSoul.userData.id,
+          position: { x: newSoul.position.x, y: newSoul.position.y, z: newSoul.position.z },
+          velocity: newSoul.userData.velocity,
+          speed: newSoul.userData.speed,
+          isHuman: newSoul.userData.isHuman,
+          isDewa: newSoul.userData.isDewa,
+          flickerPhase: newSoul.userData.flickerPhase,
+          life: newSoul.userData.life,
+          baseHSL: newSoul.userData.baseHSL,
+        };
+        
+        workerManager.addSoulToWorker(soulDataForWorker);
+      }
     }
 
     // Helper function to track draw calls for performance metrics
@@ -417,16 +393,11 @@
         pointerPosition3D = null;
       }
 
-      // Send necessary data to worker for update
-      if (simulationWorker) {
-        simulationWorker.postMessage({
-            type: 'update',
-            data: {
-                pointerPosition3D: null, // Dewa is everywhere, not tied to a specific mouse-derived point
-                lodData: null // LOD data would go here if implemented
-            }
-        });
-      }
+      // Send necessary data to worker for update via WorkerManager
+      workerManager.sendUpdate({
+        pointerPosition3D: null, // Dewa is everywhere, not tied to a specific mouse-derived point
+        lodData: null // LOD data would go here if implemented
+      });
 
       let spawnRate = NEW_SOUL_SPAWN_RATE;
       while (spawnRate > 1) {

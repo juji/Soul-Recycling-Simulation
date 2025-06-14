@@ -8,8 +8,8 @@
 - ✅ **Phase 4**: Extract Scene Setup (COMPLETED)
 - ✅ **Phase 5a**: Create Soul Creation Functions (COMPLETED)
 - ✅ **Phase 5b**: Extract Soul Lifecycle Management (COMPLETED)
-- 🚧 **Phase 6a**: Create Worker Communication Manager (NEXT - 1 hour)
-- ⏳ **Phase 6b**: Extract Animation Loop (1 hour)
+- ✅ **Phase 6a**: Create Worker Communication Manager (COMPLETED)
+- 🚧 **Phase 6b**: Extract Animation Loop (NEXT - 1 hour)
 - ⏳ **Phase 6c**: Create SimulationManager Component (1 hour)
 - ⏳ **Phase 7a**: Update Simple UI Components (1 hour)
 - ⏳ **Phase 7b**: Update Complex UI Components (1 hour)
@@ -43,17 +43,17 @@ Key runes principles to follow:
 
 ## Refactoring Timeline Summary
 
-### Completed Work (6 hours total)
+### Completed Work (7 hours total)
 - ✅ **Phase 1**: Project Setup and File Structure (1 hour)
 - ✅ **Phase 2**: Extract Constants (1 hour)  
 - ✅ **Phase 3**: Create State Management (1 hour)
 - ✅ **Phase 4**: Extract Scene Setup (1 hour)
 - ✅ **Phase 5a**: Create Soul Creation Functions (1 hour)
 - ✅ **Phase 5b**: Extract Soul Lifecycle Management (1 hour)
+- ✅ **Phase 6a**: Create Worker Communication Manager (1 hour)
 
-### Remaining Work (2 hours total)
-- 🚧 **Phase 6a**: Create Worker Communication Manager (NEXT - 1 hour)
-- ⏳ **Phase 6b**: Extract Animation Loop (1 hour)
+### Remaining Work (5 hours total)
+- 🚧 **Phase 6b**: Extract Animation Loop (NEXT - 1 hour)
 - ⏳ **Phase 6c**: Create SimulationManager Component (1 hour)
 - ⏳ **Phase 7a**: Update Simple UI Components (1 hour)
 - ⏳ **Phase 7b**: Update Complex UI Components (1 hour)
@@ -294,24 +294,9 @@ Rather than refactoring everything at once, we'll use an incremental approach wi
 
 **Status**: Soul lifecycle management successfully extracted to soulManager utility. App.svelte further simplified with better separation of concerns. Total reduction so far: 255 lines (33.8% from original 755 lines).
 
-## Phase 6a: Create Worker Communication Manager (1 hour)
+**Status**: Worker communication management successfully extracted to WorkerManager utility. App.svelte reduced by 30 lines (6% reduction). Application tested and working correctly with all rendering modes and performance optimizations preserved. Zero breaking changes. Ready for Phase 6b.
 
-1. **Create WorkerManager utility**:
-   - Create `src/lib/utils/workerManager.js`
-   - Extract Web Worker initialization and message handling
-   - Create functions for worker communication and data synchronization
-
-2. **Move worker logic from App.svelte**:
-   - Extract simulationWorker setup and message handlers
-   - Move worker message processing (soulsUpdated, soulRemoved, connectionsUpdated)
-   - Create clean API for worker communication
-
-3. **Test worker communication**:
-   - Verify physics simulation continues working
-   - Test soul updates from worker
-   - Ensure connection lines render correctly
-
-## Phase 6b: Extract Animation Loop (1 hour)
+## Phase 6b: Extract Animation Loop (NEXT - 1 hour)
 
 1. **Create AnimationController utility**:
    - Create `src/lib/utils/animationController.js`
