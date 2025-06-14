@@ -1,31 +1,68 @@
 <script>
   import { onMount } from 'svelte';
   import SliderControls from './SliderControls.svelte';
+  
+  // Import state store
+  import { 
+    NEW_SOUL_SPAWN_RATE as getNEW_SOUL_SPAWN_RATE,
+    MIN_LIFESPAN as getMIN_LIFESPAN,
+    MAX_LIFESPAN as getMAX_LIFESPAN,
+    AVG_LIFESPAN as getAVG_LIFESPAN,
+    EQUILIBRIUM_POPULATION as getEQUILIBRIUM_POPULATION,
+    resetParameters,
+    setSpawnRate,
+    setMinLifespan,
+    setMaxLifespan
+  } from '../lib/stores/simulationState.svelte.js';
 
-  // Equilibrium info component props
+  // Props for configuration only (no data props needed)
   let { 
     show = $bindable(false),
-    spawnRate = 0.7,
-    avgLifespan = 600,
-    equilibriumPopulation = Math.round(spawnRate * avgLifespan),
-    minLifespan = 300,
-    maxLifespan = 900,
-    position = 'top-left', // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
-    onParameterChange = () => {},
-    onReset = () => {}
+    position = 'top-left' // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
   } = $props();
 
-  // Calculate equilibrium population reactively
-  let calculatedEquilibrium = $derived(Math.round(spawnRate * calculatedAvgLifespan));
-  let calculatedAvgLifespan = $derived((minLifespan + maxLifespan) / 2);
+  // Get data from state store
+  let storeSpawnRate = $derived(getNEW_SOUL_SPAWN_RATE());
+  let storeMinLifespan = $derived(getMIN_LIFESPAN());
+  let storeMaxLifespan = $derived(getMAX_LIFESPAN());
+  let avgLifespan = $derived(getAVG_LIFESPAN());
+  let equilibriumPopulation = $derived(getEQUILIBRIUM_POPULATION());
+
+  // Local state for slider controls (bindable) - start with sensible defaults
+  let spawnRate = $state(0.7);
+  let minLifespan = $state(300);
+  let maxLifespan = $state(900);
+
+  // Sync local state with store when store changes
+  $effect(() => {
+    spawnRate = storeSpawnRate;
+    minLifespan = storeMinLifespan;
+    maxLifespan = storeMaxLifespan;
+  });
+
+  // Calculate equilibrium population reactively using store values
+  let calculatedEquilibrium = $derived(Math.round(storeSpawnRate * avgLifespan));
+  let calculatedAvgLifespan = $derived((storeMinLifespan + storeMaxLifespan) / 2);
 
   // Handle parameter changes from SliderControls
   function handleParameterChange(event) {
-    onParameterChange(event);
+    const { type, value } = event.detail;
+    
+    switch (type) {
+      case 'SPAWN_RATE':
+        setSpawnRate(value);
+        break;
+      case 'MIN_LIFESPAN':
+        setMinLifespan(value);
+        break;
+      case 'MAX_LIFESPAN':
+        setMaxLifespan(value);
+        break;
+    }
   }
 
   function handleReset() {
-    onReset();
+    resetParameters();
   }
 
   // Toggle function for parent access
@@ -62,7 +99,7 @@
 <div class="equilibrium-info {position}" class:show>
   <div class="equilibrium-title">Population Equilibrium</div>
   <div class="equilibrium-formula">EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN</div>
-  <div class="equilibrium-calculation">Current: {spawnRate} × {calculatedAvgLifespan} = ~{calculatedEquilibrium} souls</div>
+  <div class="equilibrium-calculation">Current: {storeSpawnRate} × {calculatedAvgLifespan} = ~{calculatedEquilibrium} souls</div>
   
   <!-- Interactive Parameter Controls -->
   <SliderControls 

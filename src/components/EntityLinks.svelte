@@ -1,9 +1,11 @@
-<!-- Entity Links Component - Extracted from App.svelte -->
+<!-- Entity Links Component - Updated for Phase 7b -->
 <script>
-  // Props
+  // Import state store and constants
+  import { isAutomaticSoulCount as getIsAutomaticSoulCount } from '../lib/stores/simulationState.svelte.js';
+  import { DEFAULT_SOUL_COUNT } from '../lib/constants/config.js';
+  
+  // Props for configuration only (no data props needed)
   let { 
-    activeCount = 999,
-    isAutomaticSoulCount = false,
     showLinks = true,
     position = 'top-left', // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
     links = [
@@ -14,6 +16,27 @@
     ]
   } = $props();
   
+  // Get data from state store
+  let isAutomaticSoulCount = $derived(getIsAutomaticSoulCount());
+  
+  // Get active count from URL (same logic as App.svelte)
+  let activeCount = $derived(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const val = urlParams.get('val');
+    
+    if (val === null || val === '') {
+      return DEFAULT_SOUL_COUNT;
+    }
+    
+    const parsedVal = parseInt(val, 10);
+    
+    if (isNaN(parsedVal)) {
+      return DEFAULT_SOUL_COUNT;
+    }
+    
+    return parsedVal;
+  });
+  
   // CSS classes based on position using runes
   let positionClass = $derived(`entity-links-${position}`);
   
@@ -22,7 +45,7 @@
     if (link.isAuto) {
       return isAutomaticSoulCount > 0;
     }
-    return activeCount === link.value;
+    return activeCount() === link.value;
   }
   
   // Helper function to get link display text
