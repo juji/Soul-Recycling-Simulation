@@ -26,7 +26,8 @@
     position: fixed;
     display: flex;
     gap: 10px;
-    z-index: 1000;
+    z-index: 1;
+    flex-direction: column;
   }
 
   /* Position variants */
