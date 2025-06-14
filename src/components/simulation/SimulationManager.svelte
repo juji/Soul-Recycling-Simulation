@@ -4,10 +4,10 @@
 
 <script>
   import { onMount, createEventDispatcher } from 'svelte';
-  import { InstancedSoulRenderer } from '../../lib/InstancedSoulRenderer.js';
-  import { loadFromStorage, STORAGE_KEYS } from '../../lib/localStorage.js';
-  import { FEATURE_FLAGS, DEFAULT_SOUL_COUNT } from '../../lib/constants/config.js';
-  import { CONNECTION_SETTINGS, POINTER_INTERACTION_RADIUS, POINTER_INFLUENCE_STRENGTH, NEIGHBOR_SPEED_INFLUENCE_RADIUS, NEIGHBOR_SPEED_INFLUENCE_STRENGTH, SEPARATION_DISTANCE, SEPARATION_STRENGTH, DEWA_ATTRACTION_RADIUS, DEWA_ATTRACTION_STRENGTH, DEWA_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST } from '../../lib/constants/physics.js';
+  import { InstancedSoulRenderer } from '../../lib/InstancedSoulRenderer.ts';
+  import { loadFromStorage, STORAGE_KEYS } from '../../lib/localStorage.ts';
+  import { FEATURE_FLAGS, DEFAULT_SOUL_COUNT } from '../../lib/constants/config.ts';
+  import { CONNECTION_SETTINGS, POINTER_INTERACTION_RADIUS, POINTER_INFLUENCE_STRENGTH, NEIGHBOR_SPEED_INFLUENCE_RADIUS, NEIGHBOR_SPEED_INFLUENCE_STRENGTH, SEPARATION_DISTANCE, SEPARATION_STRENGTH, DEWA_ATTRACTION_RADIUS, DEWA_ATTRACTION_STRENGTH, DEWA_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST } from '../../lib/constants/physics.ts';
   
   // Import simulation utilities
   import { 

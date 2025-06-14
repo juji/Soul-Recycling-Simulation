@@ -29,8 +29,15 @@ export type QualityLevel = 'ultra' | 'high' | 'medium' | 'low' | 'minimal';
 
 export interface HardwareProfile {
   cpuCores: number;
-  memory: MemoryInfo | null;
-  gpu: GPUInfo;
+  memory: {
+    total: number | 'unknown';
+    category: 'low' | 'medium' | 'high';
+  };
+  gpu: {
+    renderer: string;
+    category: 'low' | 'medium' | 'high';
+    webgl2: boolean;
+  };
   deviceType: 'mobile' | 'desktop-mac' | 'desktop-windows' | 'desktop-linux' | 'desktop-unknown';
   performance: 'unknown' | 'low' | 'medium' | 'high' | 'ultra';
 }
@@ -53,6 +60,10 @@ export interface AdaptiveConfig {
   maxAcceptableFPS: number;
   learningRate: number;
   adaptationSpeed: 'conservative' | 'moderate' | 'aggressive';
+  metricsWindowSize: number;
+  fpsStabilityThreshold: number;
+  memoryPressureThreshold: number;
+  adaptationCooldown: number;
   qualityLevels: Record<QualityLevel, QualitySettings>;
 }
 
@@ -61,6 +72,68 @@ export interface AdaptivePerformanceOptions {
   enableLearning?: boolean;
   adaptationAggression?: 'conservative' | 'moderate' | 'aggressive';
   learningRate?: number;
+  metricsWindowSize?: number;
+}
+
+export interface AdaptationMetrics {
+  fps: number[];
+  frameTime: number[];
+  memory: number[];
+  workerTime: number[];
+  renderTime: number[];
+  soulCount: number;
+}
+
+export interface AdaptationHistory {
+  timestamp: number;
+  from: QualityLevel;
+  to: QualityLevel;
+  reason: string;
+  metrics: {
+    avgFPS: number;
+    fpsStability: number;
+    memoryPressure: number;
+    performanceScore: number;
+    soulCount: number;
+  };
+}
+
+export interface PerformanceTracker {
+  fpsHistory: Array<{
+    fps: number;
+    soulCount: number;
+    quality: QualityLevel;
+    memory: number;
+    timestamp: number;
+  }>;
+  performanceMaps: Map<number, number>;
+  qualityBenchmarks: Map<QualityLevel, Array<{
+    soulCount: number;
+    fps: number;
+    timestamp: number;
+  }>>;
+  adaptationSuccess: any[];
+  hardwareBaseline: any;
+}
+
+export interface AdaptationThresholds {
+  critical: {
+    fps: number;
+    memory: number;
+  };
+  target: {
+    fps: number;
+    stability: number;
+  };
+  headroom: {
+    fps: number;
+    stability: number;
+    memory: number;
+  };
+  performanceScore: {
+    low: number;
+    high: number;
+  };
 }
 
 export interface FPSMetrics {
@@ -74,20 +147,16 @@ export interface FPSMetrics {
 
 export interface PerformanceReport {
   currentQuality: QualityLevel;
-  metrics: {
+  avgFPS: number;
+  fpsStability: number;
+  memoryPressure: number;
+  performanceScore: number;
+  adaptationHistory: AdaptationHistory[];
+  hardwareProfile: HardwareProfile;
+  measurementCount: number;
+  qualityBenchmarks: Record<QualityLevel, {
     avgFPS: number;
     sampleCount: number;
-    memoryPressure: number;
-    performanceScore: number;
-    fpsStability: number;
-  };
-  hardwareProfile: HardwareProfile;
-  recommendations: string[];
-  adaptationHistory: Array<{
-    timestamp: number;
-    from: QualityLevel;
-    to: QualityLevel;
-    reason: string;
   }>;
 }
 

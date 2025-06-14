@@ -4,7 +4,7 @@
   import * as THREE from 'three';
   import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
   import { LODManager } from '../../lib/LODManager';
-  import { AdaptivePerformanceManager } from '../../lib/adaptive-performance.js';
+  import { AdaptivePerformanceManager } from '../../lib/AdaptivePerformanceManager.js';
   import { FEATURE_FLAGS } from '../../lib/constants/config.js';
   import { CAMERA_SETTINGS, LIGHTING_SETTINGS, CONTROLS_SETTINGS } from '../../lib/constants/rendering';
   
