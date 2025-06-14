@@ -14,6 +14,7 @@
   import ToastNotification from './components/ToastNotification.svelte';
   import BottomLinks from './components/BottomLinks.svelte';
   import EquilibriumInfo from './components/EquilibriumInfo.svelte';
+  import ThreeContainer from './components/ThreeContainer.svelte';
   import './lib/ai-test-bridge.js';  // Import AI test bridge for performance testing
 
   // Phase 4: Feature Flags
@@ -112,11 +113,6 @@
         break;
     }
   }
-
-  // Handle reset from SliderControls component
-  function handleReset() {
-    showToastMessage('Parameters reset to defaults');
-  }
   
   // Convert reactive statements to effects and derived runes
   $effect(() => {
@@ -175,6 +171,9 @@
   let lodManager = $state(null);
   let adaptivePerformanceManager = $state(null);
   
+  // Define mouse at component level so it's accessible to handleMouseMove
+  let mouse = $state(new THREE.Vector2());
+  
   // Phase 3: Performance tracking functions
   function trackDrawCalls(renderer) {
     // Track draw calls for Phase 3 performance validation
@@ -200,6 +199,18 @@
       if (currentQuality === 'low') currentQuality = 'medium';
       else if (currentQuality === 'medium') currentQuality = 'high';
     }
+  }
+  
+  // Helper functions for parameter reset
+  function handleReset() {
+    resetParameters();
+  }
+  
+  // Handler for mouse movement events from ThreeContainer
+  function handleMouseMove(event) {
+    const { mouseX, mouseY } = event.detail;
+    mouse.x = mouseX;
+    mouse.y = mouseY;
   }
   
   // Helper function to determine the active count for UI highlighting
@@ -281,7 +292,9 @@
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
-    container.appendChild(renderer.domElement);
+    // Use ThreeContainer's appendChild method to add the renderer
+    let threeContainerRef = document.querySelector('#container');
+    threeContainerRef.appendChild(renderer.domElement);
 
     // Fix passive event listener warning BEFORE creating controls
     // Apply global fix for wheel events to prevent passive listener warnings
@@ -534,7 +547,6 @@
 
     // Pointer interaction variables
     const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
     let pointerPosition3D = null;
     const interactionPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     const POINTER_INTERACTION_RADIUS = 10;
@@ -559,15 +571,6 @@
 
     let simulationWorker;
     let nextSoulId = 0;
-
-    function onMouseMove(event) {
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    }
-
-    container.addEventListener('mousemove', onMouseMove);
 
     function createSoul(isHuman, isDewa = false, angle = 0, speed = 0) {
       let geometry;
@@ -941,20 +944,25 @@
 
     animate();
 
-    window.addEventListener('resize', () => {
-      camera.aspect = container.clientWidth / container.clientHeight;
+    function handleResize(event) {
+      const { width, height } = event?.detail || { 
+        width: container.clientWidth, 
+        height: container.clientHeight 
+      };
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    });
+      renderer.setSize(width, height);
+    }
 
     return () => {
-      if (container) {
-        container.removeEventListener('mousemove', onMouseMove);
-        if (renderer.domElement && container.contains(renderer.domElement)) {
-            container.removeChild(renderer.domElement);
+      if (renderer && renderer.domElement) {
+        // Remove renderer from container if it's still there
+        let threeContainerRef = document.querySelector('#container');
+        if (threeContainerRef && threeContainerRef.contains(renderer.domElement)) {
+          threeContainerRef.removeChild(renderer.domElement);
         }
       }
-      renderer.dispose();
+      if (renderer) renderer.dispose();
       souls.forEach(soul => {
         soul.geometry?.dispose();
         soul.material?.dispose();
@@ -981,22 +989,13 @@
     };
   });
 
-  // Phase 3: Performance metrics debugging - moved to animation loop 
-  // to prevent effect_update_depth_exceeded errors
 </script>
 
-<style>
-  #container {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-
-</style>
-
-<div id="container" bind:this={container}></div>
+<ThreeContainer 
+  bind:container 
+  on:mousemove={handleMouseMove} 
+  on:resize={handleResize} 
+/>
 
 <!-- UI Components -->
 <FpsCounter bind:this={fpsCounter} />
