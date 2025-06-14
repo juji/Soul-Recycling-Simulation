@@ -20,6 +20,15 @@
   import SceneManager from './components/simulation/SceneManager.svelte';
   import './lib/ai-test-bridge.js';
   
+  // Import soul management utilities
+  import { 
+    initializeSoulManager, 
+    createSoul, 
+    createNewSoul, 
+    createInitialSouls,
+    disposeSoulManager 
+  } from './lib/utils/soulManager.js';
+  
   // Import state management store
   import { 
     souls as getSouls, 
@@ -330,39 +339,8 @@
       lineSegments.geometry.attributes.color.needsUpdate = true;
     }
 
-    // Create geometries for different soul types
-    const humanGeometry = new THREE.SphereGeometry(
-      GEOMETRY_SETTINGS.HUMAN_RADIUS, 
-      GEOMETRY_SETTINGS.HUMAN_SEGMENTS.width, 
-      GEOMETRY_SETTINGS.HUMAN_SEGMENTS.height
-    );
-    const gptGeometry = new THREE.BoxGeometry(
-      GEOMETRY_SETTINGS.GPT_SIZE, 
-      GEOMETRY_SETTINGS.GPT_SIZE, 
-      GEOMETRY_SETTINGS.GPT_SIZE
-    );
-    const dewaGeometry = new THREE.SphereGeometry(
-      GEOMETRY_SETTINGS.DEWA_RADIUS, 
-      GEOMETRY_SETTINGS.DEWA_SEGMENTS.width, 
-      GEOMETRY_SETTINGS.DEWA_SEGMENTS.height
-    );
-
-    // Shared materials for better memory efficiency
-    const sharedHumanMaterial = new THREE.MeshBasicMaterial({ 
-      transparent: true, 
-      opacity: GEOMETRY_SETTINGS.MATERIAL_OPACITY.DEFAULT 
-    });
-    const sharedGptMaterial = new THREE.MeshBasicMaterial({ 
-      transparent: true, 
-      opacity: GEOMETRY_SETTINGS.MATERIAL_OPACITY.DEFAULT 
-    });
-    const sharedDewaMaterial = new THREE.MeshLambertMaterial({ 
-      transparent: true, 
-      opacity: GEOMETRY_SETTINGS.MATERIAL_OPACITY.DEWA 
-    });
-
-    const humanBaseHue = Math.random();
-    const gptBaseHue = (humanBaseHue + 0.5) % 1;
+    // Initialize soul manager with shared geometries and materials
+    initializeSoulManager();
 
     // Pointer interaction variables
     const raycaster = new THREE.Raycaster();
@@ -370,113 +348,19 @@
     const interactionPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
     let simulationWorker;
-    let nextSoulId = 0;
-
-    // Soul creation function
-    function createSoul(isHuman, isDewa = false, angle = 0, speed = 0) {
-      let geometry;
-      if (isDewa) {
-        geometry = dewaGeometry;
-      } else {
-        geometry = isHuman ? humanGeometry : gptGeometry;
-      }
-      
-      let material;
-      let h_val, s_val, l_val; 
-
-      if (isDewa) {
-        h_val = Math.random(); // Random hue
-        s_val = 1;             // Max saturation
-        l_val = 0.5;           // Max brightness (standard for HSL)
-        material = new THREE.MeshBasicMaterial({ 
-            color: new THREE.Color().setHSL(h_val, s_val, l_val), // Set color using HSL
-            transparent: false,
-            opacity: 1.0
-        });
-      } else {
-        material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
-        const baseHue = isHuman ? humanBaseHue : gptBaseHue;
-        const hueOffset = Math.random() * 0.3 - 0.15;
-        h_val = (baseHue + hueOffset + angle / (2 * Math.PI)) % 1;
-        s_val = 1;
-        l_val = 0.56;
-        material.color.setHSL(h_val, s_val, l_val);
-      }
-
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.userData.id = nextSoulId++; 
-
-      const radius = 10 + Math.random() * 10;
-      const theta = Math.random() * 2 * Math.PI;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const x = radius * Math.sin(phi) * Math.cos(theta);
-      const y = radius * Math.sin(phi) * Math.sin(theta);
-      const z = radius * Math.cos(phi);
-      mesh.position.set(x, y, z);
-
-      const currentSpeed = isDewa ? DEWA_BASE_SPEED : (speed === 0 ? (0.05 + (Math.random() * .03)) : speed);
-      const initialVelocity = new THREE.Vector3(
-        (Math.random() - 0.5),
-        (Math.random() - 0.5),
-        (Math.random() - 0.5)
-      ).normalize().multiplyScalar(currentSpeed);
-
-      mesh.userData.speed = currentSpeed;
-      mesh.userData.isHuman = isHuman;
-      mesh.userData.isDewa = isDewa; 
-      mesh.userData.flickerPhase = Math.random() * Math.PI * 2;
-      mesh.userData.life = MIN_LIFESPAN + Math.random() * (MAX_LIFESPAN - MIN_LIFESPAN);
-      mesh.userData.baseHSL = { h: h_val, s: s_val, l: l_val }; 
-      mesh.userData.velocity = { x: initialVelocity.x, y: initialVelocity.y, z: initialVelocity.z }; 
-
-      const soulDataForWorker = {
-        id: mesh.userData.id,
-        position: { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z },
-        velocity: { x: initialVelocity.x, y: initialVelocity.y, z: initialVelocity.z },
-        speed: currentSpeed,
-        isHuman,
-        isDewa, 
-        flickerPhase: mesh.userData.flickerPhase,
-        life: mesh.userData.life,
-        baseHSL: mesh.userData.baseHSL, 
-      };
-
-      if (simulationWorker) {
-        simulationWorker.postMessage({ type: 'addSoul', data: { soul: soulDataForWorker } });
-      }
-
-      // Only add individual meshes to scene when not using instanced rendering
-      if (renderingMode !== 'instanced') {
-        scene.add(mesh);
-      }
-      addSoul(mesh);
-      return mesh; 
-    }
 
     // Initialize the Web Worker
     simulationWorker = new Worker(new URL('./lib/simulation.worker.js', import.meta.url), { type: 'module' });
 
-    // Create initial souls and collect their data for the worker's init message
-    const initialSoulsForWorkerInit = [];
-    
-    for (let i = 0; i < recycledSoulCount; i++) {
-      const angle = (i / recycledSoulCount) * Math.PI * 2;
-      const isDewa = Math.random() < DEWA_SPAWN_CHANCE;
-      const isHuman = isDewa ? true : Math.random() < 0.6; 
-      const speed = Math.random() < 0.1 ?  0.05 + Math.random() * 0.25 : 0.05 + Math.random() * 0.025;
-      const mesh = createSoul(isHuman, isDewa, angle, speed); 
-      initialSoulsForWorkerInit.push({
-        id: mesh.userData.id,
-        position: {x: mesh.position.x, y: mesh.position.y, z: mesh.position.z},
-        velocity: mesh.userData.velocity, 
-        speed: mesh.userData.speed, 
-        isHuman: mesh.userData.isHuman,
-        isDewa: mesh.userData.isDewa, 
-        flickerPhase: mesh.userData.flickerPhase,
-        life: mesh.userData.life,
-        baseHSL: mesh.userData.baseHSL
-      });
-    }
+    // Create initial souls using soulManager
+    const initialSoulsForWorkerInit = createInitialSouls(
+      recycledSoulCount, 
+      scene, 
+      renderingMode, 
+      MIN_LIFESPAN, 
+      MAX_LIFESPAN, 
+      simulationWorker
+    );
     
     // Initialize instanced renderer AFTER souls are created
     if (renderingMode === 'instanced') {
@@ -643,10 +527,8 @@
 
     initLineSegments(); // Initialize line segments
 
-    function createNewSoul() {
-      const isDewa = Math.random() < DEWA_SPAWN_CHANCE;
-      const isHuman = isDewa ? true : Math.random() < 0.5;
-      createSoul(isHuman, isDewa); 
+    function createNewSoulWrapper() {
+      createNewSoul(scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, simulationWorker);
     }
 
     // Helper function to track draw calls for performance metrics
@@ -684,11 +566,11 @@
 
       let spawnRate = NEW_SOUL_SPAWN_RATE;
       while (spawnRate > 1) {
-        createNewSoul(); 
+        createNewSoulWrapper(); 
         spawnRate--;
       }
       if (Math.random() < spawnRate) {
-        createNewSoul(); 
+        createNewSoulWrapper(); 
       }
 
       controls.update();
