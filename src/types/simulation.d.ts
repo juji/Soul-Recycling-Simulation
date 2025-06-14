@@ -49,13 +49,57 @@ export interface LODStatistics {
   memoryReduction: number;
   lastUpdateTime: number;
   lodCalculationTime?: number;
+  cullingEfficiency?: number;
 }
 
 export interface LODData {
-  lod: string;
+  lod: keyof LODConfiguration;
   physicsUpdateRate: number;
   updatePhysics: boolean;
   connectionMultiplier: number;
+}
+
+export interface LODStatisticsExtended extends LODStatistics {
+  visibleSouls: number;
+  highDetailPercentage: number;
+  cullingPercentage: number;
+  lodThresholds: {
+    medium: number;
+    low: number;
+    culled: number;
+  };
+}
+
+export interface LODUpdateConfiguration {
+  distances?: {
+    medium?: number;
+    low?: number;
+    culled?: number;
+  };
+  geometryDetail?: {
+    medium?: number;
+    low?: number;
+  };
+  physicsRates?: {
+    medium?: number;
+    low?: number;
+  };
+}
+
+export interface LODDebugInfo {
+  lodStats: LODStatisticsExtended;
+  lodLevels: LODConfiguration;
+  frameCount: number;
+  cameraPosition: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  distanceThresholds: {
+    mediumSq: number;
+    lowSq: number;
+    culledSq: number;
+  };
 }
 
 // Worker message types

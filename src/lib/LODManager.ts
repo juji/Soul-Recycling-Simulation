@@ -6,6 +6,9 @@ import type {
   LODConfiguration, 
   LODStatistics, 
   LODData,
+  LODStatisticsExtended,
+  LODUpdateConfiguration,
+  LODDebugInfo,
   LODLevel
 } from '../types/simulation';
 
@@ -196,7 +199,8 @@ export class LODManager {
       }
       
       // Update statistics
-      this.lodStats[lodLevel.toLowerCase() as keyof Pick<LODStatistics, 'high' | 'medium' | 'low' | 'culled'>]++;
+      const statKey = lodLevel.toLowerCase() as 'high' | 'medium' | 'low' | 'culled';
+      this.lodStats[statKey]++;
     });
     
     // Calculate performance metrics
@@ -264,16 +268,7 @@ export class LODManager {
    * Get current LOD statistics for performance monitoring
    * @returns Current LOD statistics
    */
-  public getLODStatistics(): LODStatistics & {
-    visibleSouls: number;
-    highDetailPercentage: number;
-    cullingPercentage: number;
-    lodThresholds: {
-      medium: number;
-      low: number;
-      culled: number;
-    };
-  } {
+  public getLODStatistics(): LODStatisticsExtended {
     return {
       ...this.lodStats,
       // Additional computed metrics
@@ -293,11 +288,7 @@ export class LODManager {
    * Update LOD configuration dynamically
    * @param newConfig - New LOD configuration
    */
-  public updateLODConfiguration(newConfig: {
-    distances?: { medium?: number; low?: number; culled?: number };
-    geometryDetail?: { medium?: number; low?: number };
-    physicsRates?: { medium?: number; low?: number };
-  }): void {
+  public updateLODConfiguration(newConfig: LODUpdateConfiguration): void {
     if (newConfig.distances) {
       this.lodLevels.MEDIUM.distance = newConfig.distances.medium ?? this.lodLevels.MEDIUM.distance;
       this.lodLevels.LOW.distance = newConfig.distances.low ?? this.lodLevels.LOW.distance;
@@ -337,21 +328,7 @@ export class LODManager {
    * Get debug information for development
    * @returns Debug information
    */
-  public getDebugInfo(): {
-    lodStats: ReturnType<LODManager['getLODStatistics']>;
-    lodLevels: LODConfiguration;
-    frameCount: number;
-    cameraPosition: {
-      x: number;
-      y: number;
-      z: number;
-    };
-    distanceThresholds: {
-      mediumSq: number;
-      lowSq: number;
-      culledSq: number;
-    };
-  } {
+  public getDebugInfo(): LODDebugInfo {
     return {
       lodStats: this.getLODStatistics(),
       lodLevels: this.lodLevels,
