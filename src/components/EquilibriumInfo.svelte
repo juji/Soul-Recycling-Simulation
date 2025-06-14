@@ -16,7 +16,8 @@
   } = $props();
 
   // Calculate equilibrium population reactively
-  let calculatedEquilibrium = $derived(Math.round(spawnRate * avgLifespan));
+  let calculatedEquilibrium = $derived(Math.round(spawnRate * calculatedAvgLifespan));
+  let calculatedAvgLifespan = $derived((minLifespan + maxLifespan) / 2);
 
   // Handle parameter changes from SliderControls
   function handleParameterChange(event) {
@@ -61,15 +62,15 @@
 <div class="equilibrium-info {position}" class:show>
   <div class="equilibrium-title">Population Equilibrium</div>
   <div class="equilibrium-formula">EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN</div>
-  <div class="equilibrium-calculation">Current: {spawnRate} × {avgLifespan} = ~{calculatedEquilibrium} souls</div>
+  <div class="equilibrium-calculation">Current: {spawnRate} × {calculatedAvgLifespan} = ~{calculatedEquilibrium} souls</div>
   
   <!-- Interactive Parameter Controls -->
   <SliderControls 
     bind:NEW_SOUL_SPAWN_RATE={spawnRate}
     bind:MIN_LIFESPAN={minLifespan}
     bind:MAX_LIFESPAN={maxLifespan}
-    onparameterchange={handleParameterChange}
-    onreset={handleReset}
+    on:parameterChange={handleParameterChange}
+    on:reset={handleReset}
   />
   
   <div class="equilibrium-text">

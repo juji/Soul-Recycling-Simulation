@@ -11,53 +11,69 @@
   } = $props();
   
   const MAX_AGE_GAP = 600; // Maximum gap between min and max lifespan
-  const MIN_LIFESPAN_VAL = 100
+  const MIN_LIFESPAN_VAL = 100;
+
+  // Track previous values to detect changes
+  let prevSpawnRate = NEW_SOUL_SPAWN_RATE;
+  let prevMinLifespan = MIN_LIFESPAN;
+  let prevMaxLifespan = MAX_LIFESPAN;
+
+  // Watch for changes using effects
+  $effect(() => {
+    if (NEW_SOUL_SPAWN_RATE !== prevSpawnRate) {
+      dispatch('parameterChange', {
+        type: 'SPAWN_RATE',
+        value: NEW_SOUL_SPAWN_RATE
+      });
+      prevSpawnRate = NEW_SOUL_SPAWN_RATE;
+    }
+  });
+
+  $effect(() => {
+    if (MIN_LIFESPAN !== prevMinLifespan) {
+      // Ensure max is always greater than min
+      if(MIN_LIFESPAN > MAX_LIFESPAN) {
+        MAX_LIFESPAN = MIN_LIFESPAN + MAX_AGE_GAP;
+      }
+      
+      // Ensure age gap is maintained
+      if((MAX_LIFESPAN - MIN_LIFESPAN) > MAX_AGE_GAP) {
+        MAX_LIFESPAN = MIN_LIFESPAN + MAX_AGE_GAP;
+      }
+      
+      dispatch('parameterChange', {
+        type: 'MIN_LIFESPAN', 
+        value: MIN_LIFESPAN
+      });
+      prevMinLifespan = MIN_LIFESPAN;
+    }
+  });
+
+  $effect(() => {
+    if (MAX_LIFESPAN !== prevMaxLifespan) {
+      // Ensure max is always greater than min
+      if(MAX_LIFESPAN < MIN_LIFESPAN) {
+        MIN_LIFESPAN = Math.max(MIN_LIFESPAN_VAL, MAX_LIFESPAN - MAX_AGE_GAP);
+      }
+      
+      // Ensure age gap is maintained
+      if((MAX_LIFESPAN - MIN_LIFESPAN) > MAX_AGE_GAP) {
+        MIN_LIFESPAN = Math.max(MIN_LIFESPAN_VAL, MAX_LIFESPAN - MAX_AGE_GAP);
+      }
+      
+      dispatch('parameterChange', {
+        type: 'MAX_LIFESPAN',
+        value: MAX_LIFESPAN
+      });
+      prevMaxLifespan = MAX_LIFESPAN;
+    }
+  });
 
   function resetParameters() {
     NEW_SOUL_SPAWN_RATE = 0.7;
     MIN_LIFESPAN = 300;
     MAX_LIFESPAN = 900;
     dispatch('reset');
-  }
-
-  // Handle individual parameter changes
-  function handleSpawnRateChange() {
-    dispatch('parameterChange', {
-      type: 'SPAWN_RATE',
-      value: NEW_SOUL_SPAWN_RATE
-    });
-  }
-
-  function handleMinLifespanChange() {
-    dispatch('parameterChange', {
-      type: 'MIN_LIFESPAN', 
-      value: MIN_LIFESPAN
-    });
-
-    if(MIN_LIFESPAN > MAX_LIFESPAN) {
-      MAX_LIFESPAN = MIN_LIFESPAN + MAX_AGE_GAP; // Ensure max is always greater than min
-    }
-
-    // encsure age gap is maintained
-    if((MAX_LIFESPAN - MIN_LIFESPAN) > MAX_AGE_GAP) {
-      MAX_LIFESPAN = MIN_LIFESPAN + MAX_AGE_GAP; // Ensure gap is maintained
-    }
-  }
-
-  function handleMaxLifespanChange() {
-    dispatch('parameterChange', {
-      type: 'MAX_LIFESPAN',
-      value: MAX_LIFESPAN
-    });
-
-    if(MAX_LIFESPAN < MIN_LIFESPAN) {
-      MIN_LIFESPAN = Math.max(MIN_LIFESPAN_VAL, MAX_LIFESPAN - MAX_AGE_GAP); // Ensure max is always greater than min
-    }
-
-    // ensure age gap is maintained
-    if((MAX_LIFESPAN - MIN_LIFESPAN) > MAX_AGE_GAP) {
-      MIN_LIFESPAN = Math.max(MIN_LIFESPAN_VAL, MAX_LIFESPAN - MAX_AGE_GAP); // Ensure gap is maintained
-    }
   }
 </script>
 
@@ -73,7 +89,6 @@
       max="3.0" 
       step="0.05" 
       bind:value={NEW_SOUL_SPAWN_RATE}
-      onchange={handleSpawnRateChange}
       class="parameter-slider"
     />
   </div>
@@ -89,7 +104,6 @@
       max={900} 
       step="50" 
       bind:value={MIN_LIFESPAN}
-      onchange={handleMinLifespanChange}
       class="parameter-slider"
     />
   </div>
@@ -105,7 +119,6 @@
       max="1000" 
       step="50" 
       bind:value={MAX_LIFESPAN}
-      onchange={handleMaxLifespanChange}
       class="parameter-slider"
     />
   </div>
