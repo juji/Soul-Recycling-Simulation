@@ -1,15 +1,16 @@
-<!-- App.svelte - Simplified for Phase 4 -->
 <script>
+
   import { onMount } from 'svelte';
   import * as THREE from 'three';
+  import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
   import { InstancedSoulRenderer } from './lib/InstancedSoulRenderer.js';
-  import { LODManager } from './lib/LODManager.js';
-  import { AdaptivePerformanceManager } from './lib/adaptive-performance.js';
-  import { loadFromStorage, saveToStorage, STORAGE_KEYS } from './lib/localStorage.js';
+  import { LODManager } from './lib/LODManager.js';  // Phase 4: LOD System
+  import { AdaptivePerformanceManager } from './lib/adaptive-performance.js';  // Phase 4: Adaptive Performance
+  import { loadFromStorage, saveToStorage, STORAGE_KEYS } from './lib/localStorage.js'; // Import from new module
   import { FEATURE_FLAGS, DEFAULT_SOUL_COUNT, MATERIAL_POOL_SIZE, DEWA_SPAWN_CHANCE, DEWA_BASE_SPEED, DEFAULT_PARAMETERS } from './lib/constants/config.js';
   import { CAMERA_SETTINGS, LIGHTING_SETTINGS, LINE_SETTINGS, GEOMETRY_SETTINGS, CONTROLS_SETTINGS } from './lib/constants/rendering.js';
   import { CONNECTION_SETTINGS, POINTER_INTERACTION_RADIUS, POINTER_INFLUENCE_STRENGTH, NEIGHBOR_SPEED_INFLUENCE_RADIUS, NEIGHBOR_SPEED_INFLUENCE_STRENGTH, SEPARATION_DISTANCE, SEPARATION_STRENGTH, DEWA_ATTRACTION_RADIUS, DEWA_ATTRACTION_STRENGTH, DEWA_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST } from './lib/constants/physics.js';
-  
+  import SliderControls from './components/SliderControls.svelte';
   import FpsCounter from './components/FpsCounter.svelte';
   import PopulationCounter from './components/PopulationCounter.svelte';
   import EntityLinks from './components/EntityLinks.svelte';
@@ -18,7 +19,7 @@
   import EquilibriumInfo from './components/EquilibriumInfo.svelte';
   import ThreeContainer from './components/ThreeContainer.svelte';
   import SceneManager from './components/simulation/SceneManager.svelte';
-  import './lib/ai-test-bridge.js';
+  import './lib/ai-test-bridge.js';  // Import AI test bridge for performance testing
   
   // Import state management store
   import { 
@@ -105,12 +106,6 @@
     }
   });
 
-  // Local state for Three.js objects (from SceneManager)
-  let scene = $state(null);
-  let camera = $state(null);
-  let renderer = $state(null);
-  let controls = $state(null);
-
   // Handle parameter changes from SliderControls component
   function handleParameterChange(event) {
     const { type, value } = event.detail;
@@ -128,6 +123,43 @@
     }
   }
   
+  // Note: Effects for localStorage sync are now handled in the state store
+  
+  // POPULATION EQUILIBRIUM NOTE:
+  // The soul population tends towards an equilibrium.
+  // This equilibrium is determined by:
+  // 1. `NEW_SOUL_SPAWN_RATE` (currently ${NEW_SOUL_SPAWN_RATE}): The average number of new souls created per frame.
+  // 2. Soul Lifespan (defined in `createSoul` as ${MIN_LIFESPAN}-${MAX_LIFESPAN} frames, averaging ${AVG_LIFESPAN}): How long souls live before being removed.
+  //
+  // Equilibrium occurs when: Average Birth Rate = Average Death Rate
+  // Average Birth Rate = NEW_SOUL_SPAWN_RATE
+  // Average Death Rate = CurrentPopulation / AverageLifespan
+  // So, `NEW_SOUL_SPAWN_RATE = CurrentPopulation / AverageLifespan`
+  // `CurrentPopulation = NEW_SOUL_SPAWN_RATE * AverageLifespan`
+  // With current values: `CurrentPopulation = ${NEW_SOUL_SPAWN_RATE} * ${AVG_LIFESPAN} = ${NEW_SOUL_SPAWN_RATE * AVG_LIFESPAN}` (approximately)
+  //
+  // If the initial population is above this, it will decrease towards equilibrium.
+  // If the initial population is below this, it will increase towards equilibrium.
+
+  // Local state for Three.js objects (from SceneManager)
+  let scene = $state(null);
+  let camera = $state(null);
+  let renderer = $state(null);
+  let controls = $state(null);
+  
+  // Phase 3: Performance tracking functions
+  function trackDrawCalls(renderer) {
+    // Track draw calls for Phase 3 performance validation
+    if (renderer && renderer.info && renderer.info.render) {
+      return renderer.info.render.calls;
+    }
+    // Fallback estimation based on rendering mode
+    return renderingMode === 'instanced' ? 3 : souls.length;
+  }
+
+  // Functions now reference the store imports
+  // Note: showToastMessage and adjustQualityBasedOnFPS are now imported from store
+  
   // Helper functions for parameter reset
   function handleReset() {
     resetParameters();
@@ -140,75 +172,68 @@
     mouse.y = mouseY;
   }
   
-  // Handler for resize events from ThreeContainer
-  function handleResize(event) {
-    // The SceneManager will handle the resize, this is just for any additional app-level logic
-    const { width, height } = event?.detail || {};
-    // Add any app-level resize logic here if needed
-  }
-  
   // Helper function to determine the active count for UI highlighting
   function getActiveCount() {
     const urlParams = new URLSearchParams(window.location.search);
     const val = urlParams.get('val');
     
     if (val === null || val === '') {
-      return DEFAULT_SOUL_COUNT;
+      return DEFAULT_SOUL_COUNT; // Default value
     }
     
     const parsedVal = parseInt(val, 10);
     
     if (isNaN(parsedVal)) {
-      return DEFAULT_SOUL_COUNT;
+      return DEFAULT_SOUL_COUNT; // Default for invalid values
     }
     
     return parsedVal;
   }
 
   // Helper function to get entity count from URL parameter
+  // Uses adaptive performance management to determine optimal soul count when no URL parameter is provided
   function getEntityCountFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
     const val = urlParams.get('val');
     
     if (val === null || val === '') {
+      // Use adaptive performance manager to determine optimal soul count
       if (adaptivePerformanceManager) {
         const currentQualitySettings = adaptivePerformanceManager.getQualitySettings();
         setAutomaticSoulCount(currentQualitySettings.maxSouls);
         return currentQualitySettings.maxSouls;
       }
-      return DEFAULT_SOUL_COUNT;
+      return DEFAULT_SOUL_COUNT; // Fallback if adaptive performance manager not available
     }
     
     const parsedVal = parseInt(val, 10);
     
+    // Check if it's a valid number
     if (isNaN(parsedVal)) {
+      // Use adaptive performance manager for invalid values too
       if (adaptivePerformanceManager) {
         const currentQualitySettings = adaptivePerformanceManager.getQualitySettings();
         return currentQualitySettings.maxSouls;
       }
-      return DEFAULT_SOUL_COUNT;
+      return DEFAULT_SOUL_COUNT; // Fallback for invalid values
     }
     
     return parsedVal;
   }
 
   // Handler for when SceneManager has initialized the scene
-  function handleSceneReady(event) {
-    const sceneObjects = event.detail;
+  function handleSceneReady(sceneObjects) {
     scene = sceneObjects.scene;
     camera = sceneObjects.camera;
     renderer = sceneObjects.renderer;
     controls = sceneObjects.controls;
     
-
-    
-    // Initialize the simulation once the scene is ready
+    // Continue with the rest of the initialization that was in onMount
     initializeSimulation();
   }
 
   // Handler for resize events from SceneManager
-  function handleSceneResize(event) {
-    const dimensions = event.detail;
+  function handleSceneResize(dimensions) {
     // SceneManager handles the camera and renderer resize
     // This is just for any additional logic we might need
   }
@@ -220,20 +245,8 @@
       return;
     }
 
-    // Check if values were loaded from localStorage and show notification
-    const hasStoredValues = 
-      (typeof window !== 'undefined' && window.localStorage) &&
-      (localStorage.getItem(STORAGE_KEYS.SPAWN_RATE) ||
-       localStorage.getItem(STORAGE_KEYS.MIN_LIFESPAN) ||
-       localStorage.getItem(STORAGE_KEYS.MAX_LIFESPAN));
-    
-    if (hasStoredValues) {
-      setTimeout(() => {
-        showToastMessage('Settings loaded from storage');
-      }, 1000);
-    }
-
-    // Check URL parameters for rendering mode override (for testing)
+    // Now continue with the simulation setup that doesn't involve scene creation
+    // Phase 3: Check URL parameters for rendering mode override (for testing)
     const urlParams = new URLSearchParams(window.location.search);
     const modeParam = urlParams.get('mode');
     
@@ -245,21 +258,15 @@
       useInstancedRendering = true;
     }
 
-    // Initialize Instanced Rendering
+    // Phase 3: Initialize Instanced Rendering
     setRenderingMode(useInstancedRendering ? 'instanced' : 'individual');
 
-    // Setup the core simulation logic
+    // Continue with the rest of the simulation setup
     setupSimulationCore();
   }
 
   // Setup the core simulation logic (souls, workers, etc.)
   function setupSimulationCore() {
-    const recycledSoulCount = getEntityCountFromURL();
-    const interactionDistance = CONNECTION_SETTINGS.INTERACTION_DISTANCE;
-    let lineSegments;
-    const MAX_LINES = recycledSoulCount * CONNECTION_SETTINGS.MAX_LINES_MULTIPLIER;
-
-    // Initialize line segments for connections
     function initLineSegments() {
       const geometry = new THREE.BufferGeometry();
       const positions = new Float32Array(
@@ -330,7 +337,12 @@
       lineSegments.geometry.attributes.color.needsUpdate = true;
     }
 
-    // Create geometries for different soul types
+    const recycledSoulCount = getEntityCountFromURL();
+    
+    const interactionDistance = CONNECTION_SETTINGS.INTERACTION_DISTANCE;
+    let lineSegments;
+    const MAX_LINES = recycledSoulCount * CONNECTION_SETTINGS.MAX_LINES_MULTIPLIER;
+
     const humanGeometry = new THREE.SphereGeometry(
       GEOMETRY_SETTINGS.HUMAN_RADIUS, 
       GEOMETRY_SETTINGS.HUMAN_SEGMENTS.width, 
@@ -360,6 +372,43 @@
       transparent: true, 
       opacity: GEOMETRY_SETTINGS.MATERIAL_OPACITY.DEWA 
     });
+    
+    // Material pool for reuse
+    const materialPool = {
+      human: [],
+      gpt: [],
+      dewa: []
+    };
+    
+    function getOrCreateMaterial(type) {
+      const pool = materialPool[type];
+      if (pool.length > 0) {
+        return pool.pop();
+      }
+      
+      // Create new material based on type
+      switch(type) {
+        case 'human':
+          return sharedHumanMaterial.clone();
+        case 'gpt':
+          return sharedGptMaterial.clone();
+        case 'dewa':
+          return sharedDewaMaterial.clone();
+        default:
+          return new THREE.MeshBasicMaterial({ 
+            transparent: true, 
+            opacity: GEOMETRY_SETTINGS.MATERIAL_OPACITY.DEFAULT 
+          });
+      }
+    }
+    
+    function returnMaterial(material, type) {
+      if (materialPool[type].length < MATERIAL_POOL_SIZE) {
+        materialPool[type].push(material);
+      } else {
+        material.dispose();
+      }
+    }
 
     const humanBaseHue = Math.random();
     const gptBaseHue = (humanBaseHue + 0.5) % 1;
@@ -372,7 +421,6 @@
     let simulationWorker;
     let nextSoulId = 0;
 
-    // Soul creation function
     function createSoul(isHuman, isDewa = false, angle = 0, speed = 0) {
       let geometry;
       if (isDewa) {
@@ -380,7 +428,7 @@
       } else {
         geometry = isHuman ? humanGeometry : gptGeometry;
       }
-      
+      // const geometry = (isHuman || isDewa) ? humanGeometry : gptGeometry; // Old logic
       let material;
       let h_val, s_val, l_val; 
 
@@ -393,6 +441,10 @@
             transparent: false,
             opacity: 1.0
         });
+        // For baseHSL, update with the new random color
+        // h_val is already set above
+        // s_val is already set above
+        // l_val is already set above
       } else {
         material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8 });
         const baseHue = isHuman ? humanBaseHue : gptBaseHue;
@@ -425,7 +477,8 @@
       mesh.userData.isHuman = isHuman;
       mesh.userData.isDewa = isDewa; 
       mesh.userData.flickerPhase = Math.random() * Math.PI * 2;
-      mesh.userData.life = MIN_LIFESPAN + Math.random() * (MAX_LIFESPAN - MIN_LIFESPAN);
+      // mesh.userData.life = 600; // Initialize life to 600 ticks - Old fixed value
+      mesh.userData.life = MIN_LIFESPAN + Math.random() * (MAX_LIFESPAN - MIN_LIFESPAN); // Random lifespan between MIN_LIFESPAN and MAX_LIFESPAN
       mesh.userData.baseHSL = { h: h_val, s: s_val, l: l_val }; 
       mesh.userData.velocity = { x: initialVelocity.x, y: initialVelocity.y, z: initialVelocity.z }; 
 
@@ -437,7 +490,7 @@
         isHuman,
         isDewa, 
         flickerPhase: mesh.userData.flickerPhase,
-        life: mesh.userData.life,
+        life: mesh.userData.life, // Pass the initialized life
         baseHSL: mesh.userData.baseHSL, 
       };
 
@@ -445,11 +498,12 @@
         simulationWorker.postMessage({ type: 'addSoul', data: { soul: soulDataForWorker } });
       }
 
-      // Only add individual meshes to scene when not using instanced rendering
+      // Phase 3: Only add individual meshes to scene when not using instanced rendering
       if (renderingMode !== 'instanced') {
         scene.add(mesh);
       }
-      addSoul(mesh);
+      souls.push(mesh); 
+      soulLookupMap.set(mesh.userData.id, mesh); // Add to O(1) lookup map
       return mesh; 
     }
 
@@ -458,7 +512,6 @@
 
     // Create initial souls and collect their data for the worker's init message
     const initialSoulsForWorkerInit = [];
-    
     for (let i = 0; i < recycledSoulCount; i++) {
       const angle = (i / recycledSoulCount) * Math.PI * 2;
       const isDewa = Math.random() < DEWA_SPAWN_CHANCE;
@@ -473,12 +526,12 @@
         isHuman: mesh.userData.isHuman,
         isDewa: mesh.userData.isDewa, 
         flickerPhase: mesh.userData.flickerPhase,
-        life: mesh.userData.life,
+        life: mesh.userData.life, // Ensure life is passed for initial souls too
         baseHSL: mesh.userData.baseHSL
       });
     }
     
-    // Initialize instanced renderer AFTER souls are created
+    // Phase 3: Initialize instanced renderer AFTER souls are created
     if (renderingMode === 'instanced') {
       try {
         // Dynamic buffer size based on URL parameter with 2x safety margin
@@ -507,7 +560,6 @@
       }
     }
     
-    // Initialize worker with souls and constants
     simulationWorker.postMessage({
         type: 'init',
         data: {
@@ -521,25 +573,26 @@
                 SEPARATION_STRENGTH,
                 DEWA_ATTRACTION_RADIUS, 
                 DEWA_ATTRACTION_STRENGTH,
-                DEWA_ENHANCEMENT_RADIUS,
-                ENHANCEMENT_SATURATION_BOOST,
-                ENHANCEMENT_LIGHTNESS_BOOST
+                DEWA_ENHANCEMENT_RADIUS, // Added
+                ENHANCEMENT_SATURATION_BOOST, // Added
+                ENHANCEMENT_LIGHTNESS_BOOST // Added
             }
         }
     });
 
-    // Worker message handling
     simulationWorker.onmessage = function(e) {
         const { type, data } = e.data;
         if (type === 'soulsUpdated') {
+            // Phase 3: Performance tracking start
             const updateStartTime = performance.now();
             performanceMetrics.soulsUpdated = data.length;
             
-            // Dual rendering path - instanced vs individual meshes
+            // Phase 3: Dual rendering path - instanced vs individual meshes
             if (renderingMode === 'instanced' && instancedRenderer) {
                 // Update individual soul mesh positions for compatibility first
+                // (needed for connections, raycasting, etc.)
                 data.forEach(updatedSoulData => {
-                    const soulMesh = soulLookupMap.get(updatedSoulData.id);
+                    const soulMesh = soulLookupMap.get(updatedSoulData.id); // O(1) lookup
                     if (soulMesh) {
                         // Only update position if it was sent (moved significantly)
                         if (updatedSoulData.pos && Array.isArray(updatedSoulData.pos) && updatedSoulData.pos.length === 3) {
@@ -556,17 +609,16 @@
                     }
                 });
                 
-                // Update all souls through instanced renderer with updated mesh data
+                // NEW: Update all souls through instanced renderer with updated mesh data
                 instancedRenderer.updateInstances(souls);
                 
                 // Track instanced performance
                 const instancedTime = performance.now() - updateStartTime;
                 performanceMetrics.instancedUpdateTime += instancedTime;
-                performanceMetrics.renderingMode = 'instanced';
-            } else {
-                // Individual mesh rendering (fallback)
+                performanceMetrics.renderingMode = 'instanced';            } else {
+                // EXISTING: Individual mesh rendering (fallback)
                 data.forEach(updatedSoulData => {
-                    const soulMesh = soulLookupMap.get(updatedSoulData.id);
+                    const soulMesh = soulLookupMap.get(updatedSoulData.id); // O(1) lookup
                     if (soulMesh) {
                         // Only update position if it was sent (moved significantly)
                         if (updatedSoulData.pos && Array.isArray(updatedSoulData.pos) && updatedSoulData.pos.length === 3) {
@@ -578,6 +630,7 @@
                           let materialNeedsUpdate = false;
                           
                           // Only update RGB color if it actually changed (delta optimization)
+                          // Use setRGB instead of setHSL to avoid conversion overhead
                           if (updatedSoulData.rgb && Array.isArray(updatedSoulData.rgb) && updatedSoulData.rgb.length === 3 && 
                               soulMesh.material.color && typeof soulMesh.material.color.setRGB === 'function') {
                             // Validate RGB values before applying
@@ -611,9 +664,9 @@
             }
         } else if (type === 'soulRemoved') {
             const soulIdToRemove = data.soulId;
-            const soulMeshToRemove = soulLookupMap.get(soulIdToRemove);
+            const soulMeshToRemove = soulLookupMap.get(soulIdToRemove); // O(1) lookup
             if (soulMeshToRemove) {
-                // Handle soul removal for both rendering modes
+                // Phase 3: Handle soul removal for both rendering modes
                 if (renderingMode === 'instanced') {
                     // In instanced mode, remove from scene but don't dispose shared resources
                     scene.remove(soulMeshToRemove);
@@ -641,7 +694,7 @@
         }
     };
 
-    initLineSegments(); // Initialize line segments
+    initLineSegments(); // Call init function
 
     function createNewSoul() {
       const isDewa = Math.random() < DEWA_SPAWN_CHANCE;
@@ -649,18 +702,17 @@
       createSoul(isHuman, isDewa); 
     }
 
-    // Helper function to track draw calls for performance metrics
-    function trackDrawCalls(renderer) {
-      if (renderer && renderer.info && renderer.info.render) {
-        return renderer.info.render.calls;
-      }
-      // Fallback estimation based on rendering mode
-      return renderingMode === 'instanced' ? 3 : souls.length;
-    }
+    // Connections are now handled by the Web Worker for optimal performance
 
-    // Animation loop
     function animate() {
       requestAnimationFrame(animate);
+
+      // Phase 4: LOD calculations (before worker update for physics scaling)
+      let lodData = null;
+      if (FEATURE_FLAGS.USE_LOD_SYSTEM && lodManager && souls.length > 0) {
+        // Update LOD levels for all souls
+        lodData = lodManager.updateSoulLOD(souls);
+      }
 
       // Update pointer position in 3D space for main thread (raycasting)
       raycaster.setFromCamera(mouse, camera);
@@ -677,12 +729,12 @@
             type: 'update',
             data: {
                 pointerPosition3D: null, // Dewa is everywhere, not tied to a specific mouse-derived point
-                lodData: null // LOD data would go here if implemented
+                lodData: lodData // Pass LOD data for physics and connection optimization
             }
         });
       }
 
-      let spawnRate = NEW_SOUL_SPAWN_RATE;
+      let spawnRate = NEW_SOUL_SPAWN_RATE
       while (spawnRate > 1) {
         createNewSoul(); 
         spawnRate--;
@@ -693,7 +745,7 @@
 
       controls.update();
       
-      // Track draw calls before render
+      // Phase 3: Track draw calls before render
       renderer.render(scene, camera);
       performanceMetrics.drawCalls = trackDrawCalls(renderer);
       
@@ -701,7 +753,34 @@
       const fpsMetrics = fpsCounter ? fpsCounter.getMetrics() : { fps: 60, averageFPS: 60, memoryUsage: 0 };
       const { fps, averageFPS, memoryUsage } = fpsMetrics;
       
-      // Update global variables for AI test bridge
+      // Phase 4: Update adaptive performance manager with current metrics (every second)
+      if (FEATURE_FLAGS.USE_LOD_SYSTEM && adaptivePerformanceManager && fps > 0) {
+        const frameTime = 1000 / fps; // Calculate frame time from fps
+        const workerTime = 0; // TODO: Track worker time
+        const renderTime = 0; // TODO: Track render time
+        
+        adaptivePerformanceManager.updateMetrics(
+          fps, 
+          frameTime, 
+          memoryUsage, 
+          workerTime, 
+          renderTime, 
+          souls.length
+        );
+        
+        // Update current quality from adaptive manager using the helper function
+        if (adaptivePerformanceManager) {
+          const newQualityValue = adaptivePerformanceManager.getCurrentQuality();
+          updateCurrentQuality(newQualityValue);
+        }
+        
+        // Update LOD distances if quality changed
+        if (lodManager) {
+          lodManager.configureForQuality(currentQuality);
+        }
+      }
+      
+      // Update global variables for AI test bridge (handled by FpsCounter component)
       if (typeof window !== 'undefined') {
         window.currentQuality = currentQuality;
         window.soulCount = souls.length;
@@ -712,12 +791,52 @@
     }
 
     animate();
-  }
 
-  onMount(() => {
-    // onMount now only handles basic setup
-    // Everything else is handled by SceneManager and initializeSimulation
+    function handleResize(event) {
+      const { width, height } = event?.detail || { 
+        width: container.clientWidth, 
+        height: container.clientHeight 
+      };
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+
+    return () => {
+      if (renderer && renderer.domElement) {
+        // Remove renderer from container if it's still there
+        let threeContainerRef = document.querySelector('#container');
+        if (threeContainerRef && threeContainerRef.contains(renderer.domElement)) {
+          threeContainerRef.removeChild(renderer.domElement);
+        }
+      }
+      if (renderer) renderer.dispose();
+      souls.forEach(soul => {
+        soul.geometry?.dispose();
+        soul.material?.dispose();
+        scene.remove(soul);
+      });
+      // MODIFIED cleanup for lineSegments
+      if (lineSegments) {
+        scene.remove(lineSegments);
+        lineSegments.geometry.dispose();
+        lineSegments.material.dispose();
+      }
+      // REMOVED old linesGroup cleanup
+      if (simulationWorker) {
+        simulationWorker.terminate();
+      }
+      
+      // Phase 4: Cleanup LOD and Performance managers
+      if (lodManager) {
+        setLodManager(null);
+      }
+      if (adaptivePerformanceManager) {
+        setAdaptivePerformanceManager(null);
+      }
+    };
   });
+
 </script>
 
 <ThreeContainer 
@@ -727,8 +846,8 @@
 />
 
 <SceneManager 
-  on:sceneReady={handleSceneReady}
-  on:resize={handleSceneResize}
+  onSceneReady={handleSceneReady}
+  onResize={handleSceneResize}
 />
 
 <!-- UI Components -->
