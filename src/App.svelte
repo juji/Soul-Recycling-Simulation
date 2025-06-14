@@ -3,11 +3,12 @@
   import { onMount } from 'svelte';
   import * as THREE from 'three';
   import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
-  import { InstancedSoulRenderer } from './InstancedSoulRenderer.js';
-  import { LODManager } from './LODManager.js';  // Phase 4: LOD System
-  import { AdaptivePerformanceManager } from './adaptive-performance.js';  // Phase 4: Adaptive Performance
-  import SliderControls from './SliderControls.svelte';
-  import './ai-test-bridge.js';  // Import AI test bridge for performance testing
+  import { InstancedSoulRenderer } from './lib/InstancedSoulRenderer.js';
+  import { LODManager } from './lib/LODManager.js';  // Phase 4: LOD System
+  import { AdaptivePerformanceManager } from './lib/adaptive-performance.js';  // Phase 4: Adaptive Performance
+  import SliderControls from './components/SliderControls.svelte';
+  import FpsCounter from './components/FpsCounter.svelte';
+  import './lib/ai-test-bridge.js';  // Import AI test bridge for performance testing
 
   // Phase 4: Feature Flags
   const FEATURE_FLAGS = {
@@ -176,13 +177,8 @@
   let soulLookupMap = $state(new Map()); // O(1) lookup map for soul IDs to mesh objects
   let container = $state();
   
-  // FPS counter variables with enhanced metrics - convert to runes
-  let fps = $state(0);
-  let frameCount = $state(0);
-  let lastTime = $state(performance.now());
-  let averageFPS = $state(0);
-  let fpsHistory = $state([]);
-  let memoryUsage = $state(0);
+  // FPS Counter component reference
+  let fpsCounter = $state();
   
   // Performance tracking - convert to runes
   let renderTime = $state(0);
@@ -250,11 +246,11 @@
     }, 2000);
   }
   
-  function adjustQualityBasedOnFPS() {
-    if (fps < 30 && currentQuality !== 'low') {
+  function adjustQualityBasedOnFPS(currentFPS) {
+    if (currentFPS < 30 && currentQuality !== 'low') {
       currentQuality = 'medium';
-      if (fps < 20) currentQuality = 'low';
-    } else if (fps > 50 && currentQuality !== 'high') {
+      if (currentFPS < 20) currentQuality = 'low';
+    } else if (currentFPS > 50 && currentQuality !== 'high') {
       if (currentQuality === 'low') currentQuality = 'medium';
       else if (currentQuality === 'medium') currentQuality = 'high';
     }
@@ -743,7 +739,7 @@
     }
 
     // Initialize the Web Worker
-    simulationWorker = new Worker(new URL('./simulation.worker.js', import.meta.url), { type: 'module' });
+    simulationWorker = new Worker(new URL('./lib/simulation.worker.js', import.meta.url), { type: 'module' });
 
     // Create initial souls and collect their data for the worker's init message
     const initialSoulsForWorkerInit = [];
@@ -990,68 +986,42 @@
       renderer.render(scene, camera);
       performanceMetrics.drawCalls = trackDrawCalls(renderer);
       
-      // FPS counting logic with enhanced metrics and adaptive quality adjustment
-      frameCount++;
-      const currentTime = performance.now();
-      const elapsed = currentTime - lastTime;
+      // Get FPS metrics from FpsCounter component
+      const fpsMetrics = fpsCounter ? fpsCounter.getMetrics() : { fps: 60, averageFPS: 60, memoryUsage: 0 };
+      const { fps, averageFPS, memoryUsage } = fpsMetrics;
       
-      if (elapsed >= 1000) { // Update every second
-        fps = frameCount;
-        frameCount = 0;
-        lastTime = currentTime;
+      // Phase 4: Update adaptive performance manager with current metrics (every second)
+      if (FEATURE_FLAGS.USE_LOD_SYSTEM && adaptivePerformanceManager && fps > 0) {
+        const frameTime = 1000 / fps; // Calculate frame time from fps
+        const workerTime = 0; // TODO: Track worker time
+        const renderTime = 0; // TODO: Track render time
         
-        // Phase 4: Update adaptive performance manager with current metrics
-        if (FEATURE_FLAGS.USE_LOD_SYSTEM && adaptivePerformanceManager) {
-          const frameTime = elapsed / fps;
-          const workerTime = 0; // TODO: Track worker time
-          const renderTime = 0; // TODO: Track render time
-          
-          adaptivePerformanceManager.updateMetrics(
-            fps, 
-            frameTime, 
-            memoryUsage, 
-            workerTime, 
-            renderTime, 
-            souls.length
-          );
-          
-          // Update current quality from adaptive manager
-          currentQuality = adaptivePerformanceManager.getCurrentQuality();
-          
-          // Update LOD distances if quality changed
-          if (lodManager) {
-            lodManager.configureForQuality(currentQuality);
-          }
-        }
+        adaptivePerformanceManager.updateMetrics(
+          fps, 
+          frameTime, 
+          memoryUsage, 
+          workerTime, 
+          renderTime, 
+          souls.length
+        );
         
-        // Update global variables for AI test bridge
-        if (typeof window !== 'undefined') {
-          window.currentFPS = fps;
-          window.averageFPS = averageFPS;
-          window.currentQuality = currentQuality;
-          window.soulCount = souls.length;
-          window.memoryUsage = memoryUsage;
-        }
+        // Update current quality from adaptive manager
+        currentQuality = adaptivePerformanceManager.getCurrentQuality();
         
-        // Track FPS history for average calculation (non-reactive)
-        fpsHistory.push(fps);
-        if (fpsHistory.length > 10) fpsHistory.shift(); // Keep last 10 seconds
-        const calculatedAverageFPS = Math.round(fpsHistory.reduce((a, b) => a + b) / fpsHistory.length);
-        averageFPS = calculatedAverageFPS;
-        
-        // Memory usage tracking (if available)
-        if (performance.memory) {
-          memoryUsage = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
-        }
-        
-        // Adjust quality based on performance every second
-        adjustQualityBasedOnFPS();
-        
-        // Phase 3: Log performance metrics every 5 seconds
-        if (frameCount % 300 === 0) { // Every 5 seconds at 60fps
-          logPhase3Performance();
+        // Update LOD distances if quality changed
+        if (lodManager) {
+          lodManager.configureForQuality(currentQuality);
         }
       }
+      
+      // Update global variables for AI test bridge (handled by FpsCounter component)
+      if (typeof window !== 'undefined') {
+        window.currentQuality = currentQuality;
+        window.soulCount = souls.length;
+      }
+      
+      // Adjust quality based on performance every second
+      adjustQualityBasedOnFPS(fps);
     }
 
     animate();
@@ -1110,22 +1080,6 @@
     position: absolute;
     top: 0;
     left: 0;
-  }
-  
-  .fps-counter {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    color: #ffffff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    font-weight: bold;
-    z-index: 1000;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
   }
 
   .left-bottom-link{
@@ -1388,9 +1342,7 @@
 </style>
 
 <div id="container" bind:this={container}></div>
-<div class="fps-counter">
-  FPS: {fps}
-</div>
+<FpsCounter bind:this={fpsCounter} />
 <div class="population-counter">Population: {souls.length}</div>
 
 <div class="entity-links">

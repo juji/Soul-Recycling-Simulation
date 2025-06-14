@@ -184,7 +184,7 @@ data.forEach(updatedSoulData => {
 
 ### 2. Web Worker Physics Engine
 
-**Implementation**: `src/simulation.worker.js`
+**Implementation**: `src/lib/simulation.worker.js`
 
 The simulation physics run entirely in a dedicated Web Worker to prevent main thread blocking:
 
@@ -217,7 +217,7 @@ class SpatialGrid {
 
 ### 2. Web Worker Physics Engine
 
-**Implementation**: `src/simulation.worker.js`
+**Implementation**: `src/lib/simulation.worker.js`
 
 The simulation physics run entirely in a dedicated Web Worker to prevent main thread blocking:
 
@@ -250,7 +250,7 @@ class SpatialGrid {
 
 ### 3. GPU Instanced Rendering
 
-**Implementation**: `src/InstancedSoulRenderer.js`
+**Implementation**: `src/lib/InstancedSoulRenderer.js`
 
 Uses Three.js InstancedMesh for massive draw call reduction:
 
@@ -291,7 +291,7 @@ class InstancedSoulRenderer {
 
 ### 3. GPU Instanced Rendering
 
-**Implementation**: `src/InstancedSoulRenderer.js`
+**Implementation**: `src/lib/InstancedSoulRenderer.js`
 
 Uses Three.js InstancedMesh for massive draw call reduction:
 
@@ -332,7 +332,7 @@ class InstancedSoulRenderer {
 
 ### 4. Level of Detail (LOD) System
 
-**Implementation**: `src/LODManager.js`
+**Implementation**: `src/lib/LODManager.js`
 
 Dynamic quality scaling based on distance and performance:
 
@@ -376,7 +376,7 @@ class LODManager {
 
 ### 4. Level of Detail (LOD) System
 
-**Implementation**: `src/LODManager.js`
+**Implementation**: `src/lib/LODManager.js`
 
 Dynamic quality scaling based on distance and performance:
 
@@ -512,7 +512,7 @@ function applyDelta(delta) {
 
 ### 6. Adaptive Performance Management
 
-**Implementation**: `src/adaptive-performance.js`
+**Implementation**: `src/lib/adaptive-performance.js`
 
 Real-time performance monitoring and automatic quality adjustment:
 
@@ -569,7 +569,7 @@ class AdaptivePerformanceManager {
 
 ### 6. Adaptive Performance Management
 
-**Implementation**: `src/adaptive-performance.js`
+**Implementation**: `src/lib/adaptive-performance.js`
 
 Real-time performance monitoring and automatic quality adjustment:
 
@@ -1111,7 +1111,7 @@ export default {
       output: {
         manualChunks: {
           'three': ['three'],
-          'worker': ['./src/simulation.worker.js']
+          'worker': ['./src/lib/simulation.worker.js']
         }
       }
     },
