@@ -4,8 +4,8 @@
 
 - ✅ **Phase 1**: Project Setup and File Structure (COMPLETED)
 - ✅ **Phase 2**: Extract Constants (COMPLETED)
-- 🚧 **Phase 3**: Create State Management (NEXT)
-- ⏳ **Phase 4**: Extract Scene Setup
+- ✅ **Phase 3**: Create State Management (COMPLETED)
+- 🚧 **Phase 4**: Extract Scene Setup (NEXT)
 - ⏳ **Phase 5**: Extract Soul Management
 - ⏳ **Phase 6**: Create SimulationManager
 - ⏳ **Phase 7**: Update UI Components
@@ -92,22 +92,35 @@ Rather than refactoring everything at once, we'll use an incremental approach wi
 
 **Status**: All constants extracted and organized. Application tested and working correctly with no errors. Code is now more maintainable with centralized configuration.
 
-## Phase 3: Create State Management (2 hours)
+## Phase 3: Create State Management ✅ COMPLETED
 
-1. **Implement basic state store**:
-   - Move state variables from App.svelte to `src/lib/stores/simulationState.svelte.js`
-   - Start with core variables (souls, parameters, quality settings)
-   - Implement localStorage synchronization
+1. **Implement centralized state store**: ✅
+   - Created `src/lib/stores/simulationState.svelte.js` with Svelte 5 runes
+   - Moved all state variables from App.svelte to centralized store
+   - Used proper `$state()` object pattern to avoid export restrictions
+   - Implemented getter functions for external state access
+   - Created setter functions for state mutations with localStorage sync
 
-2. **Implement utility functions**:
-   - `resetParameters()`
-   - `updateCurrentQuality()`
-   - `showToastMessage()`
+2. **Implement utility functions**: ✅
+   - `resetParameters()` with localStorage synchronization
+   - `updateCurrentQuality()` for performance adjustments
+   - `showToastMessage()` for user notifications
+   - Soul management functions: `addSoul()`, `removeSoulById()`, `clearSouls()`
+   - Manager setter functions for Three.js objects
 
-3. **Test with minimal changes**:
-   - Update App.svelte to import from state store
-   - Keep existing logic flow for now
-   - Ensure the application works correctly
+3. **Fix Svelte 5 compliance issues**: ✅
+   - Resolved "Cannot export state from a module if it is reassigned" errors
+   - Fixed "Cannot bind to import" errors with local variable pattern
+   - Converted `$derived()` exports to function-based exports
+   - Eliminated orphan `$effect()` calls by moving localStorage sync to setter functions
+
+4. **Test with comprehensive changes**: ✅
+   - Updated App.svelte to use function-based state access with `$derived()`
+   - Maintained all existing functionality and user interactions
+   - Preserved localStorage persistence and performance tracking
+   - Application runs error-free on http://localhost:5173/
+
+**Status**: Complete state management refactoring achieved. All state is now centralized with proper Svelte 5 runes implementation. Zero compilation errors, zero runtime errors. Application fully functional with improved maintainability.
 
 ## Phase 4: Extract Scene Setup (2 hours)
 
@@ -171,58 +184,149 @@ Rather than refactoring everything at once, we'll use an incremental approach wi
 
 ```javascript
 // src/lib/stores/simulationState.svelte.js
-import { loadFromStorage, saveToStorage } from '../localStorage.js';
-import { STORAGE_KEYS } from '../constants/config.js';
+import { loadFromStorage, saveToStorage, STORAGE_KEYS } from '../localStorage.js';
+import { DEFAULT_PARAMETERS, FEATURE_FLAGS } from '../constants/config.js';
 
-// Core simulation state
-export const souls = $state([]);
-export const soulLookupMap = $state(new Map());
-export const renderingMode = $state('instanced');
-export const currentQuality = $state('high');
-export const isAutomaticSoulCount = $state(0);
+// Create state object that can be mutated but not reassigned
+const simulationState = $state({
+  // Core simulation state
+  souls: [],
+  soulLookupMap: new Map(),
+  renderingMode: FEATURE_FLAGS.USE_INSTANCED_RENDERING ? 'instanced' : 'individual',
+  currentQuality: 'high',
+  isAutomaticSoulCount: 0,
 
-// Simulation parameters with localStorage sync
-export const NEW_SOUL_SPAWN_RATE = $state(loadFromStorage(STORAGE_KEYS.SPAWN_RATE, 0.7));
-export const MIN_LIFESPAN = $state(loadFromStorage(STORAGE_KEYS.MIN_LIFESPAN, 300));
-export const MAX_LIFESPAN = $state(loadFromStorage(STORAGE_KEYS.MAX_LIFESPAN, 900));
+  // Performance tracking state
+  performanceMetrics: {
+    renderingMode: 'individual',
+    drawCalls: 0,
+    instancedUpdateTime: 0,
+    individualUpdateTime: 0,
+    soulsUpdated: 0
+  },
 
-// Derived values
-export const AVG_LIFESPAN = $derived((MIN_LIFESPAN + MAX_LIFESPAN) / 2);
-export const EQUILIBRIUM_POPULATION = $derived(NEW_SOUL_SPAWN_RATE * AVG_LIFESPAN);
+  // Core Three.js objects
+  container: undefined,
+  mouse: { x: 0, y: 0 },
 
-// Component references
-export const toastNotification = $state(null);
-export const fpsCounter = $state(null);
-export const container = $state(null);
+  // Simulation parameters with localStorage sync
+  NEW_SOUL_SPAWN_RATE: loadFromStorage(STORAGE_KEYS.SPAWN_RATE, 0.7),
+  MIN_LIFESPAN: loadFromStorage(STORAGE_KEYS.MIN_LIFESPAN, 300),
+  MAX_LIFESPAN: loadFromStorage(STORAGE_KEYS.MAX_LIFESPAN, 900),
+
+  // Component references
+  toastNotification: null,
+  fpsCounter: null,
+
+  // Managers
+  instancedRenderer: null,
+  lodManager: null,
+  adaptivePerformanceManager: null
+});
+
+// Export getters for state access
+export const souls = () => simulationState.souls;
+export const renderingMode = () => simulationState.renderingMode;
+export const NEW_SOUL_SPAWN_RATE = () => simulationState.NEW_SOUL_SPAWN_RATE;
+// ... etc.
+
+// Derived values as functions
+export const AVG_LIFESPAN = () => (simulationState.MIN_LIFESPAN + simulationState.MAX_LIFESPAN) / 2;
+export const EQUILIBRIUM_POPULATION = () => simulationState.NEW_SOUL_SPAWN_RATE * AVG_LIFESPAN();
+
+// Setter functions with localStorage sync
+export function setSpawnRate(value) {
+  simulationState.NEW_SOUL_SPAWN_RATE = value;
+  saveToStorage(STORAGE_KEYS.SPAWN_RATE, value);
+}
+
+export function setRenderingMode(mode) {
+  simulationState.renderingMode = mode;
+}
+
+// Soul management functions
+export function addSoul(soul) {
+  simulationState.souls.push(soul);
+  simulationState.soulLookupMap.set(soul.userData.id, soul);
+}
+
+export function removeSoulById(soulId) {
+  simulationState.souls = simulationState.souls.filter(s => s.userData.id !== soulId);
+  simulationState.soulLookupMap.delete(soulId);
+}
+
+// Component reference setters
+export function setContainer(containerElement) {
+  simulationState.container = containerElement;
+}
+
+export function setToastNotification(toast) {
+  simulationState.toastNotification = toast;
+}
 
 // State management functions
 export function resetParameters() {
-  NEW_SOUL_SPAWN_RATE = 0.7;
-  MIN_LIFESPAN = 300;
-  MAX_LIFESPAN = 900;
+  simulationState.NEW_SOUL_SPAWN_RATE = DEFAULT_PARAMETERS.SPAWN_RATE;
+  simulationState.MIN_LIFESPAN = DEFAULT_PARAMETERS.MIN_LIFESPAN;
+  simulationState.MAX_LIFESPAN = DEFAULT_PARAMETERS.MAX_LIFESPAN;
+  
+  // Sync to localStorage
+  saveToStorage(STORAGE_KEYS.SPAWN_RATE, DEFAULT_PARAMETERS.SPAWN_RATE);
+  saveToStorage(STORAGE_KEYS.MIN_LIFESPAN, DEFAULT_PARAMETERS.MIN_LIFESPAN);
+  saveToStorage(STORAGE_KEYS.MAX_LIFESPAN, DEFAULT_PARAMETERS.MAX_LIFESPAN);
+  
   showToastMessage('Parameters reset to defaults');
 }
 
-export function updateCurrentQuality(newValue) {
-  currentQuality = newValue;
-}
-
 export function showToastMessage(message) {
-  toastNotification?.showToast(message);
+  simulationState.toastNotification?.showToast(message);
 }
+```
 
-// Initialize effects for localStorage syncing
+### App.svelte State Access Pattern
+
+```javascript
+// Import state getters with renamed aliases
+import { 
+  souls as getSouls, 
+  renderingMode as getRenderingMode,
+  NEW_SOUL_SPAWN_RATE as getNEW_SOUL_SPAWN_RATE,
+  // ... other getters
+  setSpawnRate,
+  setRenderingMode,
+  addSoul,
+  removeSoulById
+} from './lib/stores/simulationState.svelte.js';
+
+// Create reactive local variables that call the getter functions
+let souls = $derived(getSouls());
+let renderingMode = $derived(getRenderingMode());
+let NEW_SOUL_SPAWN_RATE = $derived(getNEW_SOUL_SPAWN_RATE());
+let AVG_LIFESPAN = $derived(getAVG_LIFESPAN());
+let EQUILIBRIUM_POPULATION = $derived(getEQUILIBRIUM_POPULATION());
+
+// Local variables for component bindings (cannot bind to imports)
+let localContainer = $state();
+let localToastNotification = $state();
+let localFpsCounter = $state();
+
+// Sync local container to store when it changes
 $effect(() => {
-  saveToStorage(STORAGE_KEYS.SPAWN_RATE, NEW_SOUL_SPAWN_RATE);
+  if (localContainer) {
+    setContainer(localContainer);
+  }
 });
 
-$effect(() => {
-  saveToStorage(STORAGE_KEYS.MIN_LIFESPAN, MIN_LIFESPAN);
-});
-
-$effect(() => {
-  saveToStorage(STORAGE_KEYS.MAX_LIFESPAN, MAX_LIFESPAN);
-});
+// Use setter functions for state mutations
+function handleParameterChange(event) {
+  const { type, value } = event.detail;
+  switch (type) {
+    case 'SPAWN_RATE':
+      setSpawnRate(value);
+      break;
+    // ... other cases
+  }
+}
 ```
 
 ### SceneManager Implementation
@@ -345,18 +449,53 @@ $effect(() => {
   import BottomLinks from './components/BottomLinks.svelte';
   import ToastNotification from './components/ToastNotification.svelte';
   
-  import { container } from './lib/stores/simulationState.svelte.js';
+  // Import state getters and setters
+  import { 
+    souls as getSouls,
+    NEW_SOUL_SPAWN_RATE as getNEW_SOUL_SPAWN_RATE,
+    AVG_LIFESPAN,
+    EQUILIBRIUM_POPULATION,
+    setContainer,
+    setToastNotification,
+    setFpsCounter
+  } from './lib/stores/simulationState.svelte.js';
+  
+  // Local reactive variables
+  let souls = $derived(getSouls());
+  let NEW_SOUL_SPAWN_RATE = $derived(getNEW_SOUL_SPAWN_RATE());
+  
+  // Local variables for component bindings
+  let localContainer = $state();
+  let localToastNotification = $state();
+  let localFpsCounter = $state();
+  
+  // Sync local variables to store
+  $effect(() => {
+    if (localContainer) setContainer(localContainer);
+  });
+  
+  $effect(() => {
+    if (localToastNotification) setToastNotification(localToastNotification);
+  });
+  
+  $effect(() => {
+    if (localFpsCounter) setFpsCounter(localFpsCounter);
+  });
 </script>
 
-<ThreeContainer bind:container />
+<ThreeContainer bind:container={localContainer} />
 <SimulationManager />
 
-<FpsCounter />
-<PopulationCounter />
+<FpsCounter bind:this={localFpsCounter} />
+<PopulationCounter soulCount={souls.length} />
 <EntityLinks />
-<EquilibriumInfo />
+<EquilibriumInfo 
+  spawnRate={NEW_SOUL_SPAWN_RATE}
+  avgLifespan={AVG_LIFESPAN()}
+  equilibriumPopulation={EQUILIBRIUM_POPULATION()}
+/>
 <BottomLinks />
-<ToastNotification />
+<ToastNotification bind:this={localToastNotification} />
 ```
 
 ## Testing Strategy
@@ -364,9 +503,19 @@ $effect(() => {
 After each phase:
 
 1. Run the application and verify rendering
-2. Test user interactions
-3. Ensure performance is not degraded
-4. Check for console errors
+2. Test user interactions (parameter controls, mouse interactions)
+3. Ensure performance is not degraded (FPS counter, soul animations)
+4. Check for console errors and compilation warnings
+5. Verify localStorage persistence works correctly
+6. Test hot module reload during development
+
+**Phase 3 Testing Results**: ✅
+- Application renders correctly on http://localhost:5173/
+- All UI components functional (FpsCounter, PopulationCounter, controls)
+- Parameter adjustments work with localStorage persistence
+- Soul animation and Three.js rendering working perfectly
+- Zero compilation errors and zero runtime errors
+- Hot module reload working for rapid development
 
 ## Rollback Plan
 
