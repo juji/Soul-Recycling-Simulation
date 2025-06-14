@@ -1,37 +1,37 @@
 <script>
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { onMount } from 'svelte';
   
-  // Define props
-  export let container;
-
-  const dispatch = createEventDispatcher();
+  // Define props using runes - container is bindable for parent access
+  let { onmousemove, onresize, container = $bindable() } = $props();
 
   // Handle mouse movements and dispatch to parent
-  function onMouseMove(event) {
+  function handleMouseMove(event) {
     if (!container) return;
     const rect = container.getBoundingClientRect();
     const mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     const mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     
-    dispatch('mousemove', { mouseX, mouseY });
+    onmousemove?.({ mouseX, mouseY });
   }
 
   // Handle window resize events
   function handleResize() {
-    dispatch('resize', {
+    onresize?.({
       width: container?.clientWidth || 0,
       height: container?.clientHeight || 0
     });
   }
 
   onMount(() => {
-    container?.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('resize', handleResize);
+    if (container) {
+      container.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('resize', handleResize);
 
-    return () => {
-      container?.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('resize', handleResize);
-    };
+      return () => {
+        container.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('resize', handleResize);
+      };
+    }
   });
 </script>
 
