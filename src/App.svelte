@@ -7,6 +7,9 @@
   import { LODManager } from './lib/LODManager.js';  // Phase 4: LOD System
   import { AdaptivePerformanceManager } from './lib/adaptive-performance.js';  // Phase 4: Adaptive Performance
   import { loadFromStorage, saveToStorage, STORAGE_KEYS } from './lib/localStorage.js'; // Import from new module
+  import { FEATURE_FLAGS, DEFAULT_SOUL_COUNT, MATERIAL_POOL_SIZE, DEWA_SPAWN_CHANCE, DEWA_BASE_SPEED, DEFAULT_PARAMETERS } from './lib/constants/config.js';
+  import { CAMERA_SETTINGS, LIGHTING_SETTINGS, LINE_SETTINGS, GEOMETRY_SETTINGS, CONTROLS_SETTINGS } from './lib/constants/rendering.js';
+  import { CONNECTION_SETTINGS, POINTER_INTERACTION_RADIUS, POINTER_INFLUENCE_STRENGTH, NEIGHBOR_SPEED_INFLUENCE_RADIUS, NEIGHBOR_SPEED_INFLUENCE_STRENGTH, SEPARATION_DISTANCE, SEPARATION_STRENGTH, DEWA_ATTRACTION_RADIUS, DEWA_ATTRACTION_STRENGTH, DEWA_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST } from './lib/constants/physics.js';
   import SliderControls from './components/SliderControls.svelte';
   import FpsCounter from './components/FpsCounter.svelte';
   import PopulationCounter from './components/PopulationCounter.svelte';
@@ -17,66 +20,6 @@
   import ThreeContainer from './components/ThreeContainer.svelte';
   import './lib/ai-test-bridge.js';  // Import AI test bridge for performance testing
 
-  // Phase 4: Feature Flags
-  const FEATURE_FLAGS = {
-    USE_INSTANCED_RENDERING: true, // Enable Phase 3 instanced rendering
-    USE_LOD_SYSTEM: true, // Enable Phase 4 LOD system
-    FALLBACK_TO_INDIVIDUAL_MESHES: true // Emergency fallback
-  };
-
-  // Global settings
-  const DEFAULT_SOUL_COUNT = 999; // Fallback value when adaptive performance manager is not available
-  
-  // Camera and lighting settings
-  const CAMERA_SETTINGS = {
-    FOV: 60,
-    NEAR: 0.1,
-    FAR: 1000,
-    POSITION: { x: 0, y: 30, z: 60 }
-  };
-  
-  const LIGHTING_SETTINGS = {
-    AMBIENT: { color: 0xffffff, intensity: 0.8 },
-    DIRECTIONAL: { 
-      color: 0xffffff, 
-      intensity: 0.7, 
-      position: { x: -8, y: 10, z: 8 } 
-    },
-    POINT_LIGHTS: [
-      { color: 0xffccaa, intensity: 0.65, distance: 60, position: { x: 10, y: 4, z: 4 } },
-      { color: 0xaaccff, intensity: 0.55, distance: 60, position: { x: -4, y: -6, z: -10 } },
-      { color: 0xffffff, intensity: 0.5, distance: 25, position: { x: 0, y: 5, z: -2 } }
-    ]
-  };
-  
-  const LINE_SETTINGS = {
-    OPACITY: 0.42,
-    VERTEX_COORDS: 3,
-    VERTICES_PER_LINE: 2
-  };
-  
-  // Geometry settings - consolidated magic numbers
-  const GEOMETRY_SETTINGS = {
-    HUMAN_RADIUS: 0.15,
-    HUMAN_SEGMENTS: { width: 12, height: 12 }, // Reduced from 16x16 for performance
-    GPT_SIZE: 0.2,
-    DEWA_RADIUS: 0.333,
-    DEWA_SEGMENTS: { width: 20, height: 20 }, // Reduced from 32x32 for performance
-    MATERIAL_OPACITY: {
-      DEFAULT: 0.8,
-      DEWA: 0.9
-    }
-  };
-  
-  // Connection settings
-  const CONNECTION_SETTINGS = {
-    INTERACTION_DISTANCE: 6,
-    MAX_LINES_MULTIPLIER: 5 // Max lines = soul count * this multiplier
-  };
-  
-  // Material pool settings
-  const MATERIAL_POOL_SIZE = 20;
-  
   // Load saved values from localStorage or use defaults - migrated to runes
   let NEW_SOUL_SPAWN_RATE = $state(loadFromStorage(STORAGE_KEYS.SPAWN_RATE, 0.7));
   let MIN_LIFESPAN = $state(loadFromStorage(STORAGE_KEYS.MIN_LIFESPAN, 300));
@@ -91,9 +34,9 @@
 
   // Reset function to restore default values
   function resetParameters() {
-    NEW_SOUL_SPAWN_RATE = 0.7;
-    MIN_LIFESPAN = 300;
-    MAX_LIFESPAN = 900;
+    NEW_SOUL_SPAWN_RATE = DEFAULT_PARAMETERS.SPAWN_RATE;
+    MIN_LIFESPAN = DEFAULT_PARAMETERS.MIN_LIFESPAN;
+    MAX_LIFESPAN = DEFAULT_PARAMETERS.MAX_LIFESPAN;
     showToastMessage('Parameters reset to defaults');
   }
 
@@ -315,18 +258,18 @@
       window.__wheelEventPatched = true;
     }
 
-    const controls = new ArcballControls(camera, renderer.domElement, scene);
+    const    controls = new ArcballControls(camera, renderer.domElement, scene);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.333;  // Much lower for smoother, more responsive feel
-    controls.wMax = 1.3;             // Higher for faster rotation capability
+    controls.dampingFactor = CONTROLS_SETTINGS.DAMPING_FACTOR;  
+    controls.wMax = CONTROLS_SETTINGS.W_MAX;             
     controls.setGizmosVisible(false);
     
     // Additional recommended ArcballControls settings
-    controls.enablePan = true;      // Allow panning
-    controls.enableZoom = true;     // Allow zooming
-    controls.enableRotate = true;   // Allow rotation
-    controls.minDistance = 10;      // Minimum zoom distance
-    controls.maxDistance = 300;     // Maximum zoom distance
+    controls.enablePan = CONTROLS_SETTINGS.ENABLE_PAN;      
+    controls.enableZoom = CONTROLS_SETTINGS.ENABLE_ZOOM;     
+    controls.enableRotate = CONTROLS_SETTINGS.ENABLE_ROTATE;   
+    controls.minDistance = CONTROLS_SETTINGS.MIN_DISTANCE;      
+    controls.maxDistance = CONTROLS_SETTINGS.MAX_DISTANCE;     
 
     // Lights
     const ambientLight = new THREE.AmbientLight(
@@ -549,25 +492,6 @@
     const raycaster = new THREE.Raycaster();
     let pointerPosition3D = null;
     const interactionPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    const POINTER_INTERACTION_RADIUS = 10;
-    const POINTER_INFLUENCE_STRENGTH = 0.05;
-
-    // Neighbor speed influence variables
-    const NEIGHBOR_SPEED_INFLUENCE_RADIUS = 5;
-    const NEIGHBOR_SPEED_INFLUENCE_STRENGTH = 0.1;
-
-    // Boids-like separation variables
-    const SEPARATION_DISTANCE = 1.5;
-    const SEPARATION_STRENGTH = 0.05;
-
-    // Dewa entity properties
-    const DEWA_ATTRACTION_RADIUS = 15; 
-    const DEWA_ATTRACTION_STRENGTH = 0.005; 
-    const DEWA_SPAWN_CHANCE = 0.05; 
-    const DEWA_BASE_SPEED = 0.02; // Slower, consistent speed for dewas
-    const DEWA_ENHANCEMENT_RADIUS = 10; // New: Radius within which dewas enhance other souls
-    const ENHANCEMENT_SATURATION_BOOST = 0.2; // New: How much to boost saturation (0 to 1)
-    const ENHANCEMENT_LIGHTNESS_BOOST = 0.15; // New: How much to boost lightness (0 to 1)
 
     let simulationWorker;
     let nextSoulId = 0;
