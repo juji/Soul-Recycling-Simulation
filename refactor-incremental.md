@@ -6,10 +6,14 @@
 - ✅ **Phase 2**: Extract Constants (COMPLETED)
 - ✅ **Phase 3**: Create State Management (COMPLETED)
 - ✅ **Phase 4**: Extract Scene Setup (COMPLETED)
-- 🚧 **Phase 5**: Extract Soul Management (NEXT)
-- ⏳ **Phase 6**: Create SimulationManager
-- ⏳ **Phase 7**: Update UI Components
-- ⏳ **Phase 8**: Clean Up App.svelte
+- 🚧 **Phase 5a**: Create Soul Creation Functions (NEXT - 1 hour)
+- ⏳ **Phase 5b**: Extract Soul Lifecycle Management (1 hour)
+- ⏳ **Phase 6a**: Create Worker Communication Manager (1 hour)
+- ⏳ **Phase 6b**: Extract Animation Loop (1 hour)
+- ⏳ **Phase 6c**: Create SimulationManager Component (1 hour)
+- ⏳ **Phase 7a**: Update Simple UI Components (1 hour)
+- ⏳ **Phase 7b**: Update Complex UI Components (1 hour)
+- ⏳ **Phase 8**: Clean Up App.svelte (1 hour)
 
 ## Current Issues
 
@@ -36,6 +40,75 @@ Key runes principles to follow:
 - Use `$derived()` for computed values
 - Use `$effect()` for side effects
 - Use `$effect.root()` when needed to create isolated effect scopes
+
+## Refactoring Timeline Summary
+
+### Completed Work (4 hours total)
+- ✅ **Phase 1**: Project Setup and File Structure (1 hour)
+- ✅ **Phase 2**: Extract Constants (1 hour)  
+- ✅ **Phase 3**: Create State Management (1 hour)
+- ✅ **Phase 4**: Extract Scene Setup (1 hour)
+
+### Remaining Work (8 hours total)
+- 🚧 **Phase 5a**: Create Soul Creation Functions (1 hour) - **NEXT**
+- ⏳ **Phase 5b**: Extract Soul Lifecycle Management (1 hour)
+- ⏳ **Phase 6a**: Create Worker Communication Manager (1 hour)
+- ⏳ **Phase 6b**: Extract Animation Loop (1 hour)
+- ⏳ **Phase 6c**: Create SimulationManager Component (1 hour)
+- ⏳ **Phase 7a**: Update Simple UI Components (1 hour)
+- ⏳ **Phase 7b**: Update Complex UI Components (1 hour)
+- ⏳ **Phase 8**: Clean Up App.svelte (1 hour)
+
+### Work Breakdown by Hour
+
+**Hour 1 (Phase 5a)**: Soul Creation
+- Create `src/lib/utils/` directory and `soulManager.js`
+- Extract `createSoul()` function and geometry creation
+- Test basic soul creation and visibility
+
+**Hour 2 (Phase 5b)**: Soul Lifecycle  
+- Extract soul removal, cleanup, and connection management
+- Update App.svelte to use lifecycle functions
+- Test soul spawning, living, and dying
+
+**Hour 3 (Phase 6a)**: Worker Management
+- Create `workerManager.js` with Web Worker communication
+- Extract worker initialization and message handling
+- Test physics simulation and worker communication
+
+**Hour 4 (Phase 6b)**: Animation System
+- Create `animationController.js` with animation loop
+- Extract performance tracking and interaction logic
+- Test smooth animation and performance metrics
+
+**Hour 5 (Phase 6c)**: Simulation Coordination
+- Create `SimulationManager.svelte` component
+- Coordinate between soul, worker, and animation managers
+- Test complete simulation functionality
+
+**Hour 6 (Phase 7a)**: Simple UI Updates
+- Update `FpsCounter`, `PopulationCounter`, `BottomLinks`
+- Remove simple prop passing from App.svelte
+- Test component reactivity with state store
+
+**Hour 7 (Phase 7b)**: Complex UI Updates
+- Update `EntityLinks`, `EquilibriumInfo`, `SliderControls`
+- Remove complex prop passing and parameter handling
+- Test advanced UI functionality
+
+**Hour 8 (Phase 8)**: Final Cleanup
+- Simplify App.svelte to minimal component layout
+- Remove unused code and optimize imports
+- Final testing and documentation
+
+### Benefits of 1-Hour Phases
+
+1. **Frequent Testing**: Test after each hour to catch issues early
+2. **Incremental Progress**: Clear milestones and sense of progress
+3. **Easy Rollback**: If a phase fails, only 1 hour of work is lost
+4. **Flexible Scheduling**: Can complete phases across multiple sessions
+5. **Clear Focus**: Each phase has a single, well-defined goal
+6. **Reduced Risk**: Smaller changes reduce chance of breaking the application
 
 ## Incremental Refactoring Strategy
 
@@ -157,53 +230,304 @@ Rather than refactoring everything at once, we'll use an incremental approach wi
 
 **Status**: Complete scene setup extraction achieved. SceneManager successfully handles all Three.js initialization while App.svelte focuses on simulation logic coordination. Application fully functional with visible entities, working physics, and proper performance tracking. Ready for Phase 5.
 
-## Phase 5: Extract Soul Management (2-3 hours)
+## Phase 5a: Create Soul Creation Functions (1 hour)
 
-1. **Create SoulManager functions**:
-   - Move soul creation and management functions to `src/lib/utils/soulManager.js`
-   - Extract soul rendering logic (both instanced and individual)
+1. **Create utils directory and soulManager.js**:
+   - Create `src/lib/utils/` directory
+   - Create `src/lib/utils/soulManager.js` with soul creation functions
 
-2. **Update App.svelte to use SoulManager**:
-   - Replace inline functions with imports
-   - Test that souls render and animate correctly
+2. **Extract soul creation logic**:
+   - Move `createSoul()` function from App.svelte to soulManager.js
+   - Extract geometry creation logic (human, GPT, Dewa)
+   - Extract material creation and HSL color logic
+   - Export soul creation functions for use in App.svelte
 
-## Phase 6: Create SimulationManager (2-3 hours)
+3. **Test basic soul creation**:
+   - Import and use soulManager functions in App.svelte
+   - Verify souls are created and visible in both rendering modes
+   - Ensure initial soul population works correctly
+
+## Phase 5b: Extract Soul Lifecycle Management (1 hour)
+
+1. **Extract soul lifecycle functions**:
+   - Move soul removal and cleanup logic to soulManager.js
+   - Extract connection/line segment management functions
+   - Create utility functions for soul updates and transformations
+
+2. **Update App.svelte to use lifecycle functions**:
+   - Replace inline lifecycle logic with soulManager imports
+   - Test soul creation, updates, and removal
+   - Verify memory cleanup works in both rendering modes
+
+3. **Test soul lifecycle**:
+   - Verify souls spawn, live, and die correctly
+   - Test performance with lifecycle management
+   - Ensure no memory leaks during soul removal
+
+## Phase 6a: Create Worker Communication Manager (1 hour)
+
+1. **Create WorkerManager utility**:
+   - Create `src/lib/utils/workerManager.js`
+   - Extract Web Worker initialization and message handling
+   - Create functions for worker communication and data synchronization
+
+2. **Move worker logic from App.svelte**:
+   - Extract simulationWorker setup and message handlers
+   - Move worker message processing (soulsUpdated, soulRemoved, connectionsUpdated)
+   - Create clean API for worker communication
+
+3. **Test worker communication**:
+   - Verify physics simulation continues working
+   - Test soul updates from worker
+   - Ensure connection lines render correctly
+
+## Phase 6b: Extract Animation Loop (1 hour)
+
+1. **Create AnimationController utility**:
+   - Create `src/lib/utils/animationController.js`
+   - Extract animation loop and frame management
+   - Move performance tracking and FPS-related logic
+
+2. **Extract animation logic from App.svelte**:
+   - Move requestAnimationFrame loop
+   - Extract pointer interaction and raycasting
+   - Move draw call tracking and performance metrics
+
+3. **Test animation system**:
+   - Verify smooth animation continues
+   - Test performance metrics tracking
+   - Ensure mouse interactions work correctly
+
+## Phase 6c: Create SimulationManager Component (1 hour)
 
 1. **Create SimulationManager component**:
-   - Move animation loop from App.svelte to SimulationManager
-   - Handle worker communication
-   - Coordinate between scene and soul managers
+   - Create `src/components/simulation/SimulationManager.svelte`
+   - Coordinate between soul manager, worker manager, and animation controller
+   - Handle simulation initialization and state management
 
-2. **Use SimulationManager in App.svelte**:
-   - Replace animation logic with SimulationManager component
-   - Test that the full simulation works correctly
+2. **Integrate with App.svelte**:
+   - Replace simulation logic in App.svelte with SimulationManager component
+   - Maintain event communication between components
+   - Ensure proper lifecycle management
 
-## Phase 7: Update UI Components (2 hours)
+3. **Test complete simulation**:
+   - Verify full simulation functionality
+   - Test all rendering modes and performance features
+   - Ensure UI components continue to work correctly
 
-1. **Update UI components to use state store**:
-   - Start with simpler components (FpsCounter, PopulationCounter)
-   - Move to more complex components (EntityLinks, EquilibriumInfo)
-   - Test each component after updating
+## Phase 7a: Update Simple UI Components (1 hour)
 
-2. **Remove direct prop passing in App.svelte**:
-   - Rely on the shared state
-   - Test that all UI updates correctly
+1. **Update basic UI components to use state store**:
+   - Update `FpsCounter.svelte` to access state directly
+   - Update `PopulationCounter.svelte` to use state store
+   - Update `BottomLinks.svelte` if needed
+
+2. **Remove prop passing for simple components**:
+   - Remove direct prop passing from App.svelte
+   - Test that components update reactively from state changes
+   - Verify performance metrics display correctly
+
+3. **Test simple component updates**:
+   - Verify FPS counter updates in real-time
+   - Test population counter reflects soul count changes
+   - Ensure components remain responsive
+
+## Phase 7b: Update Complex UI Components (1 hour)
+
+1. **Update complex UI components to use state store**:
+   - Update `EntityLinks.svelte` to access state directly
+   - Update `EquilibriumInfo.svelte` to use state store
+   - Update `SliderControls.svelte` parameter handling
+
+2. **Remove remaining prop passing**:
+   - Remove complex prop passing from App.svelte
+   - Ensure parameter controls work with state store
+   - Test entity links and equilibrium calculations
+
+3. **Test complex component functionality**:
+   - Verify parameter controls update simulation
+   - Test entity links highlight active counts
+   - Ensure equilibrium info reflects current state
 
 ## Phase 8: Clean Up App.svelte (1 hour)
 
-1. **Simplify App.svelte**:
-   - Remove all simulation logic
-   - Keep only component imports and minimal layout
-   - Test the fully refactored application
+1. **Simplify App.svelte structure**:
+   - Remove all remaining simulation logic
+   - Keep only component imports and basic layout
+   - Clean up unused imports and functions
 
 2. **Final optimization and cleanup**:
-   - Remove any unused code
-   - Ensure all components follow best practices
-   - Document the new architecture
+   - Remove any unused code throughout the project
+   - Ensure all components follow Svelte 5 runes best practices
+   - Verify clean separation of concerns
+
+3. **Final testing and documentation**:
+   - Test the fully refactored application
+   - Verify all functionality works as expected
+   - Update documentation and refactoring notes
 
 ## Implementation Details
 
-### State Store Implementation (simulationState.svelte.js)
+### Phase 5a: SoulManager Implementation
+
+```javascript
+// src/lib/utils/soulManager.js
+import * as THREE from 'three';
+import { GEOMETRY_SETTINGS, DEWA_SPAWN_CHANCE, DEWA_BASE_SPEED } from '../constants/config.js';
+import { addSoul } from '../stores/simulationState.svelte.js';
+
+// Create shared geometries for performance
+const humanGeometry = new THREE.SphereGeometry(
+  GEOMETRY_SETTINGS.HUMAN_RADIUS, 
+  GEOMETRY_SETTINGS.HUMAN_SEGMENTS.width, 
+  GEOMETRY_SETTINGS.HUMAN_SEGMENTS.height
+);
+
+const gptGeometry = new THREE.BoxGeometry(
+  GEOMETRY_SETTINGS.GPT_SIZE, 
+  GEOMETRY_SETTINGS.GPT_SIZE, 
+  GEOMETRY_SETTINGS.GPT_SIZE
+);
+
+const dewaGeometry = new THREE.SphereGeometry(
+  GEOMETRY_SETTINGS.DEWA_RADIUS, 
+  GEOMETRY_SETTINGS.DEWA_SEGMENTS.width, 
+  GEOMETRY_SETTINGS.DEWA_SEGMENTS.height
+);
+
+let nextSoulId = 0;
+
+export function createSoul(isHuman, isDewa = false, angle = 0, speed = 0, scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN) {
+  // Soul creation logic extracted from App.svelte
+  // ... implementation details
+}
+
+export function createNewSoul(scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN) {
+  const isDewa = Math.random() < DEWA_SPAWN_CHANCE;
+  const isHuman = isDewa ? true : Math.random() < 0.5;
+  return createSoul(isHuman, isDewa, 0, 0, scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN);
+}
+
+export function setupSoulGeometries() {
+  // Initialize shared geometries and materials
+  // Return geometry objects for reuse
+}
+```
+
+### Phase 6a: WorkerManager Implementation
+
+```javascript
+// src/lib/utils/workerManager.js
+import { 
+  souls, 
+  soulLookupMap, 
+  removeSoulById, 
+  performanceMetrics 
+} from '../stores/simulationState.svelte.js';
+
+export class WorkerManager {
+  constructor() {
+    this.simulationWorker = null;
+    this.isInitialized = false;
+  }
+
+  initializeWorker(initialSouls, constants) {
+    this.simulationWorker = new Worker(
+      new URL('../simulation.worker.js', import.meta.url), 
+      { type: 'module' }
+    );
+    
+    this.simulationWorker.postMessage({
+      type: 'init',
+      data: { souls: initialSouls, constants }
+    });
+
+    this.setupMessageHandlers();
+    this.isInitialized = true;
+  }
+
+  setupMessageHandlers() {
+    this.simulationWorker.onmessage = (e) => {
+      const { type, data } = e.data;
+      
+      switch (type) {
+        case 'soulsUpdated':
+          this.handleSoulsUpdated(data);
+          break;
+        case 'soulRemoved':
+          this.handleSoulRemoved(data);
+          break;
+        case 'connectionsUpdated':
+          this.handleConnectionsUpdated(data);
+          break;
+      }
+    };
+  }
+
+  handleSoulsUpdated(data) {
+    // Extract soul update logic from App.svelte
+  }
+
+  sendUpdate(updateData) {
+    if (this.simulationWorker && this.isInitialized) {
+      this.simulationWorker.postMessage({
+        type: 'update',
+        data: updateData
+      });
+    }
+  }
+}
+```
+
+### Phase 6c: SimulationManager Component
+
+```svelte
+<!-- src/components/simulation/SimulationManager.svelte -->
+<script>
+  import { onMount } from 'svelte';
+  import { SoulManager } from '../../lib/utils/soulManager.js';
+  import { WorkerManager } from '../../lib/utils/workerManager.js';
+  import { AnimationController } from '../../lib/utils/animationController.js';
+  
+  // Import scene objects from state store
+  import { 
+    scene as getScene,
+    camera as getCamera,
+    renderer as getRenderer,
+    controls as getControls
+  } from '../../lib/stores/simulationState.svelte.js';
+  
+  let scene = $derived(getScene());
+  let camera = $derived(getCamera());
+  let renderer = $derived(getRenderer());
+  let controls = $derived(getControls());
+  
+  let soulManager;
+  let workerManager;
+  let animationController;
+  
+  onMount(() => {
+    if (scene && camera && renderer) {
+      initializeSimulation();
+    }
+  });
+  
+  function initializeSimulation() {
+    soulManager = new SoulManager();
+    workerManager = new WorkerManager();
+    animationController = new AnimationController();
+    
+    // Initialize simulation components
+    setupSimulation();
+  }
+  
+  function setupSimulation() {
+    // Coordinate between all simulation components
+    // Handle initial soul creation
+    // Start animation loop
+  }
+</script>
+```
 
 ```javascript
 // src/lib/stores/simulationState.svelte.js
@@ -523,14 +847,72 @@ function handleParameterChange(event) {
 
 ## Testing Strategy
 
-After each phase:
+After each 1-hour phase:
 
-1. Run the application and verify rendering
-2. Test user interactions (parameter controls, mouse interactions)
-3. Ensure performance is not degraded (FPS counter, soul animations)
-4. Check for console errors and compilation warnings
-5. Verify localStorage persistence works correctly
-6. Test hot module reload during development
+1. **Immediate Testing (5 minutes)**:
+   - Run `npm run dev` and verify application loads
+   - Check for compilation errors and warnings
+   - Verify basic rendering still works
+
+2. **Functional Testing (10 minutes)**:
+   - Test specific functionality changed in the phase
+   - Verify user interactions still work
+   - Check that existing features aren't broken
+
+3. **Performance Testing (5 minutes)**:
+   - Monitor FPS counter for performance regressions
+   - Check soul animation smoothness
+   - Verify memory usage doesn't increase significantly
+
+### Phase-Specific Testing
+
+**Phase 5a Testing (Create Soul Creation Functions)**:
+- ✅ Souls are created and visible in both rendering modes
+- ✅ Initial soul population matches expected count
+- ✅ Soul types (human, GPT, Dewa) render with correct geometry and colors
+- ✅ No compilation errors from soulManager imports
+
+**Phase 5b Testing (Extract Soul Lifecycle Management)**:
+- ✅ Souls spawn continuously at correct rate
+- ✅ Souls are removed after lifespan expires
+- ✅ Connection lines update correctly
+- ✅ No memory leaks during soul removal (check browser dev tools)
+
+**Phase 6a Testing (Create Worker Communication Manager)**:
+- ✅ Physics simulation continues working
+- ✅ Soul positions update from worker calculations
+- ✅ Connection lines render between souls
+- ✅ Worker messages processed correctly
+
+**Phase 6b Testing (Extract Animation Loop)**:
+- ✅ Smooth 60 FPS animation
+- ✅ Mouse interactions affect souls (if applicable)
+- ✅ Performance metrics update correctly
+- ✅ Camera controls work smoothly
+
+**Phase 6c Testing (Create SimulationManager Component)**:
+- ✅ Full simulation functionality maintained
+- ✅ All rendering modes work (instanced vs individual)
+- ✅ UI components continue to update correctly
+- ✅ Parameter controls affect simulation
+
+**Phase 7a Testing (Update Simple UI Components)**:
+- ✅ FPS counter updates in real-time
+- ✅ Population counter reflects soul count changes
+- ✅ Components remain responsive
+- ✅ No prop-passing dependencies remain
+
+**Phase 7b Testing (Update Complex UI Components)**:
+- ✅ Parameter controls update simulation correctly
+- ✅ Entity links highlight active counts
+- ✅ Equilibrium info reflects current state
+- ✅ All UI interactions work as expected
+
+**Phase 8 Testing (Clean Up App.svelte)**:
+- ✅ App.svelte is minimal and clean (< 100 lines)
+- ✅ All functionality works exactly as before refactoring
+- ✅ No unused imports or code
+- ✅ Hot module reload works correctly
 
 **Phase 3 Testing Results**: ✅
 - Application renders correctly on http://localhost:5173/
