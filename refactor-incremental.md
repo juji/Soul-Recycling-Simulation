@@ -401,7 +401,6 @@ Rather than refactoring everything at once, we'll use an incremental approach wi
 1. **Update basic UI components to use state store**:
    - Update `FpsCounter.svelte` to access state directly
    - Update `PopulationCounter.svelte` to use state store
-   - Update `BottomLinks.svelte` if needed
 
 2. **Remove prop passing for simple components**:
    - Remove direct prop passing from App.svelte
