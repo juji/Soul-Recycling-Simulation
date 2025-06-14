@@ -95,7 +95,7 @@
 <style>
   .fps-counter {
     position: fixed;
-    top: 10px;
+    bottom: 60px;
     right: 10px;
     background: rgba(0, 0, 0, 0.7);
     color: #ffffff;

@@ -88,20 +88,15 @@
   .entity-link {
     background: rgba(0, 0, 0, 0.7);
     color: #ffffff;
-    padding: 6px 10px;
+    padding: 8px 12px;
     border-radius: 4px;
     font-family: 'Courier New', monospace;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: bold;
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(4px);
     text-decoration: none;
     transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 20px;
-    text-align: center;
   }
   
   .entity-link:hover {
