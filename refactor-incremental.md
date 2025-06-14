@@ -9,8 +9,8 @@
 - ✅ **Phase 5a**: Create Soul Creation Functions (COMPLETED)
 - ✅ **Phase 5b**: Extract Soul Lifecycle Management (COMPLETED)
 - ✅ **Phase 6a**: Create Worker Communication Manager (COMPLETED)
-- 🚧 **Phase 6b**: Extract Animation Loop (NEXT - 1 hour)
-- ⏳ **Phase 6c**: Create SimulationManager Component (1 hour)
+- ✅ **Phase 6b**: Extract Animation Loop (COMPLETED)
+- 🚧 **Phase 6c**: Create SimulationManager Component (NEXT - 1 hour)
 - ⏳ **Phase 7a**: Update Simple UI Components (1 hour)
 - ⏳ **Phase 7b**: Update Complex UI Components (1 hour)
 - ⏳ **Phase 8**: Clean Up App.svelte (1 hour)
@@ -43,7 +43,7 @@ Key runes principles to follow:
 
 ## Refactoring Timeline Summary
 
-### Completed Work (7 hours total)
+### Completed Work (8 hours total)
 - ✅ **Phase 1**: Project Setup and File Structure (1 hour)
 - ✅ **Phase 2**: Extract Constants (1 hour)  
 - ✅ **Phase 3**: Create State Management (1 hour)
@@ -51,9 +51,10 @@ Key runes principles to follow:
 - ✅ **Phase 5a**: Create Soul Creation Functions (1 hour)
 - ✅ **Phase 5b**: Extract Soul Lifecycle Management (1 hour)
 - ✅ **Phase 6a**: Create Worker Communication Manager (1 hour)
+- ✅ **Phase 6b**: Extract Animation Loop (1 hour)
 
-### Remaining Work (5 hours total)
-- 🚧 **Phase 6b**: Extract Animation Loop (NEXT - 1 hour)
+### Remaining Work (4 hours total)
+- 🚧 **Phase 6c**: Create SimulationManager Component (NEXT - 1 hour)
 - ⏳ **Phase 6c**: Create SimulationManager Component (1 hour)
 - ⏳ **Phase 7a**: Update Simple UI Components (1 hour)
 - ⏳ **Phase 7b**: Update Complex UI Components (1 hour)

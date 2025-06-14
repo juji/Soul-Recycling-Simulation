@@ -37,6 +37,9 @@
   // Import worker communication manager
   import { workerManager } from './lib/utils/workerManager.js';
   
+  // Import animation controller
+  import { animationController } from './lib/utils/animationController.js';
+  
   // Import state management store
   import { 
     souls as getSouls, 
@@ -282,11 +285,6 @@
     // Initialize soul manager with shared geometries and materials
     initializeSoulManager();
 
-    // Pointer interaction variables
-    const raycaster = new THREE.Raycaster();
-    let pointerPosition3D = null;
-    const interactionPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-
     // Create initial souls using soulManager (worker will be passed later)
     const initialSoulsForWorkerInit = createInitialSouls(
       recycledSoulCount, 
@@ -350,6 +348,7 @@
     // Worker message handling is now managed by WorkerManager
     // Custom handlers could be registered here if needed
 
+    // Soul creation wrapper function
     function createNewSoulWrapper() {
       const newSoul = createNewSoul(scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, null);
       
@@ -371,64 +370,13 @@
       }
     }
 
-    // Helper function to track draw calls for performance metrics
-    function trackDrawCalls(renderer) {
-      if (renderer && renderer.info && renderer.info.render) {
-        return renderer.info.render.calls;
-      }
-      // Fallback estimation based on rendering mode
-      return renderingMode === 'instanced' ? 3 : souls.length;
-    }
-
-    // Animation loop
-    function animate() {
-      requestAnimationFrame(animate);
-
-      // Update pointer position in 3D space for main thread (raycasting)
-      raycaster.setFromCamera(mouse, camera);
-      const intersectionPoint = new THREE.Vector3();
-      if (raycaster.ray.intersectPlane(interactionPlane, intersectionPoint)) {
-        pointerPosition3D = intersectionPoint;
-      } else {
-        pointerPosition3D = null;
-      }
-
-      // Send necessary data to worker for update via WorkerManager
-      workerManager.sendUpdate({
-        pointerPosition3D: null, // Dewa is everywhere, not tied to a specific mouse-derived point
-        lodData: null // LOD data would go here if implemented
-      });
-
-      let spawnRate = NEW_SOUL_SPAWN_RATE;
-      while (spawnRate > 1) {
-        createNewSoulWrapper(); 
-        spawnRate--;
-      }
-      if (Math.random() < spawnRate) {
-        createNewSoulWrapper(); 
-      }
-
-      controls.update();
-      
-      // Track draw calls before render
-      renderer.render(scene, camera);
-      performanceMetrics.drawCalls = trackDrawCalls(renderer);
-      
-      // Get FPS metrics from FpsCounter component
-      const fpsMetrics = fpsCounter ? fpsCounter.getMetrics() : { fps: 60, averageFPS: 60, memoryUsage: 0 };
-      const { fps, averageFPS, memoryUsage } = fpsMetrics;
-      
-      // Update global variables for AI test bridge
-      if (typeof window !== 'undefined') {
-        window.currentQuality = currentQuality;
-        window.soulCount = souls.length;
-      }
-      
-      // Adjust quality based on performance every second
-      adjustQualityBasedOnFPS(fps);
-    }
-
-    animate();
+    // Initialize and start animation controller
+    animationController.initializeScene({ scene, camera, renderer, controls });
+    animationController.setCallbacks({
+      onSoulSpawn: createNewSoulWrapper,
+      onWorkerUpdate: (data) => workerManager.sendUpdate(data)
+    });
+    animationController.start();
   }
 
   onMount(() => {
