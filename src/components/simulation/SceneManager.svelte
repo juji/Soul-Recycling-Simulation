@@ -6,7 +6,7 @@
   import { LODManager } from '../../lib/LODManager.js';
   import { AdaptivePerformanceManager } from '../../lib/adaptive-performance.js';
   import { FEATURE_FLAGS } from '../../lib/constants/config.js';
-  import { CAMERA_SETTINGS, LIGHTING_SETTINGS, CONTROLS_SETTINGS } from '../../lib/constants/rendering.js';
+  import { CAMERA_SETTINGS, LIGHTING_SETTINGS, CONTROLS_SETTINGS } from '../../lib/constants/rendering';
   
   // Import store getters
   import { 

@@ -2,10 +2,23 @@
 // This file provides a centralized export of all type definitions
 
 // Re-export all types from individual modules
-export * from './three.d.ts';
-export * from './simulation.d.ts';
-export * from './performance.d.ts';
-export * from './svelte.d.ts';
+export type * from './three';
+export type * from './simulation';
+export type * from './performance';
+export type * from './svelte';
+
+// Re-export rendering constants types
+export type {
+  Position3D,
+  CameraSettings,
+  LightSettings,
+  LightingSettings,
+  SegmentSettings,
+  MaterialOpacity,
+  GeometrySettings,
+  LineSettings,
+  ControlsSettings
+} from '../lib/constants/rendering';
 
 // Additional global types that don't fit in specific modules
 export interface StorageKeys {

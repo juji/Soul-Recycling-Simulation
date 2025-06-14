@@ -2,7 +2,7 @@
 // Soul creation and management utilities
 import * as THREE from 'three';
 import { DEWA_SPAWN_CHANCE, DEWA_BASE_SPEED } from '../constants/config.js';
-import { GEOMETRY_SETTINGS, LINE_SETTINGS } from '../constants/rendering.js';
+import { GEOMETRY_SETTINGS, LINE_SETTINGS } from '../constants/rendering';
 import { addSoul, removeSoulById, soulLookupMap } from '../stores/simulationState.svelte.js';
 
 // Shared geometries for better memory efficiency
