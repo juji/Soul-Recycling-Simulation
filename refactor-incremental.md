@@ -10,8 +10,8 @@
 - ✅ **Phase 5b**: Extract Soul Lifecycle Management (COMPLETED)
 - ✅ **Phase 6a**: Create Worker Communication Manager (COMPLETED)
 - ✅ **Phase 6b**: Extract Animation Loop (COMPLETED)
-- 🚧 **Phase 6c**: Create SimulationManager Component (NEXT - 1 hour)
-- ⏳ **Phase 7a**: Update Simple UI Components (1 hour)
+- ✅ **Phase 6c**: Create SimulationManager Component (COMPLETED)
+- ✅ **Phase 7a**: Update Simple UI Components (COMPLETED)
 - ⏳ **Phase 7b**: Update Complex UI Components (1 hour)
 - ⏳ **Phase 8**: Clean Up App.svelte (1 hour)
 
@@ -43,7 +43,7 @@ Key runes principles to follow:
 
 ## Refactoring Timeline Summary
 
-### Completed Work (8 hours total)
+### Completed Work (10 hours total)
 - ✅ **Phase 1**: Project Setup and File Structure (1 hour)
 - ✅ **Phase 2**: Extract Constants (1 hour)  
 - ✅ **Phase 3**: Create State Management (1 hour)
@@ -52,10 +52,10 @@ Key runes principles to follow:
 - ✅ **Phase 5b**: Extract Soul Lifecycle Management (1 hour)
 - ✅ **Phase 6a**: Create Worker Communication Manager (1 hour)
 - ✅ **Phase 6b**: Extract Animation Loop (1 hour)
+- ✅ **Phase 6c**: Create SimulationManager Component (1 hour)
+- ✅ **Phase 7a**: Update Simple UI Components (1 hour)
 
-### Remaining Work (4 hours total)
-- 🚧 **Phase 6c**: Create SimulationManager Component (NEXT - 1 hour)
-- ⏳ **Phase 7a**: Update Simple UI Components (1 hour)
+### Remaining Work (2 hours total)
 - ⏳ **Phase 7b**: Update Complex UI Components (1 hour)
 - ⏳ **Phase 8**: Clean Up App.svelte (1 hour)
 
@@ -379,24 +379,96 @@ Rather than refactoring everything at once, we'll use an incremental approach wi
 
 **Status**: Animation loop management successfully extracted to AnimationController utility. App.svelte reduced by 53 lines (11.2% reduction). Total reduction so far: 336 lines (44.5% from original 755 lines). Application tested and working correctly with all animation features preserved. Zero breaking changes. Ready for Phase 6c.
 
-## Phase 6c: Create SimulationManager Component (NEXT - 1 hour)
+## Phase 6c: Create SimulationManager Component ✅ COMPLETED
 
-1. **Create SimulationManager component**:
-   - Create `src/components/simulation/SimulationManager.svelte`
-   - Coordinate between soul manager, worker manager, and animation controller
-   - Handle simulation initialization and state management
+1. **Create SimulationManager component**: ✅
+   - Created comprehensive `src/components/simulation/SimulationManager.svelte` component (276 lines)
+   - Extracted all simulation coordination logic from App.svelte
+   - Handles URL parameter processing, rendering mode setup, and localStorage notifications
 
-2. **Integrate with App.svelte**:
-   - Replace simulation logic in App.svelte with SimulationManager component
-   - Maintain event communication between components
-   - Ensure proper lifecycle management
+2. **Coordinate between managers**: ✅
+   - Integrates soulManager, workerManager, and animationController
+   - Manages instanced vs individual rendering mode transitions
+   - Coordinates soul creation, worker communication, and animation callbacks
 
-3. **Test complete simulation**:
-   - Verify full simulation functionality
-   - Test all rendering modes and performance features
-   - Ensure UI components continue to work correctly
+3. **Integrate with App.svelte**: ✅
+   - Replaced simulation logic in App.svelte with SimulationManager component
+   - Simplified App.svelte to focus on UI layout and basic event coordination
+   - Maintained proper event communication between SceneManager and SimulationManager
 
-## Phase 7a: Update Simple UI Components (1 hour)
+4. **Test complete simulation**: ✅
+   - Verified full simulation functionality across all soul counts (33, 333, 3333+)
+   - Tested both rendering modes (instanced and individual) with URL parameters
+   - Confirmed UI components continue to work correctly
+   - All animation, physics, and performance features preserved
+
+**Extracted Functions to SimulationManager**:
+- `initializeSimulation()`: Main simulation initialization with localStorage and URL parameter handling
+- `setupSimulationCore()`: Core simulation setup with soul creation, worker initialization, and animation startup
+- `getEntityCountFromURL()`: URL parameter processing for entity count and performance management
+- `handleSceneReady()`: Scene initialization coordinator
+- Soul creation wrapper and manager coordination logic
+
+**Code Changes**:
+- Created `src/components/simulation/SimulationManager.svelte`: 276 lines of simulation coordination
+- Reduced `src/App.svelte` by -229 lines (419 → 190 lines, 54.7% reduction from Phase 6b)
+- Extracted ~200 lines of simulation initialization and coordination logic
+- Simplified App.svelte imports by removing unused utilities and constants
+
+**Testing Validation**:
+- ✅ Application loads and renders correctly: `http://localhost:5173/`
+- ✅ SimulationManager successfully coordinates all simulation systems
+- ✅ URL parameter handling working: `?val=333&mode=instanced`
+- ✅ Both rendering modes tested and functional
+- ✅ Performance maintained across all soul counts with proper spawning
+- ✅ UI components continue to update reactively from state store
+- ✅ Zero compilation errors and zero runtime errors
+- ✅ Complete separation of simulation logic from App.svelte achieved
+
+**Status**: SimulationManager component successfully created and integrated. App.svelte reduced by 229 lines (54.7% reduction). Total reduction so far: 565 lines (74.8% from original 755 lines). Application tested and working correctly with full simulation functionality preserved. Zero breaking changes. Ready for Phase 7a.
+
+## Phase 7a: Update Simple UI Components ✅ COMPLETED
+
+1. **Update basic UI components to use state store**: ✅
+   - Updated `PopulationCounter.svelte` to import and use `souls` from state store directly
+   - Removed `soulCount` prop dependency from PopulationCounter
+   - FpsCounter and BottomLinks were already self-contained (no props from App.svelte)
+
+2. **Remove prop passing for simple components**: ✅
+   - Removed `soulCount={souls.length}` prop passing from App.svelte to PopulationCounter
+   - Removed unused `souls` import from App.svelte since it's no longer needed for prop passing
+   - Cleaned up unused reactive variables and imports
+
+3. **Test simple component updates**: ✅
+   - Verified PopulationCounter updates correctly from state store across different soul counts
+   - Tested FPS counter continues to display and update correctly
+   - Confirmed BottomLinks render properly (already self-contained)
+   - All components remain responsive and reactive to state changes
+
+**Updated Components**:
+- **PopulationCounter**: Now imports `souls` directly from state store instead of receiving via props
+- **FpsCounter**: Already self-contained with its own performance tracking (no changes needed)
+- **BottomLinks**: Already self-contained with default configuration (no changes needed)
+
+**Code Changes**:
+- Updated `src/components/PopulationCounter.svelte`: Added state store import, removed prop dependency
+- Reduced `src/App.svelte` by -2 lines (190 → 188 lines, minor reduction)
+- Removed soul count prop passing: `<PopulationCounter soulCount={souls.length} />` → `<PopulationCounter />`
+- Cleaned up unused `souls` import and reactive variable from App.svelte
+
+**Testing Validation**:
+- ✅ Application loads and renders correctly: `http://localhost:5173/`
+- ✅ PopulationCounter displays correct soul count from state store
+- ✅ Soul count updates reactively when simulation changes (tested at 33, 333 souls)
+- ✅ FPS counter continues to function correctly with performance tracking
+- ✅ BottomLinks render properly with default links
+- ✅ Components are decoupled from App.svelte props (improved maintainability)
+- ✅ Hot module reload working correctly for component updates
+- ✅ Zero compilation errors and zero runtime errors
+
+**Status**: Simple UI components successfully updated to use state store directly. Prop passing eliminated for basic components. App.svelte reduced by 2 lines with improved separation of concerns. All components remain fully functional and reactive. Zero breaking changes. Ready for Phase 7b.
+
+## Phase 7b: Update Complex UI Components (1 hour)
 
 1. **Update basic UI components to use state store**:
    - Update `FpsCounter.svelte` to access state directly

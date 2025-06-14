@@ -1,14 +1,8 @@
-<!-- App.svelte - Simplified for Phase 4 -->
+<!-- App.svelte - Simplified with SimulationManager (Phase 6c) -->
 <script>
   import { onMount } from 'svelte';
-  import * as THREE from 'three';
-  import { InstancedSoulRenderer } from './lib/InstancedSoulRenderer.js';
-  import { LODManager } from './lib/LODManager.js';
-  import { AdaptivePerformanceManager } from './lib/adaptive-performance.js';
   import { loadFromStorage, saveToStorage, STORAGE_KEYS } from './lib/localStorage.js';
-  import { FEATURE_FLAGS, DEFAULT_SOUL_COUNT, MATERIAL_POOL_SIZE, DEWA_SPAWN_CHANCE, DEWA_BASE_SPEED, DEFAULT_PARAMETERS } from './lib/constants/config.js';
-  import { CAMERA_SETTINGS, LIGHTING_SETTINGS, LINE_SETTINGS, GEOMETRY_SETTINGS, CONTROLS_SETTINGS } from './lib/constants/rendering.js';
-  import { CONNECTION_SETTINGS, POINTER_INTERACTION_RADIUS, POINTER_INFLUENCE_STRENGTH, NEIGHBOR_SPEED_INFLUENCE_RADIUS, NEIGHBOR_SPEED_INFLUENCE_STRENGTH, SEPARATION_DISTANCE, SEPARATION_STRENGTH, DEWA_ATTRACTION_RADIUS, DEWA_ATTRACTION_STRENGTH, DEWA_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST } from './lib/constants/physics.js';
+  import { DEFAULT_SOUL_COUNT } from './lib/constants/config.js';
   
   import FpsCounter from './components/FpsCounter.svelte';
   import PopulationCounter from './components/PopulationCounter.svelte';
@@ -18,92 +12,43 @@
   import EquilibriumInfo from './components/EquilibriumInfo.svelte';
   import ThreeContainer from './components/ThreeContainer.svelte';
   import SceneManager from './components/simulation/SceneManager.svelte';
+  import SimulationManager from './components/simulation/SimulationManager.svelte';
   import './lib/ai-test-bridge.js';
-  
-  // Import soul management utilities
-  import { 
-    initializeSoulManager, 
-    createSoul, 
-    createNewSoul, 
-    createInitialSouls,
-    disposeSoulManager,
-    handleSoulRemoval,
-    updateSoulFromWorker,
-    initializeConnectionLines,
-    updateConnectionLines,
-    disposeConnectionLines
-  } from './lib/utils/soulManager.js';
-  
-  // Import worker communication manager
-  import { workerManager } from './lib/utils/workerManager.js';
-  
-  // Import animation controller
-  import { animationController } from './lib/utils/animationController.js';
   
   // Import state management store
   import { 
-    souls as getSouls, 
-    soulLookupMap as getSoulLookupMap, 
-    renderingMode as getRenderingMode, 
-    currentQuality as getCurrentQuality, 
+    renderingMode as getRenderingMode,
     isAutomaticSoulCount as getIsAutomaticSoulCount,
-    performanceMetrics as getPerformanceMetrics,
-    container as getContainer,
     mouse as getMouse,
     NEW_SOUL_SPAWN_RATE as getNEW_SOUL_SPAWN_RATE,
     MIN_LIFESPAN as getMIN_LIFESPAN,
     MAX_LIFESPAN as getMAX_LIFESPAN,
     AVG_LIFESPAN as getAVG_LIFESPAN,
     EQUILIBRIUM_POPULATION as getEQUILIBRIUM_POPULATION,
-    toastNotification as getToastNotification,
-    fpsCounter as getFpsCounter,
-    instancedRenderer as getInstancedRenderer,
-    lodManager as getLodManager,
-    adaptivePerformanceManager as getAdaptivePerformanceManager,
     resetParameters,
-    updateCurrentQuality,
-    showToastMessage,
-    adjustQualityBasedOnFPS,
     setSpawnRate,
     setMinLifespan,
     setMaxLifespan,
-    setAutomaticSoulCount,
-    setInstancedRenderer,
-    setLodManager,
-    setAdaptivePerformanceManager,
-    setRenderingMode,
     setContainer,
     setToastNotification,
-    setFpsCounter,
-    addSoul,
-    removeSoulById,
-    clearSouls
+    setFpsCounter
   } from './lib/stores/simulationState.svelte.js';
 
   // Local reactive variables that call the getter functions
-  let souls = $derived(getSouls());
-  let soulLookupMap = $derived(getSoulLookupMap());
   let renderingMode = $derived(getRenderingMode());
-  let currentQuality = $derived(getCurrentQuality());
   let isAutomaticSoulCount = $derived(getIsAutomaticSoulCount());
-  let performanceMetrics = $derived(getPerformanceMetrics());
-  let container = $derived(getContainer());
   let mouse = $derived(getMouse());
   let NEW_SOUL_SPAWN_RATE = $derived(getNEW_SOUL_SPAWN_RATE());
   let MIN_LIFESPAN = $derived(getMIN_LIFESPAN());
   let MAX_LIFESPAN = $derived(getMAX_LIFESPAN());
   let AVG_LIFESPAN = $derived(getAVG_LIFESPAN());
   let EQUILIBRIUM_POPULATION = $derived(getEQUILIBRIUM_POPULATION());
-  let toastNotification = $derived(getToastNotification());
-  let fpsCounter = $derived(getFpsCounter());
-  let instancedRenderer = $derived(getInstancedRenderer());
-  let lodManager = $derived(getLodManager());
-  let adaptivePerformanceManager = $derived(getAdaptivePerformanceManager());
 
   // Local variable for container binding (cannot bind to imports)
   let localContainer = $state();
   let localToastNotification = $state();
   let localFpsCounter = $state();
+  let simulationManager = $state();
 
   // Sync local container to store when it changes
   $effect(() => {
@@ -124,12 +69,6 @@
       setFpsCounter(localFpsCounter);
     }
   });
-
-  // Local state for Three.js objects (from SceneManager)
-  let scene = $state(null);
-  let camera = $state(null);
-  let renderer = $state(null);
-  let controls = $state(null);
 
   // Handle parameter changes from SliderControls component
   function handleParameterChange(event) {
@@ -185,45 +124,14 @@
     return parsedVal;
   }
 
-  // Helper function to get entity count from URL parameter
-  function getEntityCountFromURL() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const val = urlParams.get('val');
-    
-    if (val === null || val === '') {
-      if (adaptivePerformanceManager) {
-        const currentQualitySettings = adaptivePerformanceManager.getQualitySettings();
-        setAutomaticSoulCount(currentQualitySettings.maxSouls);
-        return currentQualitySettings.maxSouls;
-      }
-      return DEFAULT_SOUL_COUNT;
-    }
-    
-    const parsedVal = parseInt(val, 10);
-    
-    if (isNaN(parsedVal)) {
-      if (adaptivePerformanceManager) {
-        const currentQualitySettings = adaptivePerformanceManager.getQualitySettings();
-        return currentQualitySettings.maxSouls;
-      }
-      return DEFAULT_SOUL_COUNT;
-    }
-    
-    return parsedVal;
-  }
-
   // Handler for when SceneManager has initialized the scene
   function handleSceneReady(event) {
     const sceneObjects = event.detail;
-    scene = sceneObjects.scene;
-    camera = sceneObjects.camera;
-    renderer = sceneObjects.renderer;
-    controls = sceneObjects.controls;
     
-
-    
-    // Initialize the simulation once the scene is ready
-    initializeSimulation();
+    // Delegate scene ready handling to SimulationManager
+    if (simulationManager) {
+      simulationManager.handleSceneReady(sceneObjects);
+    }
   }
 
   // Handler for resize events from SceneManager
@@ -233,156 +141,12 @@
     // This is just for any additional logic we might need
   }
 
-  // Initialize the simulation once the scene is ready
-  function initializeSimulation() {
-    if (!scene || !camera || !renderer) {
-      console.warn('Scene not ready for simulation initialization');
-      return;
-    }
-
-    // Check if values were loaded from localStorage and show notification
-    const hasStoredValues = 
-      (typeof window !== 'undefined' && window.localStorage) &&
-      (localStorage.getItem(STORAGE_KEYS.SPAWN_RATE) ||
-       localStorage.getItem(STORAGE_KEYS.MIN_LIFESPAN) ||
-       localStorage.getItem(STORAGE_KEYS.MAX_LIFESPAN));
-    
-    if (hasStoredValues) {
-      setTimeout(() => {
-        showToastMessage('Settings loaded from storage');
-      }, 1000);
-    }
-
-    // Check URL parameters for rendering mode override (for testing)
-    const urlParams = new URLSearchParams(window.location.search);
-    const modeParam = urlParams.get('mode');
-    
-    // Override feature flag if mode parameter is provided
-    let useInstancedRendering = FEATURE_FLAGS.USE_INSTANCED_RENDERING;
-    if (modeParam === 'individual') {
-      useInstancedRendering = false;
-    } else if (modeParam === 'instanced') {
-      useInstancedRendering = true;
-    }
-
-    // Initialize Instanced Rendering
-    setRenderingMode(useInstancedRendering ? 'instanced' : 'individual');
-
-    // Setup the core simulation logic
-    setupSimulationCore();
+  // Handler for simulation ready event from SimulationManager
+  function handleSimulationReady(event) {
+    const simulationObjects = event.detail;
+    // Simulation is fully initialized and ready
+    // Can add any app-level logic here if needed
   }
-
-  // Setup the core simulation logic (souls, workers, etc.)
-  function setupSimulationCore() {
-    const recycledSoulCount = getEntityCountFromURL();
-    const interactionDistance = CONNECTION_SETTINGS.INTERACTION_DISTANCE;
-    let lineSegments;
-    const MAX_LINES = recycledSoulCount * CONNECTION_SETTINGS.MAX_LINES_MULTIPLIER;
-
-    // Initialize line segments for connections using soulManager
-    lineSegments = initializeConnectionLines(scene, MAX_LINES);
-
-    // Initialize soul manager with shared geometries and materials
-    initializeSoulManager();
-
-    // Create initial souls using soulManager (worker will be passed later)
-    const initialSoulsForWorkerInit = createInitialSouls(
-      recycledSoulCount, 
-      scene, 
-      renderingMode, 
-      MIN_LIFESPAN, 
-      MAX_LIFESPAN, 
-      null // Worker reference not needed for initial creation
-    );
-    
-    // Initialize instanced renderer AFTER souls are created
-    if (renderingMode === 'instanced') {
-      try {
-        // Dynamic buffer size based on URL parameter with 2x safety margin
-        const dynamicMaxSouls = recycledSoulCount * 2;
-        setInstancedRenderer(new InstancedSoulRenderer(scene, dynamicMaxSouls));
-        
-        // Hide individual meshes from scene since we'll use instanced rendering
-        souls.forEach(soul => {
-          if (soul.parent === scene) {
-            scene.remove(soul);
-          }
-        });
-        
-        // Perform initial instanced update with existing souls
-        instancedRenderer.updateInstances(souls);
-        
-      } catch (error) {
-        setRenderingMode('individual');
-        
-        // Show individual meshes again on fallback
-        souls.forEach(soul => {
-          if (soul.parent !== scene) {
-            scene.add(soul);
-          }
-        });
-      }
-    }
-    
-    // Initialize worker with souls and constants using WorkerManager
-    const workerConstants = {
-      POINTER_INTERACTION_RADIUS, 
-      POINTER_INFLUENCE_STRENGTH, 
-      NEIGHBOR_SPEED_INFLUENCE_RADIUS,
-      NEIGHBOR_SPEED_INFLUENCE_STRENGTH,
-      SEPARATION_DISTANCE,
-      SEPARATION_STRENGTH,
-      DEWA_ATTRACTION_RADIUS, 
-      DEWA_ATTRACTION_STRENGTH,
-      DEWA_ENHANCEMENT_RADIUS,
-      ENHANCEMENT_SATURATION_BOOST,
-      ENHANCEMENT_LIGHTNESS_BOOST
-    };
-
-    // Initialize WorkerManager
-    workerManager.initializeWorker(initialSoulsForWorkerInit, workerConstants);
-    
-    // Set scene references for WorkerManager
-    workerManager.setSceneReferences(scene, lineSegments, MAX_LINES);
-
-    // Worker message handling is now managed by WorkerManager
-    // Custom handlers could be registered here if needed
-
-    // Soul creation wrapper function
-    function createNewSoulWrapper() {
-      const newSoul = createNewSoul(scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, null);
-      
-      // Send the new soul to the worker via WorkerManager
-      if (newSoul && newSoul.userData) {
-        const soulDataForWorker = {
-          id: newSoul.userData.id,
-          position: { x: newSoul.position.x, y: newSoul.position.y, z: newSoul.position.z },
-          velocity: newSoul.userData.velocity,
-          speed: newSoul.userData.speed,
-          isHuman: newSoul.userData.isHuman,
-          isDewa: newSoul.userData.isDewa,
-          flickerPhase: newSoul.userData.flickerPhase,
-          life: newSoul.userData.life,
-          baseHSL: newSoul.userData.baseHSL,
-        };
-        
-        workerManager.addSoulToWorker(soulDataForWorker);
-      }
-    }
-
-    // Initialize and start animation controller
-    animationController.initializeScene({ scene, camera, renderer, controls });
-    animationController.setCallbacks({
-      onSoulSpawn: createNewSoulWrapper,
-      onWorkerUpdate: (data) => workerManager.sendUpdate(data)
-    });
-    animationController.start();
-  }
-
-  onMount(() => {
-    // onMount now only handles basic setup
-    // Everything else is handled by SceneManager and initializeSimulation
-  });
 </script>
 
 <ThreeContainer 
@@ -396,9 +160,14 @@
   on:resize={handleSceneResize}
 />
 
+<SimulationManager 
+  bind:this={simulationManager}
+  on:simulationReady={handleSimulationReady}
+/>
+
 <!-- UI Components -->
 <FpsCounter bind:this={localFpsCounter} />
-<PopulationCounter soulCount={souls.length} />
+<PopulationCounter />
 <EntityLinks 
   activeCount={getActiveCount()} 
   {isAutomaticSoulCount} 

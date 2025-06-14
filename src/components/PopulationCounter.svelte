@@ -1,11 +1,17 @@
-<!-- Population Counter Component - Extracted from App.svelte -->
+<!-- Population Counter Component - Updated for Phase 7a -->
 <script>
-  // Props
+  // Import state store to get soul count directly
+  import { souls as getSouls } from '../lib/stores/simulationState.svelte.js';
+  
+  // Props for configuration (no data props needed)
   let { 
-    soulCount = 0,
     showCounter = true,
     position = 'bottom-right' // 'bottom-right', 'bottom-left', 'top-right', 'top-left'
   } = $props();
+  
+  // Get soul count directly from state store
+  let souls = $derived(getSouls());
+  let soulCount = $derived(souls.length);
   
   // Reactive calculation for display using runes
   let displayCount = $derived(Math.max(0, soulCount));

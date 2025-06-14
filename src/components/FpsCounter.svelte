@@ -1,5 +1,7 @@
-<!-- FPS Counter Component - Extracted from App.svelte -->
+<!-- FPS Counter Component - Updated for Phase 7a -->
 <script>
+  import { onMount } from 'svelte';
+  
   // Props
   let { 
     showCounter = true,
