@@ -16,7 +16,7 @@ The Soul Recycling Simulation is a high-performance 3D particle simulation built
 
 ## Incremental Refactoring Achievement
 
-### Completed Refactoring Phases (5/8 Complete)
+### Completed Refactoring Phases (6/8 Complete)
 
 ✅ **Phase 1: Project Setup and File Structure** (1 hour)
 - Created organized directory structure (`src/lib/stores`, `src/lib/constants`, `src/components/simulation`)
@@ -44,19 +44,15 @@ The Soul Recycling Simulation is a high-performance 3D particle simulation built
 - Implemented shared geometries and materials for memory efficiency
 - Maintained full compatibility with both rendering modes and Web Worker integration
 
-### Remaining Refactoring Phases (3/8 Remaining)
+✅ **Phase 5b: Extract Soul Lifecycle Management** (1 hour)
+- Extended soulManager.js with soul lifecycle and connection management functions
+- Extracted ~200 lines of soul removal, cleanup, and connection line logic
+- Implemented proper memory management for both rendering modes
+- Created efficient soul update functions with worker data integration
 
-🚧 **Phase 5b: Extract Soul Lifecycle Management** (NEXT - 1 hour)
-- Extract soul removal, cleanup, and connection management
-- Move lifecycle and update functions to soulManager
-- Test soul spawning, living, and dying
+### Remaining Refactoring Phases (2/8 Remaining)
 
-⏳ **Phase 5b: Extract Soul Lifecycle Management** (1 hour)
-- Extract soul removal, cleanup, and connection management
-- Move lifecycle and update functions
-- Test soul spawning, living, and dying
-
-⏳ **Phase 6a: Create Worker Communication Manager** (1 hour)
+🚧 **Phase 6a: Create Worker Communication Manager** (NEXT - 1 hour)
 - Create `workerManager.js` with Web Worker communication
 - Extract worker initialization and message handling
 - Test physics simulation and worker communication

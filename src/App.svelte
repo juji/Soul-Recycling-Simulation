@@ -26,7 +26,12 @@
     createSoul, 
     createNewSoul, 
     createInitialSouls,
-    disposeSoulManager 
+    disposeSoulManager,
+    handleSoulRemoval,
+    updateSoulFromWorker,
+    initializeConnectionLines,
+    updateConnectionLines,
+    disposeConnectionLines
   } from './lib/utils/soulManager.js';
   
   // Import state management store
@@ -268,76 +273,8 @@
     let lineSegments;
     const MAX_LINES = recycledSoulCount * CONNECTION_SETTINGS.MAX_LINES_MULTIPLIER;
 
-    // Initialize line segments for connections
-    function initLineSegments() {
-      const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(
-        MAX_LINES * LINE_SETTINGS.VERTICES_PER_LINE * LINE_SETTINGS.VERTEX_COORDS
-      );
-      const colors = new Float32Array(
-        MAX_LINES * LINE_SETTINGS.VERTICES_PER_LINE * LINE_SETTINGS.VERTEX_COORDS
-      );
-
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, LINE_SETTINGS.VERTEX_COORDS));
-      geometry.setAttribute('color', new THREE.BufferAttribute(colors, LINE_SETTINGS.VERTEX_COORDS));
-
-      const material = new THREE.LineBasicMaterial({
-        vertexColors: true,
-        transparent: true,
-        opacity: LINE_SETTINGS.OPACITY
-      });
-
-      lineSegments = new THREE.LineSegments(geometry, material);
-      scene.add(lineSegments);
-    }
-
-    // Function to handle connections calculated in Web Worker
-    function updateConnectionsFromWorker(connections) {
-      if (!lineSegments || !connections || connections.length === 0) {
-        if (lineSegments) lineSegments.geometry.setDrawRange(0, 0);
-        return;
-      }
-
-      const positions = lineSegments.geometry.attributes.position.array;
-      const colors = lineSegments.geometry.attributes.color.array;
-      
-      let lineIdx = 0;
-      const maxLines = Math.min(connections.length, MAX_LINES);
-
-      // Apply pre-calculated connection data from worker
-      for (let i = 0; i < maxLines; i++) {
-        const connection = connections[i];
-        
-        // Vertex 1 (start)
-        positions[lineIdx * 6 + 0] = connection.start[0];
-        positions[lineIdx * 6 + 1] = connection.start[1];
-        positions[lineIdx * 6 + 2] = connection.start[2];
-        colors[lineIdx * 6 + 0] = connection.color[0];
-        colors[lineIdx * 6 + 1] = connection.color[1];
-        colors[lineIdx * 6 + 2] = connection.color[2];
-
-        // Vertex 2 (end)
-        positions[lineIdx * 6 + 3] = connection.end[0];
-        positions[lineIdx * 6 + 4] = connection.end[1];
-        positions[lineIdx * 6 + 5] = connection.end[2];
-        colors[lineIdx * 6 + 3] = connection.color[0];
-        colors[lineIdx * 6 + 4] = connection.color[1];
-        colors[lineIdx * 6 + 5] = connection.color[2];
-        
-        lineIdx++;
-      }
-
-      // Hide unused lines by setting them to zero
-      for (let i = lineIdx; i < MAX_LINES; i++) {
-        positions[i * 6 + 0] = 0; positions[i * 6 + 1] = 0; positions[i * 6 + 2] = 0;
-        positions[i * 6 + 3] = 0; positions[i * 6 + 4] = 0; positions[i * 6 + 5] = 0;
-      }
-
-      // Update the geometry
-      lineSegments.geometry.setDrawRange(0, lineIdx * 2);
-      lineSegments.geometry.attributes.position.needsUpdate = true;
-      lineSegments.geometry.attributes.color.needsUpdate = true;
-    }
+    // Initialize line segments for connections using soulManager
+    lineSegments = initializeConnectionLines(scene, MAX_LINES);
 
     // Initialize soul manager with shared geometries and materials
     initializeSoulManager();
@@ -421,23 +358,9 @@
             
             // Dual rendering path - instanced vs individual meshes
             if (renderingMode === 'instanced' && instancedRenderer) {
-                // Update individual soul mesh positions for compatibility first
+                // Update individual soul mesh positions for compatibility using soulManager
                 data.forEach(updatedSoulData => {
-                    const soulMesh = soulLookupMap.get(updatedSoulData.id);
-                    if (soulMesh) {
-                        // Only update position if it was sent (moved significantly)
-                        if (updatedSoulData.pos && Array.isArray(updatedSoulData.pos) && updatedSoulData.pos.length === 3) {
-                            soulMesh.position.set(updatedSoulData.pos[0], updatedSoulData.pos[1], updatedSoulData.pos[2]);
-                        }
-                        
-                        // Update userData for instanced renderer access
-                        if (updatedSoulData.rgb) {
-                          soulMesh.userData.finalRGB = updatedSoulData.rgb;
-                        }
-                        if (updatedSoulData.opacity !== undefined) {
-                          soulMesh.userData.finalOpacity = updatedSoulData.opacity;
-                        }
-                    }
+                    updateSoulFromWorker(updatedSoulData, renderingMode);
                 });
                 
                 // Update all souls through instanced renderer with updated mesh data
@@ -448,44 +371,9 @@
                 performanceMetrics.instancedUpdateTime += instancedTime;
                 performanceMetrics.renderingMode = 'instanced';
             } else {
-                // Individual mesh rendering (fallback)
+                // Individual mesh rendering (fallback) using soulManager
                 data.forEach(updatedSoulData => {
-                    const soulMesh = soulLookupMap.get(updatedSoulData.id);
-                    if (soulMesh) {
-                        // Only update position if it was sent (moved significantly)
-                        if (updatedSoulData.pos && Array.isArray(updatedSoulData.pos) && updatedSoulData.pos.length === 3) {
-                            soulMesh.position.set(updatedSoulData.pos[0], updatedSoulData.pos[1], updatedSoulData.pos[2]);
-                        }
-                        
-                        // Ensure material exists before trying to set properties
-                        if (soulMesh.material) {
-                          let materialNeedsUpdate = false;
-                          
-                          // Only update RGB color if it actually changed (delta optimization)
-                          if (updatedSoulData.rgb && Array.isArray(updatedSoulData.rgb) && updatedSoulData.rgb.length === 3 && 
-                              soulMesh.material.color && typeof soulMesh.material.color.setRGB === 'function') {
-                            // Validate RGB values before applying
-                            const [r, g, b] = updatedSoulData.rgb;
-                            if (typeof r === 'number' && typeof g === 'number' && typeof b === 'number' &&
-                                !isNaN(r) && !isNaN(g) && !isNaN(b)) {
-                              soulMesh.material.color.setRGB(r, g, b);
-                              materialNeedsUpdate = true;
-                            }
-                          }
-                          
-                          // Only update opacity if it actually changed (delta optimization)
-                          if (updatedSoulData.opacity !== undefined && typeof updatedSoulData.opacity === 'number' && 
-                              !isNaN(updatedSoulData.opacity) && soulMesh.material.opacity !== undefined) {
-                            soulMesh.material.opacity = Math.max(0, Math.min(1, updatedSoulData.opacity));
-                            materialNeedsUpdate = true;
-                          }
-                          
-                          // Only mark material for update if we actually changed something
-                          if (materialNeedsUpdate && soulMesh.material.needsUpdate !== undefined) {
-                            soulMesh.material.needsUpdate = true;
-                          }
-                        }
-                    }
+                    updateSoulFromWorker(updatedSoulData, renderingMode);
                 });
                 
                 // Track individual mesh performance
@@ -494,38 +382,14 @@
                 performanceMetrics.renderingMode = 'individual';
             }
         } else if (type === 'soulRemoved') {
+            // Handle soul removal using soulManager
             const soulIdToRemove = data.soulId;
-            const soulMeshToRemove = soulLookupMap.get(soulIdToRemove);
-            if (soulMeshToRemove) {
-                // Handle soul removal for both rendering modes
-                if (renderingMode === 'instanced') {
-                    // In instanced mode, remove from scene but don't dispose shared resources
-                    scene.remove(soulMeshToRemove);
-                    // Instanced renderer will handle the update in next frame
-                } else {
-                    // Individual mesh mode: dispose resources as before
-                    scene.remove(soulMeshToRemove);
-                    if (soulMeshToRemove.geometry) {
-                        soulMeshToRemove.geometry.dispose();
-                    }
-                    if (soulMeshToRemove.material) {
-                        // If material is an array (e.g. multi-material), dispose each
-                        if (Array.isArray(soulMeshToRemove.material)) {
-                          soulMeshToRemove.material.forEach(material => material.dispose());
-                        } else {
-                          soulMeshToRemove.material.dispose();
-                        }
-                    }
-                }
-                removeSoulById(soulIdToRemove);
-            }
+            handleSoulRemoval(soulIdToRemove, scene, renderingMode);
         } else if (type === 'connectionsUpdated') {
-            // Handle connections calculated in worker
-            updateConnectionsFromWorker(data);
+            // Handle connections calculated in worker using soulManager
+            updateConnectionLines(lineSegments, data, MAX_LINES);
         }
     };
-
-    initLineSegments(); // Initialize line segments
 
     function createNewSoulWrapper() {
       createNewSoul(scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, simulationWorker);

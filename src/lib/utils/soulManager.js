@@ -2,8 +2,8 @@
 // Soul creation and management utilities
 import * as THREE from 'three';
 import { DEWA_SPAWN_CHANCE, DEWA_BASE_SPEED } from '../constants/config.js';
-import { GEOMETRY_SETTINGS } from '../constants/rendering.js';
-import { addSoul } from '../stores/simulationState.svelte.js';
+import { GEOMETRY_SETTINGS, LINE_SETTINGS } from '../constants/rendering.js';
+import { addSoul, removeSoulById, soulLookupMap } from '../stores/simulationState.svelte.js';
 
 // Shared geometries for better memory efficiency
 let humanGeometry = null;
@@ -273,5 +273,201 @@ export function disposeSoulManager() {
   if (sharedDewaMaterial) {
     sharedDewaMaterial.dispose();
     sharedDewaMaterial = null;
+  }
+}
+
+// ===== SOUL LIFECYCLE MANAGEMENT =====
+
+/**
+ * Handle soul removal with proper cleanup for different rendering modes
+ * @param {string} soulId - ID of the soul to remove
+ * @param {THREE.Scene} scene - Three.js scene
+ * @param {string} renderingMode - 'instanced' or 'individual'
+ * @returns {boolean} True if soul was found and removed, false otherwise
+ */
+export function handleSoulRemoval(soulId, scene, renderingMode) {
+  const soulMesh = soulLookupMap().get(soulId);
+  if (!soulMesh) {
+    return false;
+  }
+
+  // Handle soul removal for both rendering modes
+  if (renderingMode === 'instanced') {
+    // In instanced mode, remove from scene but don't dispose shared resources
+    scene.remove(soulMesh);
+    // Instanced renderer will handle the update in next frame
+  } else {
+    // Individual mesh mode: dispose resources as before
+    scene.remove(soulMesh);
+    if (soulMesh.geometry) {
+      soulMesh.geometry.dispose();
+    }
+    if (soulMesh.material) {
+      // If material is an array (e.g. multi-material), dispose each
+      if (Array.isArray(soulMesh.material)) {
+        soulMesh.material.forEach(material => material.dispose());
+      } else {
+        soulMesh.material.dispose();
+      }
+    }
+  }
+  
+  // Remove from state management
+  removeSoulById(soulId);
+  return true;
+}
+
+/**
+ * Update soul mesh properties from worker data
+ * @param {Object} soulData - Soul data from worker with id, pos, rgb, opacity
+ * @param {string} renderingMode - 'instanced' or 'individual'
+ * @returns {boolean} True if soul was found and updated, false otherwise
+ */
+export function updateSoulFromWorker(soulData, renderingMode) {
+  const soulMesh = soulLookupMap().get(soulData.id);
+  if (!soulMesh) {
+    return false;
+  }
+
+  // Update position if provided
+  if (soulData.pos && Array.isArray(soulData.pos) && soulData.pos.length === 3) {
+    soulMesh.position.set(soulData.pos[0], soulData.pos[1], soulData.pos[2]);
+  }
+  
+  // Update userData for instanced renderer access
+  if (soulData.rgb) {
+    soulMesh.userData.finalRGB = soulData.rgb;
+  }
+  if (soulData.opacity !== undefined) {
+    soulMesh.userData.finalOpacity = soulData.opacity;
+  }
+
+  // For individual mesh rendering, also update material properties
+  if (renderingMode === 'individual' && soulMesh.material) {
+    let materialNeedsUpdate = false;
+    
+    // Only update color if it actually changed (delta optimization)
+    if (soulData.rgb && Array.isArray(soulData.rgb) && soulData.rgb.length === 3) {
+      if (soulMesh.material.color) {
+        soulMesh.material.color.setRGB(soulData.rgb[0], soulData.rgb[1], soulData.rgb[2]);
+        materialNeedsUpdate = true;
+      }
+    }
+    
+    // Only update opacity if it actually changed (delta optimization)
+    if (soulData.opacity !== undefined && typeof soulData.opacity === 'number' && 
+        !isNaN(soulData.opacity) && soulMesh.material.opacity !== undefined) {
+      soulMesh.material.opacity = Math.max(0, Math.min(1, soulData.opacity));
+      materialNeedsUpdate = true;
+    }
+    
+    // Only mark material for update if we actually changed something
+    if (materialNeedsUpdate && soulMesh.material.needsUpdate !== undefined) {
+      soulMesh.material.needsUpdate = true;
+    }
+  }
+
+  return true;
+}
+
+// ===== CONNECTION LINE MANAGEMENT =====
+
+/**
+ * Initialize line segments for soul connections
+ * @param {THREE.Scene} scene - Three.js scene
+ * @param {number} maxLines - Maximum number of connection lines
+ * @returns {THREE.LineSegments} The created line segments object
+ */
+export function initializeConnectionLines(scene, maxLines) {
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(
+    maxLines * LINE_SETTINGS.VERTICES_PER_LINE * LINE_SETTINGS.VERTEX_COORDS
+  );
+  const colors = new Float32Array(
+    maxLines * LINE_SETTINGS.VERTICES_PER_LINE * LINE_SETTINGS.VERTEX_COORDS
+  );
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, LINE_SETTINGS.VERTEX_COORDS));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, LINE_SETTINGS.VERTEX_COORDS));
+
+  const material = new THREE.LineBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    opacity: LINE_SETTINGS.OPACITY
+  });
+
+  const lineSegments = new THREE.LineSegments(geometry, material);
+  scene.add(lineSegments);
+  
+  return lineSegments;
+}
+
+/**
+ * Update connection lines from worker-calculated connection data
+ * @param {THREE.LineSegments} lineSegments - The line segments object to update
+ * @param {Array} connections - Array of connection objects from worker
+ * @param {number} maxLines - Maximum number of lines that can be displayed
+ */
+export function updateConnectionLines(lineSegments, connections, maxLines) {
+  if (!lineSegments || !connections || connections.length === 0) {
+    if (lineSegments) lineSegments.geometry.setDrawRange(0, 0);
+    return;
+  }
+
+  const positions = lineSegments.geometry.attributes.position.array;
+  const colors = lineSegments.geometry.attributes.color.array;
+  
+  let lineIdx = 0;
+  const maxLineCount = Math.min(connections.length, maxLines);
+
+  // Apply pre-calculated connection data from worker
+  for (let i = 0; i < maxLineCount; i++) {
+    const connection = connections[i];
+    
+    // Vertex 1 (start)
+    positions[lineIdx * 6 + 0] = connection.start[0];
+    positions[lineIdx * 6 + 1] = connection.start[1];
+    positions[lineIdx * 6 + 2] = connection.start[2];
+    colors[lineIdx * 6 + 0] = connection.color[0];
+    colors[lineIdx * 6 + 1] = connection.color[1];
+    colors[lineIdx * 6 + 2] = connection.color[2];
+
+    // Vertex 2 (end)
+    positions[lineIdx * 6 + 3] = connection.end[0];
+    positions[lineIdx * 6 + 4] = connection.end[1];
+    positions[lineIdx * 6 + 5] = connection.end[2];
+    colors[lineIdx * 6 + 3] = connection.color[0];
+    colors[lineIdx * 6 + 4] = connection.color[1];
+    colors[lineIdx * 6 + 5] = connection.color[2];
+    
+    lineIdx++;
+  }
+
+  // Hide unused lines by setting them to zero
+  for (let i = lineIdx; i < maxLines; i++) {
+    positions[i * 6 + 0] = 0; positions[i * 6 + 1] = 0; positions[i * 6 + 2] = 0;
+    positions[i * 6 + 3] = 0; positions[i * 6 + 4] = 0; positions[i * 6 + 5] = 0;
+  }
+
+  // Update the geometry
+  lineSegments.geometry.setDrawRange(0, lineIdx * 2);
+  lineSegments.geometry.attributes.position.needsUpdate = true;
+  lineSegments.geometry.attributes.color.needsUpdate = true;
+}
+
+/**
+ * Dispose of connection line resources
+ * @param {THREE.LineSegments} lineSegments - The line segments object to dispose
+ * @param {THREE.Scene} scene - Three.js scene to remove from
+ */
+export function disposeConnectionLines(lineSegments, scene) {
+  if (lineSegments) {
+    scene.remove(lineSegments);
+    if (lineSegments.geometry) {
+      lineSegments.geometry.dispose();
+    }
+    if (lineSegments.material) {
+      lineSegments.material.dispose();
+    }
   }
 }

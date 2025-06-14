@@ -7,8 +7,8 @@
 - ✅ **Phase 3**: Create State Management (COMPLETED)
 - ✅ **Phase 4**: Extract Scene Setup (COMPLETED)
 - ✅ **Phase 5a**: Create Soul Creation Functions (COMPLETED)
-- 🚧 **Phase 5b**: Extract Soul Lifecycle Management (NEXT - 1 hour)
-- ⏳ **Phase 6a**: Create Worker Communication Manager (1 hour)
+- ✅ **Phase 5b**: Extract Soul Lifecycle Management (COMPLETED)
+- 🚧 **Phase 6a**: Create Worker Communication Manager (NEXT - 1 hour)
 - ⏳ **Phase 6b**: Extract Animation Loop (1 hour)
 - ⏳ **Phase 6c**: Create SimulationManager Component (1 hour)
 - ⏳ **Phase 7a**: Update Simple UI Components (1 hour)
@@ -43,16 +43,16 @@ Key runes principles to follow:
 
 ## Refactoring Timeline Summary
 
-### Completed Work (5 hours total)
+### Completed Work (6 hours total)
 - ✅ **Phase 1**: Project Setup and File Structure (1 hour)
 - ✅ **Phase 2**: Extract Constants (1 hour)  
 - ✅ **Phase 3**: Create State Management (1 hour)
 - ✅ **Phase 4**: Extract Scene Setup (1 hour)
 - ✅ **Phase 5a**: Create Soul Creation Functions (1 hour)
+- ✅ **Phase 5b**: Extract Soul Lifecycle Management (1 hour)
 
-### Remaining Work (3 hours total)
-- 🚧 **Phase 5b**: Extract Soul Lifecycle Management (NEXT - 1 hour)
-- ⏳ **Phase 6a**: Create Worker Communication Manager (1 hour)
+### Remaining Work (2 hours total)
+- 🚧 **Phase 6a**: Create Worker Communication Manager (NEXT - 1 hour)
 - ⏳ **Phase 6b**: Extract Animation Loop (1 hour)
 - ⏳ **Phase 6c**: Create SimulationManager Component (1 hour)
 - ⏳ **Phase 7a**: Update Simple UI Components (1 hour)
@@ -253,22 +253,46 @@ Rather than refactoring everything at once, we'll use an incremental approach wi
 
 **Status**: All soul creation logic successfully extracted to dedicated soulManager utility. App.svelte reduced by 118 lines (15.6% complexity reduction). Application tested and working correctly with no errors across all rendering modes and scale levels.
 
-## Phase 5b: Extract Soul Lifecycle Management (1 hour)
+## Phase 5b: Extract Soul Lifecycle Management ✅ COMPLETED
 
-1. **Extract soul lifecycle functions**:
-   - Move soul removal and cleanup logic to soulManager.js
-   - Extract connection/line segment management functions
-   - Create utility functions for soul updates and transformations
+1. **Extract soul lifecycle functions**: ✅
+   - Moved soul removal and cleanup logic to soulManager.js
+   - Extracted connection/line segment management functions
+   - Created utility functions for soul updates and transformations
 
-2. **Update App.svelte to use lifecycle functions**:
-   - Replace inline lifecycle logic with soulManager imports
-   - Test soul creation, updates, and removal
-   - Verify memory cleanup works in both rendering modes
+2. **Update App.svelte to use lifecycle functions**: ✅
+   - Replaced inline lifecycle logic with soulManager imports
+   - Updated worker message handlers to use soulManager functions
+   - Integrated soul update and removal functions from soulManager
 
-3. **Test soul lifecycle**:
-   - Verify souls spawn, live, and die correctly
-   - Test performance with lifecycle management
-   - Ensure no memory leaks during soul removal
+3. **Test soul lifecycle**: ✅
+   - Verified souls spawn, live, and die correctly
+   - Tested performance with lifecycle management across different soul counts
+   - Confirmed no memory leaks during soul removal in both rendering modes
+
+**Extracted Functions**:
+- `handleSoulRemoval()`: Proper cleanup for both instanced and individual rendering modes
+- `updateSoulFromWorker()`: Optimized soul property updates from worker data
+- `initializeConnectionLines()`: Connection line setup with proper Three.js configuration
+- `updateConnectionLines()`: Efficient connection line updates from worker calculations
+- `disposeConnectionLines()`: Cleanup function for connection line resources
+
+**Code Changes**:
+- Extended `src/lib/utils/soulManager.js` by +195 lines (now 473 lines total)
+- Reduced `src/App.svelte` by -137 lines (now 500 lines total, 21.5% reduction from original)
+- Replaced ~70 lines of soul lifecycle logic with clean function calls
+- Extracted ~65 lines of connection line management code
+
+**Testing Validation**:
+- ✅ Application loads and renders correctly: `http://localhost:5174/`
+- ✅ Soul lifecycle works: creation, living, dying, and removal
+- ✅ Connection lines update properly from worker calculations
+- ✅ Both rendering modes (instanced vs individual) working correctly
+- ✅ Performance maintained across all soul counts (33, 333, 3333+)
+- ✅ Memory cleanup working properly with no leaks
+- ✅ Production build successful with no errors
+
+**Status**: Soul lifecycle management successfully extracted to soulManager utility. App.svelte further simplified with better separation of concerns. Total reduction so far: 255 lines (33.8% from original 755 lines).
 
 ## Phase 6a: Create Worker Communication Manager (1 hour)
 
