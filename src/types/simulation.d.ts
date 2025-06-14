@@ -21,6 +21,7 @@ export interface ConnectionData {
   soul2Id: number;
   distance: number;
   strength: number;
+  color?: THREE.Color;
 }
 
 export interface LODLevel {
@@ -63,6 +64,33 @@ export interface WorkerMessage {
   data: any;
 }
 
+export interface WorkerUpdateMessage extends WorkerMessage {
+  type: 'UPDATE';
+  data: {
+    souls: Array<{
+      id: number;
+      position: { x: number; y: number; z: number };
+      velocity: { x: number; y: number; z: number };
+      hue: number;
+      saturation: number;
+      lightness: number;
+    }>;
+    connections: ConnectionData[];
+    performanceData: {
+      calculationTime: number;
+      soulsProcessed: number;
+    };
+  };
+}
+
+export interface WorkerInitMessage extends WorkerMessage {
+  type: 'INIT';
+  data: {
+    souls: SoulData[];
+    constants: any;
+  };
+}
+
 export interface WorkerMessageHandler {
   (data: any): void;
 }
@@ -78,4 +106,44 @@ export interface SceneObjects {
   camera: THREE.Camera;
   renderer: THREE.WebGLRenderer;
   controls: any; // ArcballControls type
+}
+
+// Rendering mode types
+export type RenderingMode = 'individual' | 'instanced';
+
+// Soul creation parameters
+export interface SoulCreationParams {
+  isHuman: boolean;
+  isDewa?: boolean;
+  angle?: number;
+  speed?: number;
+  minLifespan: number;
+  maxLifespan: number;
+}
+
+// Simulation state interface
+export interface SimulationStateData {
+  souls: THREE.Object3D[];
+  soulLookupMap: Map<number, THREE.Object3D>;
+  renderingMode: RenderingMode;
+  currentQuality: string;
+  isAutomaticSoulCount: number;
+  mouse: { x: number; y: number };
+  container?: HTMLElement;
+}
+
+// Physics constants types
+export interface PhysicsConstants {
+  INTERACTION_DISTANCE: number;
+  POINTER_INTERACTION_RADIUS: number;
+  POINTER_INFLUENCE_STRENGTH: number;
+  NEIGHBOR_SPEED_INFLUENCE_RADIUS: number;
+  NEIGHBOR_SPEED_INFLUENCE_STRENGTH: number;
+  SEPARATION_DISTANCE: number;
+  SEPARATION_STRENGTH: number;
+  DEWA_ATTRACTION_RADIUS: number;
+  DEWA_ATTRACTION_STRENGTH: number;
+  DEWA_ENHANCEMENT_RADIUS: number;
+  ENHANCEMENT_SATURATION_BOOST: number;
+  ENHANCEMENT_LIGHTNESS_BOOST: number;
 }

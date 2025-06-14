@@ -29,10 +29,22 @@ export type QualityLevel = 'ultra' | 'high' | 'medium' | 'low' | 'minimal';
 
 export interface HardwareProfile {
   cpuCores: number;
-  memory: any;
-  gpu: any;
-  deviceType: string;
-  performance: string;
+  memory: MemoryInfo | null;
+  gpu: GPUInfo;
+  deviceType: 'mobile' | 'desktop-mac' | 'desktop-windows' | 'desktop-linux' | 'desktop-unknown';
+  performance: 'unknown' | 'low' | 'medium' | 'high' | 'ultra';
+}
+
+export interface MemoryInfo {
+  jsHeapSizeLimit?: number;
+  totalJSHeapSize?: number;
+  usedJSHeapSize?: number;
+}
+
+export interface GPUInfo {
+  renderer: string;
+  category: 'low' | 'medium' | 'high' | 'ultra';
+  webgl2: boolean;
 }
 
 export interface AdaptiveConfig {
@@ -40,7 +52,7 @@ export interface AdaptiveConfig {
   minAcceptableFPS: number;
   maxAcceptableFPS: number;
   learningRate: number;
-  adaptationSpeed: string;
+  adaptationSpeed: 'conservative' | 'moderate' | 'aggressive';
   qualityLevels: Record<QualityLevel, QualitySettings>;
 }
 
@@ -67,7 +79,41 @@ export interface PerformanceReport {
     sampleCount: number;
     memoryPressure: number;
     performanceScore: number;
+    fpsStability: number;
   };
   hardwareProfile: HardwareProfile;
   recommendations: string[];
+  adaptationHistory: Array<{
+    timestamp: number;
+    from: QualityLevel;
+    to: QualityLevel;
+    reason: string;
+  }>;
+}
+
+export interface AdaptationMetrics {
+  fps: number[];
+  frameTime: number[];
+  memory: number[];
+  workerTime: number[];
+  renderTime: number[];
+  soulCount: number;
+}
+
+// LOD specific performance types
+export interface LODPerformanceData {
+  high: number;
+  medium: number;
+  low: number;
+  culled: number;
+  totalProcessed: number;
+  calculationTime: number;
+}
+
+// FPS Counter specific types
+export interface FPSCounterMetrics {
+  fps: number;
+  averageFPS: number;
+  memoryUsage: number;
+  frameTime: number;
 }

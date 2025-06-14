@@ -1,4 +1,5 @@
 // Svelte component types and props interfaces
+import type * as THREE from 'three';
 
 export interface FpsCounterProps {
   showCounter?: boolean;
@@ -46,6 +47,17 @@ export interface BottomLinksProps {
   showLinks?: boolean;
 }
 
+// Scene Manager props
+export interface SceneManagerProps {
+  onsceneready?: (event: CustomEvent<SceneReadyEvent>) => void;
+  onresize?: (event: CustomEvent<ResizeEvent>) => void;
+}
+
+// Simulation Manager props
+export interface SimulationManagerProps {
+  // No external props, but has bindable instance
+}
+
 // Event types for components
 export interface MouseMoveEvent {
   mouseX: number;
@@ -66,5 +78,43 @@ export interface SceneReadyEvent {
   scene: THREE.Scene;
   camera: THREE.Camera;
   renderer: THREE.WebGLRenderer;
-  controls: any;
+  controls: any; // ArcballControls
+}
+
+// Component instance types
+export interface FpsCounterInstance {
+  getMetrics(): {
+    fps: number;
+    averageFPS: number;
+    memoryUsage: number;
+    frameTime: number;
+  };
+}
+
+export interface ToastNotificationInstance {
+  showToast(message: string): void;
+}
+
+export interface SimulationManagerInstance {
+  handleSceneReady(sceneObjects: SceneReadyEvent): void;
+}
+
+// Custom event types for Svelte
+export interface CustomEventMap {
+  mousemove: CustomEvent<MouseMoveEvent>;
+  resize: CustomEvent<ResizeEvent>;
+  parameterChange: CustomEvent<ParameterChangeEvent>;
+  sceneReady: CustomEvent<SceneReadyEvent>;
+  reset: CustomEvent<void>;
+  simulationReady: CustomEvent<{
+    scene: THREE.Scene;
+    camera: THREE.Camera;
+    renderer: THREE.WebGLRenderer;
+    controls: any;
+  }>;
+}
+
+// Type-safe event dispatcher
+export interface TypedEventDispatcher<T extends Record<string, any>> {
+  <K extends keyof T>(type: K, detail: T[K]): boolean;
 }
