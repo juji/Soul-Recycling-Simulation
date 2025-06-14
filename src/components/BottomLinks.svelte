@@ -28,6 +28,10 @@
     gap: 10px;
     z-index: 1;
     flex-direction: column;
+
+    @media screen and (min-width: 400px) {
+      flex-direction: row;
+    }
   }
 
   /* Position variants */
