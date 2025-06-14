@@ -8,6 +8,7 @@
   import { AdaptivePerformanceManager } from './lib/adaptive-performance.js';  // Phase 4: Adaptive Performance
   import SliderControls from './components/SliderControls.svelte';
   import FpsCounter from './components/FpsCounter.svelte';
+  import PopulationCounter from './components/PopulationCounter.svelte';
   import './lib/ai-test-bridge.js';  // Import AI test bridge for performance testing
 
   // Phase 4: Feature Flags
@@ -1297,22 +1298,6 @@
     }
   } */
 
-  .population-counter {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    color: #ffffff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    font-weight: bold;
-    z-index: 1000;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-  }
-  
   .toast {
     position: fixed;
     bottom: 20px;
@@ -1343,7 +1328,7 @@
 
 <div id="container" bind:this={container}></div>
 <FpsCounter bind:this={fpsCounter} />
-<div class="population-counter">Population: {souls.length}</div>
+<PopulationCounter soulCount={souls.length} />
 
 <div class="entity-links">
   <a href="?val=33" class="entity-link" class:active={getActiveCount() === 33}>33</a>
