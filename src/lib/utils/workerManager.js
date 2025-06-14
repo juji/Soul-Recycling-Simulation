@@ -58,7 +58,6 @@ export class WorkerManager {
       };
 
       this.isInitialized = true;
-      console.log('WorkerManager: Worker initialized successfully');
 
     } catch (error) {
       console.error('WorkerManager: Failed to initialize worker:', error);
