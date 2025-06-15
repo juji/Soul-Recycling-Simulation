@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Development directories
+.vite/
+.svelte-kit/
+
+# Version control
+.git/
+
+# IDE and editor directories
+.vscode/
+
+# Git hooks
+.husky/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
