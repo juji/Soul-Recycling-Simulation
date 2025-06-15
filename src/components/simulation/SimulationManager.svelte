@@ -32,7 +32,7 @@
     setInstancedRenderer,
     setAutomaticSoulCount,
     showToastMessage
-  } from '../../lib/stores/simulationState.svelte.js';
+  } from '../../lib/stores/simulationState.svelte.ts';
 
   // Local reactive variables
   let souls = $derived(getSouls());

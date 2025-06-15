@@ -1,7 +1,7 @@
 <!-- Entity Links Component - Updated for Phase 7b -->
 <script>
   // Import state store and constants
-  import { isAutomaticSoulCount as getIsAutomaticSoulCount } from '../lib/stores/simulationState.svelte.js';
+  import { isAutomaticSoulCount as getIsAutomaticSoulCount } from '../lib/stores/simulationState.svelte.ts';
   import { DEFAULT_SOUL_COUNT } from '../lib/constants/config.js';
   
   // Props for configuration only (no data props needed)

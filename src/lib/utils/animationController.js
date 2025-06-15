@@ -17,7 +17,7 @@ import {
   mouse as getMouse,
   NEW_SOUL_SPAWN_RATE as getNEW_SOUL_SPAWN_RATE,
   adjustQualityBasedOnFPS
-} from '../stores/simulationState.svelte.js';
+} from '../stores/simulationState.svelte.ts';
 
 export class AnimationController {
   constructor() {

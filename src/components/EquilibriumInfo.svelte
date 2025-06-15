@@ -13,7 +13,7 @@
     setSpawnRate,
     setMinLifespan,
     setMaxLifespan
-  } from '../lib/stores/simulationState.svelte.js';
+  } from '../lib/stores/simulationState.svelte.ts';
 
   // Props for configuration only (no data props needed)
   let { 

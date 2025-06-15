@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { DEWA_SPAWN_CHANCE, DEWA_BASE_SPEED } from '../constants/config.js';
 import { GEOMETRY_SETTINGS, LINE_SETTINGS } from '../constants/rendering';
-import { addSoul, removeSoulById, soulLookupMap } from '../stores/simulationState.svelte.js';
+import { addSoul, removeSoulById, soulLookupMap } from '../stores/simulationState.svelte.ts';
 
 // Shared geometries for better memory efficiency
 let humanGeometry = null;

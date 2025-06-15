@@ -13,7 +13,7 @@
     container as getContainer,
     setLodManager,
     setAdaptivePerformanceManager
-  } from '../../lib/stores/simulationState.svelte.js';
+  } from '../../lib/stores/simulationState.svelte.ts';
 
   const dispatch = createEventDispatcher();
 

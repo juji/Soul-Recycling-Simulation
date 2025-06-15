@@ -12,7 +12,7 @@ import {
   souls as getSouls,
   renderingMode as getRenderingMode,
   instancedRenderer as getInstancedRenderer
-} from '../stores/simulationState.svelte.js';
+} from '../stores/simulationState.svelte.ts';
 
 import { 
   handleSoulRemoval,

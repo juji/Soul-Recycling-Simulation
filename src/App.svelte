@@ -16,7 +16,7 @@
     setContainer,
     setToastNotification,
     setFpsCounter
-  } from './lib/stores/simulationState.svelte.js';
+  } from './lib/stores/simulationState.svelte.ts';
 
   let mouse = $derived(getMouse());
   let localContainer = $state();

@@ -1,7 +1,7 @@
 <!-- Population Counter Component - Updated for Phase 7a -->
 <script>
   // Import state store to get soul count directly
-  import { souls as getSouls } from '../lib/stores/simulationState.svelte.js';
+  import { souls as getSouls } from '../lib/stores/simulationState.svelte.ts';
   
   // Props for configuration (no data props needed)
   let { 
