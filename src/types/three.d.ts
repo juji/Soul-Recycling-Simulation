@@ -47,13 +47,13 @@ declare module 'three' {
       finalRGB?: number[];
       finalOpacity?: number;
     };
-    geometry: BufferGeometry;
-    material: Material | Material[];
+    geometry: THREE.BufferGeometry;
+    material: THREE.Material | THREE.Material[];
   }
 
   interface LineSegments {
-    geometry: BufferGeometry;
-    material: LineBasicMaterial;
+    geometry: THREE.BufferGeometry;
+    material: THREE.LineBasicMaterial;
   }
 }
 

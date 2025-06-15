@@ -1,10 +1,7 @@
 // src/lib/stores/simulationState.svelte.ts
 // Simulation state management using Svelte 5 runes with TypeScript
 import * as THREE from 'three';
-import type { 
-  PerformanceMetrics, 
-  QualityLevel 
-} from '../../types/performance';
+import type { PerformanceMetrics, QualityLevel } from '../../types/performance';
 import type { LODManager } from '../LODManager';
 import type { AdaptivePerformanceManager } from '../AdaptivePerformanceManager';
 import type { InstancedSoulRenderer } from '../InstancedSoulRenderer';
@@ -73,7 +70,7 @@ const simulationState = $state<SimulationState>({
     drawCalls: 0,
     instancedUpdateTime: 0,
     individualUpdateTime: 0,
-    soulsUpdated: 0
+    soulsUpdated: 0,
   },
 
   // Core Three.js objects
@@ -92,7 +89,7 @@ const simulationState = $state<SimulationState>({
   // Managers
   instancedRenderer: null,
   lodManager: null,
-  adaptivePerformanceManager: null
+  adaptivePerformanceManager: null,
 });
 
 // Export getters for state access
@@ -107,27 +104,32 @@ export const mouse = (): MousePosition => simulationState.mouse;
 export const NEW_SOUL_SPAWN_RATE = (): number => simulationState.NEW_SOUL_SPAWN_RATE;
 export const MIN_LIFESPAN = (): number => simulationState.MIN_LIFESPAN;
 export const MAX_LIFESPAN = (): number => simulationState.MAX_LIFESPAN;
-export const toastNotification = (): ToastNotificationComponent | null => simulationState.toastNotification;
+export const toastNotification = (): ToastNotificationComponent | null =>
+  simulationState.toastNotification;
 export const fpsCounter = (): FpsCounterComponent | null => simulationState.fpsCounter;
-export const instancedRenderer = (): InstancedSoulRenderer | null => simulationState.instancedRenderer;
+export const instancedRenderer = (): InstancedSoulRenderer | null =>
+  simulationState.instancedRenderer;
 export const lodManager = (): LODManager | null => simulationState.lodManager;
-export const adaptivePerformanceManager = (): AdaptivePerformanceManager | null => simulationState.adaptivePerformanceManager;
+export const adaptivePerformanceManager = (): AdaptivePerformanceManager | null =>
+  simulationState.adaptivePerformanceManager;
 
 // Derived values as functions
-export const AVG_LIFESPAN = (): number => (simulationState.MIN_LIFESPAN + simulationState.MAX_LIFESPAN) / 2;
-export const EQUILIBRIUM_POPULATION = (): number => simulationState.NEW_SOUL_SPAWN_RATE * AVG_LIFESPAN();
+export const AVG_LIFESPAN = (): number =>
+  (simulationState.MIN_LIFESPAN + simulationState.MAX_LIFESPAN) / 2;
+export const EQUILIBRIUM_POPULATION = (): number =>
+  simulationState.NEW_SOUL_SPAWN_RATE * AVG_LIFESPAN();
 
 // State management functions
 export function resetParameters(): void {
   simulationState.NEW_SOUL_SPAWN_RATE = DEFAULT_PARAMETERS.SPAWN_RATE;
   simulationState.MIN_LIFESPAN = DEFAULT_PARAMETERS.MIN_LIFESPAN;
   simulationState.MAX_LIFESPAN = DEFAULT_PARAMETERS.MAX_LIFESPAN;
-  
+
   // Sync to localStorage
   saveToStorage(STORAGE_KEYS.SPAWN_RATE, DEFAULT_PARAMETERS.SPAWN_RATE);
   saveToStorage(STORAGE_KEYS.MIN_LIFESPAN, DEFAULT_PARAMETERS.MIN_LIFESPAN);
   saveToStorage(STORAGE_KEYS.MAX_LIFESPAN, DEFAULT_PARAMETERS.MAX_LIFESPAN);
-  
+
   showToastMessage('Parameters reset to defaults');
 }
 
@@ -142,10 +144,15 @@ export function showToastMessage(message: string): void {
 export function adjustQualityBasedOnFPS(currentFPS: number): void {
   if (currentFPS < 30 && simulationState.currentQuality !== 'low') {
     simulationState.currentQuality = 'medium';
-    if (currentFPS < 20) simulationState.currentQuality = 'low';
+    if (currentFPS < 20) {
+      simulationState.currentQuality = 'low';
+    }
   } else if (currentFPS > 50 && simulationState.currentQuality !== 'high') {
-    if (simulationState.currentQuality === 'low') simulationState.currentQuality = 'medium';
-    else if (simulationState.currentQuality === 'medium') simulationState.currentQuality = 'high';
+    if (simulationState.currentQuality === 'low') {
+      simulationState.currentQuality = 'medium';
+    } else if (simulationState.currentQuality === 'medium') {
+      simulationState.currentQuality = 'high';
+    }
   }
 }
 

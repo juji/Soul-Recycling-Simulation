@@ -250,12 +250,6 @@ export interface SoulWorkerData {
   baseHSL: { h: number; s: number; l: number };
 }
 
-export interface ConnectionData {
-  start: [number, number, number];
-  end: [number, number, number];
-  color: [number, number, number];
-}
-
 export interface WorkerSoulUpdate {
   id: number;
   pos?: [number, number, number];

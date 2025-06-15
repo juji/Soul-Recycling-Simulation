@@ -4,12 +4,12 @@ import type { StorageKeys } from '../types/index.js';
 export const STORAGE_KEYS: StorageKeys = {
   SPAWN_RATE: 'soul_simulation_spawn_rate',
   MIN_LIFESPAN: 'soul_simulation_min_lifespan',
-  MAX_LIFESPAN: 'soul_simulation_max_lifespan'
+  MAX_LIFESPAN: 'soul_simulation_max_lifespan',
 };
 
 // Type-safe localStorage helper functions
 export function loadFromStorage<T extends number | string | boolean>(
-  key: string, 
+  key: string,
   defaultValue: T
 ): T {
   if (typeof window !== 'undefined' && window.localStorage) {
@@ -18,7 +18,9 @@ export function loadFromStorage<T extends number | string | boolean>(
       // Handle different types appropriately
       if (typeof defaultValue === 'number') {
         const parsed = parseFloat(saved);
-        if (isNaN(parsed)) return defaultValue;
+        if (isNaN(parsed)) {
+          return defaultValue;
+        }
 
         // Validate bounds for each parameter
         if (key === STORAGE_KEYS.SPAWN_RATE) {
@@ -40,10 +42,7 @@ export function loadFromStorage<T extends number | string | boolean>(
   return defaultValue;
 }
 
-export function saveToStorage<T extends number | string | boolean>(
-  key: string, 
-  value: T
-): void {
+export function saveToStorage<T extends number | string | boolean>(key: string, value: T): void {
   if (typeof window !== 'undefined' && window.localStorage) {
     localStorage.setItem(key, value.toString());
   }

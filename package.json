@@ -8,17 +8,39 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "benchmark:phase3": "node testing-results/phase3-benchmark.js"
+    "benchmark:phase3": "node testing-results/phase3-benchmark.js",
+    "lint": "eslint src --ext .ts,.svelte,.js",
+    "lint:fix": "eslint src --ext .ts,.svelte,.js --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run type-check && npm run lint && npm run format:check",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,js,svelte}": [
+      "eslint --fix --max-warnings=100",
+      "npm run format"
+    ],
+    "*.{json,md,css,scss}": [
+      "npm run format"
+    ]
   },
   "devDependencies": {
+    "@eslint/js": "^9.29.0",
     "@sveltejs/adapter-netlify": "^5.0.2",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "@types/three": "^0.166.0",
-    "@typescript-eslint/eslint-plugin": "^8.15.0",
-    "@typescript-eslint/parser": "^8.15.0",
+    "@typescript-eslint/eslint-plugin": "^8.34.0",
+    "@typescript-eslint/parser": "^8.34.0",
     "eslint": "^9.15.0",
+    "eslint-plugin-svelte": "^3.9.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.1",
+    "prettier": "^3.5.3",
+    "prettier-plugin-svelte": "^3.4.0",
     "puppeteer": "^22.15.0",
     "svelte": "^5.28.1",
+    "svelte-eslint-parser": "^1.2.0",
     "typescript": "^5.7.2",
     "vite": "^6.3.5"
   },

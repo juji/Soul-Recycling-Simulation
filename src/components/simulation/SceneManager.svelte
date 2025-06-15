@@ -7,13 +7,17 @@
   import { LODManager } from '../../lib/LODManager';
   import { AdaptivePerformanceManager } from '../../lib/AdaptivePerformanceManager';
   import { FEATURE_FLAGS } from '../../lib/constants/config';
-  import { CAMERA_SETTINGS, LIGHTING_SETTINGS, CONTROLS_SETTINGS } from '../../lib/constants/rendering';
-  
+  import {
+    CAMERA_SETTINGS,
+    LIGHTING_SETTINGS,
+    CONTROLS_SETTINGS,
+  } from '../../lib/constants/rendering';
+
   // Import store getters
-  import { 
+  import {
     container as getContainer,
     setLodManager,
-    setAdaptivePerformanceManager
+    setAdaptivePerformanceManager,
   } from '../../lib/stores/simulationState.svelte';
 
   // TypeScript interfaces
@@ -55,44 +59,43 @@
     try {
       // Create scene
       scene = new THREE.Scene();
-      
+
       // Create camera
       camera = new THREE.PerspectiveCamera(
-        CAMERA_SETTINGS.FOV, 
-        container.clientWidth / container.clientHeight, 
-        CAMERA_SETTINGS.NEAR, 
+        CAMERA_SETTINGS.FOV,
+        container.clientWidth / container.clientHeight,
+        CAMERA_SETTINGS.NEAR,
         CAMERA_SETTINGS.FAR
       );
       camera.position.set(
-        CAMERA_SETTINGS.POSITION.x, 
-        CAMERA_SETTINGS.POSITION.y, 
+        CAMERA_SETTINGS.POSITION.x,
+        CAMERA_SETTINGS.POSITION.y,
         CAMERA_SETTINGS.POSITION.z
       );
 
       // Create renderer
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(container.clientWidth, container.clientHeight);
-      
+
       // Add renderer to container
       container.appendChild(renderer.domElement);
 
       // Setup controls with passive event listener fix
       setupControls();
-      
+
       // Setup lighting
       setupLighting();
-      
+
       // Initialize performance managers
       initializePerformanceManagers();
-      
+
       // Dispatch scene ready event
       dispatch('sceneReady', {
         scene,
         camera,
         renderer,
-        controls: controls!
+        controls: controls!,
       });
-      
     } catch (error) {
       console.error('❌ SceneManager: Error during initialization:', error);
     }
@@ -102,44 +105,45 @@
     // Fix passive event listener warning before creating controls
     if (!window.__wheelEventPatched) {
       const originalAddEventListener = EventTarget.prototype.addEventListener;
-      
-      EventTarget.prototype.addEventListener = function(type, listener, options) {
+
+      EventTarget.prototype.addEventListener = function (type, listener, options) {
         if (type === 'wheel' && this instanceof HTMLElement) {
-          const newOptions = typeof options === 'object' ? { ...options, passive: false } : { passive: false };
+          const newOptions =
+            typeof options === 'object' ? { ...options, passive: false } : { passive: false };
           return originalAddEventListener.call(this, type, listener, newOptions);
         }
         return originalAddEventListener.call(this, type, listener, options);
       };
-      
+
       window.__wheelEventPatched = true;
     }
 
     // Create controls
     controls = new ArcballControls(camera, renderer?.domElement, scene);
     controls.enableDamping = true;
-    controls.dampingFactor = CONTROLS_SETTINGS.DAMPING_FACTOR;  
-    controls.wMax = CONTROLS_SETTINGS.W_MAX;             
+    controls.dampingFactor = CONTROLS_SETTINGS.DAMPING_FACTOR;
+    controls.wMax = CONTROLS_SETTINGS.W_MAX;
     controls.setGizmosVisible(false);
-    
+
     // Additional control settings
-    controls.enablePan = CONTROLS_SETTINGS.ENABLE_PAN;      
-    controls.enableZoom = CONTROLS_SETTINGS.ENABLE_ZOOM;     
-    controls.enableRotate = CONTROLS_SETTINGS.ENABLE_ROTATE;   
-    controls.minDistance = CONTROLS_SETTINGS.MIN_DISTANCE;      
+    controls.enablePan = CONTROLS_SETTINGS.ENABLE_PAN;
+    controls.enableZoom = CONTROLS_SETTINGS.ENABLE_ZOOM;
+    controls.enableRotate = CONTROLS_SETTINGS.ENABLE_ROTATE;
+    controls.minDistance = CONTROLS_SETTINGS.MIN_DISTANCE;
     controls.maxDistance = CONTROLS_SETTINGS.MAX_DISTANCE;
   }
 
   function setupLighting() {
     // Ambient light
     const ambientLight = new THREE.AmbientLight(
-      LIGHTING_SETTINGS.AMBIENT.color, 
+      LIGHTING_SETTINGS.AMBIENT.color,
       LIGHTING_SETTINGS.AMBIENT.intensity
     );
     scene?.add(ambientLight);
 
     // Directional light
     const directionalLight = new THREE.DirectionalLight(
-      LIGHTING_SETTINGS.DIRECTIONAL.color, 
+      LIGHTING_SETTINGS.DIRECTIONAL.color,
       LIGHTING_SETTINGS.DIRECTIONAL.intensity
     );
     directionalLight.position.set(
@@ -150,10 +154,10 @@
     scene?.add(directionalLight);
 
     // Point lights
-    LIGHTING_SETTINGS.POINT_LIGHTS.forEach((lightConfig, index) => {
+    LIGHTING_SETTINGS.POINT_LIGHTS.forEach((lightConfig, _index) => {
       const pointLight = new THREE.PointLight(
-        lightConfig.color, 
-        lightConfig.intensity, 
+        lightConfig.color,
+        lightConfig.intensity,
         lightConfig.distance
       );
       pointLight.position.set(
@@ -171,21 +175,18 @@
       adaptivePerformanceManager = new AdaptivePerformanceManager({
         debug: import.meta.env.DEV,
         enableLearning: true,
-        adaptationAggression: 'moderate'
+        adaptationAggression: 'moderate',
       });
       setAdaptivePerformanceManager(adaptivePerformanceManager);
-      
+
       // Initialize LOD Manager
-      lodManager = new LODManager(
-        camera as THREE.PerspectiveCamera, 
-        adaptivePerformanceManager
-      );
+      lodManager = new LODManager(camera as THREE.PerspectiveCamera, adaptivePerformanceManager);
       setLodManager(lodManager);
-      
+
       // Configure LOD distances based on initial hardware quality
       const initialQuality = adaptivePerformanceManager.getCurrentQuality();
       lodManager.configureForQuality(initialQuality);
-      
+
       // Make performance manager globally accessible for AI test bridge
       if (typeof window !== 'undefined') {
         window.performanceManager = adaptivePerformanceManager;
@@ -195,14 +196,14 @@
 
   function handleResize() {
     if (!camera || !renderer || !container) return;
-    
+
     const width = container.clientWidth;
     const height = container.clientHeight;
-    
+
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
-    
+
     dispatch('resize', { width, height });
   }
 
@@ -213,19 +214,19 @@
         container.removeChild(renderer.domElement);
       }
     }
-    
+
     if (renderer) {
       renderer.dispose();
     }
-    
+
     if (controls) {
       controls.dispose();
     }
-    
+
     if (lodManager) {
       setLodManager(null);
     }
-    
+
     if (adaptivePerformanceManager) {
       setAdaptivePerformanceManager(null);
     }

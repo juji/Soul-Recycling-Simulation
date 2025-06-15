@@ -11,13 +11,12 @@
   import SceneManager from './components/simulation/SceneManager.svelte';
   import SimulationManager from './components/simulation/SimulationManager.svelte';
   import './lib/ai-test-bridge';
-  
-  import { 
-    mouse as getMouse,
+
+  import {
     setContainer,
     setToastNotification,
     setFpsCounter,
-    setMousePosition
+    setMousePosition,
   } from './lib/stores/simulationState.svelte';
 
   console.log('App: Initializing main application, version 1');
@@ -38,7 +37,6 @@
   }
 
   // Component references with TypeScript typing
-  let mouse = $derived(getMouse());
   let localContainer = $state<HTMLElement | undefined>();
   let localToastNotification = $state<ToastNotification | undefined>();
   let localFpsCounter = $state<FpsCounter | undefined>();
@@ -60,7 +58,7 @@
     const { mouseX, mouseY } = event;
     setMousePosition(mouseX, mouseY);
   }
-  
+
   function handleSceneReady(event: SceneReadyEvent): void {
     if (simulationManager) {
       simulationManager.handleSceneReady(event.detail);
@@ -68,10 +66,7 @@
   }
 </script>
 
-<ThreeContainer 
-  bind:container={localContainer} 
-  onmousemove={handleMouseMove} 
-/>
+<ThreeContainer bind:container={localContainer} onmousemove={handleMouseMove} />
 
 <SceneManager on:sceneReady={handleSceneReady} />
 

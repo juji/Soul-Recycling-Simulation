@@ -1,18 +1,17 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import SliderControls from './SliderControls.svelte';
-  
+
   // Import state store
-  import { 
+  import {
     NEW_SOUL_SPAWN_RATE as getNEW_SOUL_SPAWN_RATE,
     MIN_LIFESPAN as getMIN_LIFESPAN,
     MAX_LIFESPAN as getMAX_LIFESPAN,
     AVG_LIFESPAN as getAVG_LIFESPAN,
-    EQUILIBRIUM_POPULATION as getEQUILIBRIUM_POPULATION,
     resetParameters,
     setSpawnRate,
     setMinLifespan,
-    setMaxLifespan
+    setMaxLifespan,
   } from '../lib/stores/simulationState.svelte';
 
   // TypeScript interfaces
@@ -29,9 +28,9 @@
   }
 
   // Props for configuration with TypeScript typing
-  let { 
+  let {
     show = $bindable(false),
-    position = 'top-left' // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
+    position = 'top-left', // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
   }: EquilibriumInfoProps = $props();
 
   // Get data from state store with proper typing
@@ -39,7 +38,6 @@
   let storeMinLifespan = $derived(getMIN_LIFESPAN());
   let storeMaxLifespan = $derived(getMAX_LIFESPAN());
   let avgLifespan = $derived(getAVG_LIFESPAN());
-  let equilibriumPopulation = $derived(getEQUILIBRIUM_POPULATION());
 
   // Local state for slider controls (bindable) with TypeScript typing
   let spawnRate = $state<number>(0.7);
@@ -60,7 +58,7 @@
   // Handle parameter changes from SliderControls with TypeScript
   function handleParameterChange(event: ParameterChangeEvent): void {
     const { type, value } = event.detail;
-    
+
     switch (type) {
       case 'SPAWN_RATE':
         setSpawnRate(value);
@@ -95,7 +93,7 @@
     handleResize();
 
     window.addEventListener('resize', handleResize);
-    
+
     return () => {
       window.removeEventListener('resize', handleResize);
     };
@@ -103,7 +101,7 @@
 </script>
 
 <!-- Toggle button -->
-<button class="equilibrium-toggle" onclick={() => show = !show}>
+<button class="equilibrium-toggle" onclick={() => (show = !show)}>
   <span class="toggle-icon">{show ? '✕' : 'ℹ'}</span>
   <span class="toggle-text">Info</span>
 </button>
@@ -112,27 +110,31 @@
 <div class="equilibrium-info {position}" class:show>
   <div class="equilibrium-title">Population Equilibrium</div>
   <div class="equilibrium-formula">EquilibriumPopulation ≈ NEW_SOUL_SPAWN_RATE × AVG_LIFESPAN</div>
-  <div class="equilibrium-calculation">Current: {storeSpawnRate} × {calculatedAvgLifespan} = ~{calculatedEquilibrium} souls</div>
-  
+  <div class="equilibrium-calculation">
+    Current: {storeSpawnRate} × {calculatedAvgLifespan} = ~{calculatedEquilibrium} souls
+  </div>
+
   <!-- Interactive Parameter Controls -->
-  <SliderControls 
+  <SliderControls
     bind:NEW_SOUL_SPAWN_RATE={spawnRate}
     bind:MIN_LIFESPAN={minLifespan}
     bind:MAX_LIFESPAN={maxLifespan}
     on:parameterChange={handleParameterChange}
     on:reset={handleReset}
   />
-  
+
   <div class="equilibrium-text">
     <p>A stable system.</p>
     <div>
       <quote>
-        <a 
-        href="https://en.wikipedia.org/wiki/Thomas_Malthus" 
-        target="_blank">Thomas Malthus</a> (conceptually, 1798) and <a 
-        href="https://en.wikipedia.org/wiki/Pierre-François_Verhulst" 
-        target="_blank">François Verhulst</a> (mathematically, 1838) in the 18th-19th century found out about this.
-        <br /><br />Yes, this universe is explosion-proof and collapse-proof. Time heals all population wounds.
+        <a href="https://en.wikipedia.org/wiki/Thomas_Malthus" target="_blank">Thomas Malthus</a>
+        (conceptually, 1798) and
+        <a href="https://en.wikipedia.org/wiki/Pierre-François_Verhulst" target="_blank"
+          >François Verhulst</a
+        >
+        (mathematically, 1838) in the 18th-19th century found out about this.
+        <br /><br />Yes, this universe is explosion-proof and collapse-proof. Time heals all
+        population wounds.
       </quote>
     </div>
   </div>
@@ -279,7 +281,7 @@
     padding: 8px 10px;
     border-radius: 6px;
     border-left: 3px solid #ffcc00;
-    margin-top: 10px; 
+    margin-top: 10px;
     display: block;
     font-size: small;
   }

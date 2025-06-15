@@ -107,11 +107,14 @@ export interface PerformanceTracker {
     timestamp: number;
   }>;
   performanceMaps: Map<number, number>;
-  qualityBenchmarks: Map<QualityLevel, Array<{
-    soulCount: number;
-    fps: number;
-    timestamp: number;
-  }>>;
+  qualityBenchmarks: Map<
+    QualityLevel,
+    Array<{
+      soulCount: number;
+      fps: number;
+      timestamp: number;
+    }>
+  >;
   adaptationSuccess: any[];
   hardwareBaseline: any;
 }
@@ -154,19 +157,13 @@ export interface PerformanceReport {
   adaptationHistory: AdaptationHistory[];
   hardwareProfile: HardwareProfile;
   measurementCount: number;
-  qualityBenchmarks: Record<QualityLevel, {
-    avgFPS: number;
-    sampleCount: number;
-  }>;
-}
-
-export interface AdaptationMetrics {
-  fps: number[];
-  frameTime: number[];
-  memory: number[];
-  workerTime: number[];
-  renderTime: number[];
-  soulCount: number;
+  qualityBenchmarks: Record<
+    QualityLevel,
+    {
+      avgFPS: number;
+      sampleCount: number;
+    }
+  >;
 }
 
 // LOD specific performance types
