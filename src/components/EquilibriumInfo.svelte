@@ -13,7 +13,7 @@
     setSpawnRate,
     setMinLifespan,
     setMaxLifespan
-  } from '../lib/stores/simulationState.svelte.ts';
+  } from '../lib/stores/simulationState.svelte';
 
   // TypeScript interfaces
   interface ParameterChangeEvent {

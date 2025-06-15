@@ -1,8 +1,8 @@
 <!-- Entity Links Component - TypeScript Migration Phase 10.1 -->
 <script lang="ts">
   // Import state store and constants
-  import { isAutomaticSoulCount as getIsAutomaticSoulCount } from '../lib/stores/simulationState.svelte.ts';
-  import { DEFAULT_SOUL_COUNT } from '../lib/constants/config.ts';
+  import { isAutomaticSoulCount as getIsAutomaticSoulCount } from '../lib/stores/simulationState.svelte';
+  import { DEFAULT_SOUL_COUNT } from '../lib/constants/config';
   
   // TypeScript interfaces
   interface EntityLink {

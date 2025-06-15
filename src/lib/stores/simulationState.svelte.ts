@@ -174,11 +174,11 @@ export function setInstancedRenderer(renderer: InstancedSoulRenderer): void {
   simulationState.instancedRenderer = renderer;
 }
 
-export function setLodManager(manager: LODManager): void {
+export function setLodManager(manager: LODManager | null): void {
   simulationState.lodManager = manager;
 }
 
-export function setAdaptivePerformanceManager(manager: AdaptivePerformanceManager): void {
+export function setAdaptivePerformanceManager(manager: AdaptivePerformanceManager | null): void {
   simulationState.adaptivePerformanceManager = manager;
 }
 

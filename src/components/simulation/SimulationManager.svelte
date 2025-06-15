@@ -5,6 +5,7 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
   import * as THREE from 'three';
+  // @ts-expect-error
   import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
   import { InstancedSoulRenderer } from '../../lib/InstancedSoulRenderer';
   import { loadFromStorage, STORAGE_KEYS } from '../../lib/localStorage';
@@ -34,7 +35,7 @@
     setInstancedRenderer,
     setAutomaticSoulCount,
     showToastMessage
-  } from '../../lib/stores/simulationState.svelte.ts';
+  } from '../../lib/stores/simulationState.svelte';
 
   // TypeScript interfaces
   interface SceneObjects {
@@ -183,6 +184,10 @@
     let lineSegments;
     const MAX_LINES = recycledSoulCount * CONNECTION_SETTINGS.MAX_LINES_MULTIPLIER;
 
+    if(!scene || !camera || !renderer) {
+      console.warn('Scene, camera or renderer not initialized');
+      return;
+    }
     // Initialize line segments for connections using soulManager
     lineSegments = initializeConnectionLines(scene, MAX_LINES);
 
@@ -204,11 +209,11 @@
       try {
         // Dynamic buffer size based on URL parameter with 2x safety margin
         const dynamicMaxSouls = recycledSoulCount * 2;
-        setInstancedRenderer(new InstancedSoulRenderer(scene, dynamicMaxSouls));
+        setInstancedRenderer(new InstancedSoulRenderer(scene, { maxSouls: dynamicMaxSouls }));
         
         // Hide individual meshes from scene since we'll use instanced rendering
         souls.forEach(soul => {
-          if (soul.parent === scene) {
+          if (soul.parent === scene && scene) {
             scene.remove(soul);
           }
         });
@@ -224,7 +229,7 @@
         
         // Show individual meshes again on fallback
         souls.forEach(soul => {
-          if (soul.parent !== scene) {
+          if (soul.parent !== scene && scene) {
             scene.add(soul);
           }
         });
@@ -259,15 +264,15 @@
       // Send the new soul to the worker via WorkerManager
       if (newSoul && newSoul.userData) {
         const soulDataForWorker: SoulDataForWorker = {
-          id: newSoul.userData.id,
+          id: newSoul.userData.id as number,
           position: { x: newSoul.position.x, y: newSoul.position.y, z: newSoul.position.z },
-          velocity: newSoul.userData.velocity,
-          speed: newSoul.userData.speed,
-          isHuman: newSoul.userData.isHuman,
-          isDewa: newSoul.userData.isDewa,
-          flickerPhase: newSoul.userData.flickerPhase,
-          life: newSoul.userData.life,
-          baseHSL: newSoul.userData.baseHSL,
+          velocity: newSoul.userData.velocity as THREE.Vector3,
+          speed: newSoul.userData.speed as number,
+          isHuman: newSoul.userData.isHuman as boolean,
+          isDewa: newSoul.userData.isDewa as boolean,
+          flickerPhase: newSoul.userData.flickerPhase as number,
+          life: newSoul.userData.life as number,
+          baseHSL: newSoul.userData.baseHSL as { h: number; s: number; l: number; },
         };
         
         workerManager.addSoulToWorker(soulDataForWorker);

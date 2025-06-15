@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount, createEventDispatcher, onDestroy } from 'svelte';
   import * as THREE from 'three';
+  // @ts-expect-error
   import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
   import { LODManager } from '../../lib/LODManager';
   import { AdaptivePerformanceManager } from '../../lib/AdaptivePerformanceManager';
@@ -13,7 +14,7 @@
     container as getContainer,
     setLodManager,
     setAdaptivePerformanceManager
-  } from '../../lib/stores/simulationState.svelte.ts';
+  } from '../../lib/stores/simulationState.svelte';
 
   // TypeScript interfaces
   interface SceneReadyEvent {
@@ -114,7 +115,7 @@
     }
 
     // Create controls
-    controls = new ArcballControls(camera, renderer.domElement, scene);
+    controls = new ArcballControls(camera, renderer?.domElement, scene);
     controls.enableDamping = true;
     controls.dampingFactor = CONTROLS_SETTINGS.DAMPING_FACTOR;  
     controls.wMax = CONTROLS_SETTINGS.W_MAX;             
@@ -134,7 +135,7 @@
       LIGHTING_SETTINGS.AMBIENT.color, 
       LIGHTING_SETTINGS.AMBIENT.intensity
     );
-    scene.add(ambientLight);
+    scene?.add(ambientLight);
 
     // Directional light
     const directionalLight = new THREE.DirectionalLight(
@@ -146,7 +147,7 @@
       LIGHTING_SETTINGS.DIRECTIONAL.position.y,
       LIGHTING_SETTINGS.DIRECTIONAL.position.z
     );
-    scene.add(directionalLight);
+    scene?.add(directionalLight);
 
     // Point lights
     LIGHTING_SETTINGS.POINT_LIGHTS.forEach((lightConfig, index) => {
@@ -160,7 +161,7 @@
         lightConfig.position.y,
         lightConfig.position.z
       );
-      scene.add(pointLight);
+      scene?.add(pointLight);
     });
   }
 
@@ -175,7 +176,10 @@
       setAdaptivePerformanceManager(adaptivePerformanceManager);
       
       // Initialize LOD Manager
-      lodManager = new LODManager(camera, adaptivePerformanceManager);
+      lodManager = new LODManager(
+        camera as THREE.PerspectiveCamera, 
+        adaptivePerformanceManager
+      );
       setLodManager(lodManager);
       
       // Configure LOD distances based on initial hardware quality
@@ -231,7 +235,7 @@
   onMount(() => {
     // Set up a watcher for container availability
     const checkContainer = () => {
-      container = getContainer();
+      container = getContainer() as HTMLElement | null;
       if (container && !scene) {
         // Small delay to ensure container is fully rendered
         setTimeout(initializeScene, 10);

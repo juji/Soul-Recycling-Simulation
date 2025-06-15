@@ -1,7 +1,7 @@
 <!-- Population Counter Component - TypeScript Migration Phase 10.1 -->
 <script lang="ts">
   // Import state store to get soul count directly
-  import { souls as getSouls } from '../lib/stores/simulationState.svelte.ts';
+  import { souls as getSouls } from '../lib/stores/simulationState.svelte';
   
   // TypeScript interface for component props
   interface PopulationCounterProps {
