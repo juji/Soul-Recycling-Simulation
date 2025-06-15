@@ -20,6 +20,8 @@
     setMousePosition
   } from './lib/stores/simulationState.svelte';
 
+  console.log('App: Initializing main application, version 1');
+
   // TypeScript interfaces
   interface MouseMoveEvent {
     mouseX: number;
