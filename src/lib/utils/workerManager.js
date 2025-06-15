@@ -39,7 +39,7 @@ export class WorkerManager {
     try {
       // Create new worker instance
       this.simulationWorker = new Worker(
-        new URL('../simulation.worker.js', import.meta.url), 
+        new URL('../simulation.worker.ts', import.meta.url), 
         { type: 'module' }
       );
 

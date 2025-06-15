@@ -3,17 +3,18 @@ import * as THREE from 'three';
 // Core simulation data types
 export interface SoulData {
   id: number;
-  type: 'human' | 'gpt' | 'dewa';
-  position: THREE.Vector3;
-  velocity: THREE.Vector3;
-  lifespan: number;
-  currentAge: number;
+  position: { x: number; y: number; z: number };
+  velocity: { x: number; y: number; z: number };
   speed: number;
-  hue: number;
-  saturation: number;
-  lightness: number;
-  isDewa: boolean;
+  life: number; // Changed from lifespan to life
   isHuman: boolean;
+  isDewa: boolean;
+  flickerPhase: number;
+  baseHSL: {
+    h: number;
+    s: number;
+    l: number;
+  };
 }
 
 export interface ConnectionData {
@@ -131,12 +132,58 @@ export interface WorkerInitMessage extends WorkerMessage {
   type: 'INIT';
   data: {
     souls: SoulData[];
-    constants: any;
+    constants: PhysicsConstants;
   };
 }
 
-export interface WorkerMessageHandler {
-  (data: any): void;
+export interface WorkerAddSoulMessage extends WorkerMessage {
+  type: 'addSoul';
+  data: {
+    soul: SoulData;
+  };
+}
+
+export interface WorkerSoulUpdatedMessage {
+  type: 'soulsUpdated';
+  data: Array<{
+    id: number;
+    pos?: number[];
+    vel?: number[];
+    rgb?: number[];
+    opacity?: number;
+  }>;
+  metadata: {
+    messageId: number;
+    totalSouls: number;
+    compressionRatio: number;
+    changedSouls: number;
+  };
+}
+
+export interface WorkerConnectionsUpdatedMessage {
+  type: 'connectionsUpdated';
+  data: Array<{
+    start: number[];
+    end: number[];
+    color: number[];
+  }>;
+}
+
+export interface WorkerSoulRemovedMessage {
+  type: 'soulRemoved';
+  data: {
+    soulId: number;
+  };
+}
+
+export interface WorkerPerformanceMetrics {
+  updateTime: number;
+  processedSouls: number;
+  connections: number;
+  spatialGridCells: number;
+  memoryUsage: number;
+  compressionRatio?: number;
+  deltaCompressionEfficiency?: number;
 }
 
 // Animation controller types
