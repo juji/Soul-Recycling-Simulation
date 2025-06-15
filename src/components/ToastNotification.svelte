@@ -8,11 +8,11 @@
   }
 
   // Toast notification component props with TypeScript typing
-  let { 
+  let {
     message = $bindable<string>(''),
     show = $bindable<boolean>(false),
     duration = 2000,
-    position = 'bottom-center' // 'bottom-center', 'top-center', 'bottom-left', 'bottom-right'
+    position = 'bottom-center', // 'bottom-center', 'top-center', 'bottom-left', 'bottom-right'
   }: ToastNotificationProps = $props();
 
   // Auto-hide toast after duration with TypeScript
@@ -21,7 +21,7 @@
       const timer: ReturnType<typeof setTimeout> = setTimeout(() => {
         show = false;
       }, duration);
-      
+
       return () => clearTimeout(timer);
     }
     return undefined;

@@ -1,31 +1,31 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  
+
   // TypeScript interfaces
   interface ParameterChangeEvent {
     type: 'SPAWN_RATE' | 'MIN_LIFESPAN' | 'MAX_LIFESPAN';
     value: number;
   }
-  
+
   interface SliderControlsProps {
     NEW_SOUL_SPAWN_RATE: number;
     MIN_LIFESPAN: number;
     MAX_LIFESPAN: number;
   }
-  
+
   // Create event dispatcher with proper typing
   const dispatch = createEventDispatcher<{
     parameterChange: ParameterChangeEvent;
     reset: void;
   }>();
-  
+
   // Convert to runes with $bindable for two-way binding and TypeScript typing
   let {
     NEW_SOUL_SPAWN_RATE = $bindable<number>(),
     MIN_LIFESPAN = $bindable<number>(),
-    MAX_LIFESPAN = $bindable<number>()
+    MAX_LIFESPAN = $bindable<number>(),
   }: SliderControlsProps = $props();
-  
+
   const MAX_AGE_GAP: number = 600; // Maximum gap between min and max lifespan
   const MIN_LIFESPAN_VAL: number = 100;
 
@@ -39,7 +39,7 @@
     if (NEW_SOUL_SPAWN_RATE !== prevSpawnRate) {
       dispatch('parameterChange', {
         type: 'SPAWN_RATE',
-        value: NEW_SOUL_SPAWN_RATE
+        value: NEW_SOUL_SPAWN_RATE,
       });
       prevSpawnRate = NEW_SOUL_SPAWN_RATE;
     }
@@ -48,18 +48,18 @@
   $effect(() => {
     if (MIN_LIFESPAN !== prevMinLifespan) {
       // Ensure max is always greater than min
-      if(MIN_LIFESPAN > MAX_LIFESPAN) {
+      if (MIN_LIFESPAN > MAX_LIFESPAN) {
         MAX_LIFESPAN = MIN_LIFESPAN + MAX_AGE_GAP;
       }
-      
+
       // Ensure age gap is maintained
-      if((MAX_LIFESPAN - MIN_LIFESPAN) > MAX_AGE_GAP) {
+      if (MAX_LIFESPAN - MIN_LIFESPAN > MAX_AGE_GAP) {
         MAX_LIFESPAN = MIN_LIFESPAN + MAX_AGE_GAP;
       }
-      
+
       dispatch('parameterChange', {
-        type: 'MIN_LIFESPAN', 
-        value: MIN_LIFESPAN
+        type: 'MIN_LIFESPAN',
+        value: MIN_LIFESPAN,
       });
       prevMinLifespan = MIN_LIFESPAN;
     }
@@ -68,18 +68,18 @@
   $effect(() => {
     if (MAX_LIFESPAN !== prevMaxLifespan) {
       // Ensure max is always greater than min
-      if(MAX_LIFESPAN < MIN_LIFESPAN) {
+      if (MAX_LIFESPAN < MIN_LIFESPAN) {
         MIN_LIFESPAN = Math.max(MIN_LIFESPAN_VAL, MAX_LIFESPAN - MAX_AGE_GAP);
       }
-      
+
       // Ensure age gap is maintained
-      if((MAX_LIFESPAN - MIN_LIFESPAN) > MAX_AGE_GAP) {
+      if (MAX_LIFESPAN - MIN_LIFESPAN > MAX_AGE_GAP) {
         MIN_LIFESPAN = Math.max(MIN_LIFESPAN_VAL, MAX_LIFESPAN - MAX_AGE_GAP);
       }
-      
+
       dispatch('parameterChange', {
         type: 'MAX_LIFESPAN',
-        value: MAX_LIFESPAN
+        value: MAX_LIFESPAN,
       });
       prevMaxLifespan = MAX_LIFESPAN;
     }
@@ -99,51 +99,49 @@
     <label for="spawn-rate-slider">
       Soul Spawn Rate: {NEW_SOUL_SPAWN_RATE.toFixed(2)} per frame
     </label>
-    <input 
+    <input
       id="spawn-rate-slider"
-      type="range" 
-      min="0.1" 
-      max="3.0" 
-      step="0.05" 
+      type="range"
+      min="0.1"
+      max="3.0"
+      step="0.05"
       bind:value={NEW_SOUL_SPAWN_RATE}
       class="parameter-slider"
     />
   </div>
-  
+
   <div class="parameter-control">
     <label for="min-lifespan-slider">
       Min Lifespan: {MIN_LIFESPAN} frames
     </label>
-    <input 
+    <input
       id="min-lifespan-slider"
-      type="range" 
-      min={100} 
-      max={900} 
-      step="50" 
+      type="range"
+      min={100}
+      max={900}
+      step="50"
       bind:value={MIN_LIFESPAN}
       class="parameter-slider"
     />
   </div>
-  
+
   <div class="parameter-control">
     <label for="max-lifespan-slider">
       Max Lifespan: {MAX_LIFESPAN} frames
     </label>
-    <input 
+    <input
       id="max-lifespan-slider"
-      type="range" 
-      min="200" 
-      max="1000" 
-      step="50" 
+      type="range"
+      min="200"
+      max="1000"
+      step="50"
       bind:value={MAX_LIFESPAN}
       class="parameter-slider"
     />
   </div>
-  
+
   <div class="parameter-control">
-    <button class="reset-button" onclick={resetParameters}>
-      Reset to Defaults
-    </button>
+    <button class="reset-button" onclick={resetParameters}> Reset to Defaults </button>
   </div>
 </div>
 

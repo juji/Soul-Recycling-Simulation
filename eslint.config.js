@@ -154,6 +154,10 @@ export default [
   },
   {
     ignores: [
+      '.git/**',
+      '.husky/**',
+      '.vite/**',
+      '.vscode/**',
       'dist/**',
       'node_modules/**',
       '.svelte-kit/**',

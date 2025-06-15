@@ -6,14 +6,14 @@
     updateInterval?: number;
     averageWindowSize?: number;
   }
-  
+
   // Props with TypeScript typing
-  let { 
+  let {
     showCounter = true,
     updateInterval = 1000,
-    averageWindowSize = 10 
+    averageWindowSize = 10,
   }: FpsCounterProps = $props();
-  
+
   // State variables for FPS tracking with TypeScript types
   let fps = $state<number>(0);
   let frameCount = $state<number>(0);
@@ -21,50 +21,52 @@
   let averageFPS = $state<number>(0);
   let fpsHistory = $state<number[]>([]);
   let memoryUsage = $state<number>(0);
-  
+
   // Animation frame tracking
   let animationFrameId = $state<number | null>(null);
-  
+
   // FPS calculation function with TypeScript types
   function updateFPS(): void {
     frameCount++;
     const currentTime: number = performance.now();
     const elapsed: number = currentTime - lastTime;
-    
+
     if (elapsed >= updateInterval) {
       fps = frameCount;
       frameCount = 0;
       lastTime = currentTime;
-      
+
       // Track FPS history for average calculation
       fpsHistory.push(fps);
       if (fpsHistory.length > averageWindowSize) {
         fpsHistory.shift();
       }
-      
+
       // Calculate average FPS
       if (fpsHistory.length > 0) {
-        averageFPS = Math.round(fpsHistory.reduce((a: number, b: number) => a + b) / fpsHistory.length);
+        averageFPS = Math.round(
+          fpsHistory.reduce((a: number, b: number) => a + b) / fpsHistory.length
+        );
       }
-      
+
       // Memory usage tracking (if available)
       if (performance.memory) {
         memoryUsage = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
       }
     }
-    
+
     // Continue the animation loop
     if (showCounter) {
       animationFrameId = requestAnimationFrame(updateFPS);
     }
   }
-  
+
   // Start FPS tracking when component mounts
   $effect(() => {
     if (showCounter) {
       animationFrameId = requestAnimationFrame(updateFPS);
     }
-    
+
     // Cleanup function
     return () => {
       if (animationFrameId) {
@@ -72,7 +74,7 @@
       }
     };
   });
-  
+
   // Export current metrics for parent components with TypeScript interface
   interface FpsMetrics {
     fps: number;
@@ -80,13 +82,13 @@
     memoryUsage: number;
     fpsHistory: number[];
   }
-  
+
   export function getMetrics(): FpsMetrics {
     return {
       fps,
       averageFPS,
       memoryUsage,
-      fpsHistory: [...fpsHistory]
+      fpsHistory: [...fpsHistory],
     };
   }
 
@@ -98,7 +100,7 @@
   export function getAverageFPS(): number {
     return averageFPS;
   }
-  
+
   // Expose FPS values to global scope for AI test bridge compatibility
   $effect(() => {
     if (typeof window !== 'undefined') {
@@ -110,9 +112,9 @@
 </script>
 
 {#if showCounter}
-<div class="fps-counter">
-  FPS: {fps}
-</div>
+  <div class="fps-counter">
+    FPS: {fps}
+  </div>
 {/if}
 
 <style>

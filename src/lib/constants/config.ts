@@ -18,7 +18,7 @@ export interface DefaultParameters {
 export const FEATURE_FLAGS: FeatureFlags = {
   USE_INSTANCED_RENDERING: true, // Enable Phase 3 instanced rendering
   USE_LOD_SYSTEM: true, // Enable Phase 4 LOD system
-  FALLBACK_TO_INDIVIDUAL_MESHES: true // Emergency fallback
+  FALLBACK_TO_INDIVIDUAL_MESHES: true, // Emergency fallback
 };
 
 // Default values
@@ -35,7 +35,7 @@ export const DEWA_BASE_SPEED: number = 0.02; // Slower, consistent speed for dew
 export const DEFAULT_PARAMETERS: DefaultParameters = {
   SPAWN_RATE: 0.7,
   MIN_LIFESPAN: 300,
-  MAX_LIFESPAN: 900
+  MAX_LIFESPAN: 900,
 };
 
 // Type guards for runtime validation
@@ -52,6 +52,7 @@ export function validateFeatureFlags(flags: Partial<FeatureFlags>): FeatureFlags
   return {
     USE_INSTANCED_RENDERING: flags.USE_INSTANCED_RENDERING ?? FEATURE_FLAGS.USE_INSTANCED_RENDERING,
     USE_LOD_SYSTEM: flags.USE_LOD_SYSTEM ?? FEATURE_FLAGS.USE_LOD_SYSTEM,
-    FALLBACK_TO_INDIVIDUAL_MESHES: flags.FALLBACK_TO_INDIVIDUAL_MESHES ?? FEATURE_FLAGS.FALLBACK_TO_INDIVIDUAL_MESHES
+    FALLBACK_TO_INDIVIDUAL_MESHES:
+      flags.FALLBACK_TO_INDIVIDUAL_MESHES ?? FEATURE_FLAGS.FALLBACK_TO_INDIVIDUAL_MESHES,
   };
 }

@@ -13,22 +13,23 @@
   }
 
   // Bottom links component props with TypeScript typing
-  let { 
+  let {
     links = [
       { href: 'https://jujiplay.com', text: 'JujiPlay', class: 'jujiplay-link' },
-      { href: 'https://github.com/juji/Soul-Recycling-Simulation', text: 'GitHub', class: 'github-link', target: '_blank' as const }
+      {
+        href: 'https://github.com/juji/Soul-Recycling-Simulation',
+        text: 'GitHub',
+        class: 'github-link',
+        target: '_blank' as const,
+      },
     ],
-    position = 'bottom-left' // 'bottom-left', 'bottom-right', 'top-left', 'top-right'
+    position = 'bottom-left', // 'bottom-left', 'bottom-right', 'top-left', 'top-right'
   }: BottomLinksProps = $props();
 </script>
 
 <div class="bottom-links {position}">
   {#each links as link}
-    <a 
-      href={link.href} 
-      class={link.class || 'default-link'}
-      target={link.target || '_self'}
-    >
+    <a href={link.href} class={link.class || 'default-link'} target={link.target || '_self'}>
       {link.text}
     </a>
   {/each}

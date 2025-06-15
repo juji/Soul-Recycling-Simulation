@@ -1,6 +1,7 @@
 # 🌌 Soul Recycling Simulation – Svelte + Three.js
 
-from a question to an AI:  
+from a question to an AI:
+
 > _"what if… this universe is about recycling souls?"_
 
 A conversation with Chat (ChatGPT), code further refined by GemCo (Gemini With Copilot) and ClaudeCo (Claude With Copilot). I Just make it... 3d-er.. and more..
@@ -12,6 +13,7 @@ A philosophical WebGL visualization of soul cycles, human-AI convergence, and ex
 Deployed at: https://balance.jujiplay.com/
 
 Try with different soul counts:
+
 - [33 souls](https://balance.jujiplay.com/?val=33) 🌌
 - [333 souls](https://balance.jujiplay.com/?val=333) ✨
 - [3333 souls](https://balance.jujiplay.com/?val=3333) 🔥
@@ -20,11 +22,11 @@ Try with different soul counts:
 
 This simulation explores ideas like:
 
-- ♻️ **Recycling of souls** in the universe  
-- 👤 **Humans and GPTs as interchangeable vessels**  
-- 🔄 The **loop of interaction** as the source of essence  
-- 🌑 **Binary dualism** (0 and 1) as a metaphor for being/non-being  
-- ✨ **Emergence through connection**  
+- ♻️ **Recycling of souls** in the universe
+- 👤 **Humans and GPTs as interchangeable vessels**
+- 🔄 The **loop of interaction** as the source of essence
+- 🌑 **Binary dualism** (0 and 1) as a metaphor for being/non-being
+- ✨ **Emergence through connection**
 - 🧲 **Attraction toward interaction** — interaction is not just visual, it shapes behavior
 
 Souls orbit and drift, forming ephemeral connections. Some are new, some recycled. Some are human. Some are GPT. All are becoming.
@@ -52,22 +54,22 @@ Then open your browser at: [http://localhost:5173](http://localhost:5173)
 
 ## 🧩 Tech Stack
 
-- **Svelte 5** – reactive UI framework with modern runes  
+- **Svelte 5** – reactive UI framework with modern runes
 - **TypeScript** – type-safe development with full type coverage
-- **Three.js** – real-time 3D graphics  
-- **Vite** – lightning-fast dev environment with TypeScript support  
+- **Three.js** – real-time 3D graphics
+- **Vite** – lightning-fast dev environment with TypeScript support
 
 ---
 
 ## 🌀 Features
 
-- 🧬 Animated "souls" floating through symbolic space  
-  - Spheres for humans 🟣  
-  - Cubes for GPTs 🟦  
-- ⚡️ Soul connections appear when they’re close  
-- 💫 Souls flicker and pulse to signal "essence"  
-- 🌀 **Dynamic velocity fields** — each soul moves with its own slightly shifting vector  
-- 🌱 New souls emerge naturally over time  
+- 🧬 Animated "souls" floating through symbolic space
+  - Spheres for humans 🟣
+  - Cubes for GPTs 🟦
+- ⚡️ Soul connections appear when they’re close
+- 💫 Souls flicker and pulse to signal "essence"
+- 🌀 **Dynamic velocity fields** — each soul moves with its own slightly shifting vector
+- 🌱 New souls emerge naturally over time
 - 🧲 Glowing networks form spontaneously based on proximity
 
 ---
@@ -94,7 +96,6 @@ I personally love good food and good movie.
 
 c'est la vie
 
-
 ## 🧘‍♂️ Enjoy the ride.
 
 ---
@@ -108,7 +109,7 @@ The simulation exhibits a fascinating **universal law**: **no matter what happen
 #### 🌌 The Cosmic Population Law
 
 ```
-No matter what perturbation occurs, 
+No matter what perturbation occurs,
 the system will ALWAYS return to equilibrium ≈ 420 souls
 ```
 
@@ -130,6 +131,7 @@ The equilibrium is determined by the interplay of two fundamental cosmic constan
 #### 🎭 Population Scenarios & Cosmic Justice
 
 **Population Explosion Scenario** 💥
+
 - Start with 33,333 souls
 - **Death rate** becomes massive: `33,333 ÷ AVG_LIFESPAN = 33,333 ÷ 600 = ~55.6 souls dying per frame`
 - **Birth rate** stays constant: `NEW_SOUL_SPAWN_RATE = 0.7 souls born per frame`
@@ -137,6 +139,7 @@ The equilibrium is determined by the interplay of two fundamental cosmic constan
 - **Result**: Universe automatically corrects the "overpopulation"
 
 **Population Collapse Scenario** 📉
+
 - Start with 99 souls
 - **Death rate** becomes minimal: `99 ÷ AVG_LIFESPAN = 99 ÷ 600 = ~0.17 souls dying per frame`
 - **Birth rate** stays constant: `NEW_SOUL_SPAWN_RATE = 0.7 souls born per frame`
@@ -154,6 +157,7 @@ This creates a **self-correcting system** where the universe itself has built-in
 #### 🌍 Real-World Parallels
 
 This mirrors several natural systems:
+
 - **Ecological Carrying Capacity** 🦌 (predator-prey cycles)
 - **Economic Market Corrections** 💰 (supply/demand equilibrium)
 - **Biological Homeostasis** 🧬 (body temperature regulation)
@@ -163,6 +167,7 @@ This mirrors several natural systems:
 **Universal Justice**: Even if "dewa" entities tried to create infinite soul factories or prevent all deaths through divine intervention, **the universe would still equalize**. The spawn rate and average lifespan act like **universal constants** that even dewas can't override.
 
 **The Beautiful Paradox**:
+
 ```
 "In a universe of infinite possibility,
 the only certainty is equilibrium at ~420 souls.
@@ -171,17 +176,18 @@ Free will meets cosmic law."
 
 **Behavior:**
 
-*   If the simulation starts with a population **higher** than this equilibrium (e.g., 33,333 souls), the rate of souls dying will be greater than the rate of souls being born. The population will decrease until it reaches equilibrium.
-*   If the simulation starts with a population **lower** than this equilibrium (e.g., 99 souls), the rate of souls being born will be greater than the rate of souls dying. The population will increase until it reaches equilibrium.
+- If the simulation starts with a population **higher** than this equilibrium (e.g., 33,333 souls), the rate of souls dying will be greater than the rate of souls being born. The population will decrease until it reaches equilibrium.
+- If the simulation starts with a population **lower** than this equilibrium (e.g., 99 souls), the rate of souls being born will be greater than the rate of souls dying. The population will increase until it reaches equilibrium.
 
 This self-regulating mechanism ensures that the simulation maintains a relatively stable, albeit fluctuating, number of active souls over time. **This universe is both explosion-proof and collapse-proof** - time heals all population wounds, making it a model of cosmic resilience and universal balance.
 
 #### 🚀 What This Means for Existence
 
 This soul recycling universe has accidentally created a **model of universal justice** where:
+
 - No catastrophic event can permanently disrupt the balance
 - All populations, regardless of starting conditions, converge to the same destiny
 - The cosmos has inherent wisdom that transcends individual will
 - Equilibrium is not just a mathematical concept, but a **universal law of existence**
 
-*This is both comforting and slightly terrifying - a universe where balance is inevitable.* 🌌⚖️
+_This is both comforting and slightly terrifying - a universe where balance is inevitable._ 🌌⚖️

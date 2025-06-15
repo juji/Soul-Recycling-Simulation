@@ -1,14 +1,31 @@
 var __defProp = Object.defineProperty;
-var __typeError = (msg) => {
+var __typeError = msg => {
   throw TypeError(msg);
 };
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
-var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
-var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
-var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
-var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
+var __defNormalProp = (obj, key, value) =>
+  key in obj
+    ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value })
+    : (obj[key] = value);
+var __publicField = (obj, key, value) =>
+  __defNormalProp(obj, typeof key !== 'symbol' ? key + '' : key, value);
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError('Cannot ' + msg);
+var __privateGet = (obj, member, getter) => (
+  __accessCheck(obj, member, 'read from private field'), getter ? getter.call(obj) : member.get(obj)
+);
+var __privateAdd = (obj, member, value) =>
+  member.has(obj)
+    ? __typeError('Cannot add the same private member more than once')
+    : member instanceof WeakSet
+      ? member.add(obj)
+      : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (
+  __accessCheck(obj, member, 'write to private field'),
+  setter ? setter.call(obj, value) : member.set(obj, value),
+  value
+);
+var __privateMethod = (obj, member, method) => (
+  __accessCheck(obj, member, 'access private method'), method
+);
 
 // node_modules/esm-env/true.js
 var true_default = true;
@@ -52,16 +69,18 @@ var INSPECT_EFFECT = 1 << 18;
 var HEAD_EFFECT = 1 << 19;
 var EFFECT_HAS_DERIVED = 1 << 20;
 var EFFECT_IS_UPDATING = 1 << 21;
-var STATE_SYMBOL = Symbol("$state");
-var LEGACY_PROPS = Symbol("legacy props");
-var LOADING_ATTR_SYMBOL = Symbol("");
+var STATE_SYMBOL = Symbol('$state');
+var LEGACY_PROPS = Symbol('legacy props');
+var LOADING_ATTR_SYMBOL = Symbol('');
 
 // node_modules/svelte/src/internal/client/reactivity/equality.js
 function equals(value) {
   return value === this.v;
 }
 function safe_not_equal(a, b) {
-  return a != a ? b == b : a !== b || a !== null && typeof a === "object" || typeof a === "function";
+  return a != a
+    ? b == b
+    : a !== b || (a !== null && typeof a === 'object') || typeof a === 'function';
 }
 function safe_equals(value) {
   return !safe_not_equal(value, this.v);
@@ -73,7 +92,7 @@ function derived_references_self() {
     const error = new Error(`derived_references_self
 A derived value cannot reference itself recursively
 https://svelte.dev/e/derived_references_self`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/derived_references_self`);
@@ -84,7 +103,7 @@ function effect_in_teardown(rune) {
     const error = new Error(`effect_in_teardown
 \`${rune}\` cannot be used inside an effect cleanup function
 https://svelte.dev/e/effect_in_teardown`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/effect_in_teardown`);
@@ -95,7 +114,7 @@ function effect_in_unowned_derived() {
     const error = new Error(`effect_in_unowned_derived
 Effect cannot be created inside a \`$derived\` value that was not itself created inside an effect
 https://svelte.dev/e/effect_in_unowned_derived`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/effect_in_unowned_derived`);
@@ -106,7 +125,7 @@ function effect_orphan(rune) {
     const error = new Error(`effect_orphan
 \`${rune}\` can only be used inside an effect (e.g. during component initialisation)
 https://svelte.dev/e/effect_orphan`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/effect_orphan`);
@@ -117,7 +136,7 @@ function effect_update_depth_exceeded() {
     const error = new Error(`effect_update_depth_exceeded
 Maximum update depth exceeded. This can happen when a reactive block or effect repeatedly sets a new value. Svelte limits the number of nested updates to prevent infinite loops
 https://svelte.dev/e/effect_update_depth_exceeded`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/effect_update_depth_exceeded`);
@@ -128,7 +147,7 @@ function hydration_failed() {
     const error = new Error(`hydration_failed
 Failed to hydrate the application
 https://svelte.dev/e/hydration_failed`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/hydration_failed`);
@@ -139,7 +158,7 @@ function lifecycle_legacy_only(name) {
     const error = new Error(`lifecycle_legacy_only
 \`${name}(...)\` cannot be used in runes mode
 https://svelte.dev/e/lifecycle_legacy_only`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/lifecycle_legacy_only`);
@@ -150,7 +169,7 @@ function rune_outside_svelte(rune) {
     const error = new Error(`rune_outside_svelte
 The \`${rune}\` rune is only available inside \`.svelte\` and \`.svelte.js/ts\` files
 https://svelte.dev/e/rune_outside_svelte`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/rune_outside_svelte`);
@@ -161,7 +180,7 @@ function state_descriptors_fixed() {
     const error = new Error(`state_descriptors_fixed
 Property descriptors defined on \`$state\` objects must contain \`value\` and always be \`enumerable\`, \`configurable\` and \`writable\`.
 https://svelte.dev/e/state_descriptors_fixed`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/state_descriptors_fixed`);
@@ -172,7 +191,7 @@ function state_prototype_fixed() {
     const error = new Error(`state_prototype_fixed
 Cannot set prototype of \`$state\` object
 https://svelte.dev/e/state_prototype_fixed`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/state_prototype_fixed`);
@@ -183,7 +202,7 @@ function state_unsafe_mutation() {
     const error = new Error(`state_unsafe_mutation
 Updating state inside a derived or a template expression is forbidden. If the value should not be reactive, declare it without \`$state\`
 https://svelte.dev/e/state_unsafe_mutation`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/state_unsafe_mutation`);
@@ -208,13 +227,13 @@ var TRANSITION_GLOBAL = 1 << 2;
 var TEMPLATE_USE_IMPORT_NODE = 1 << 1;
 var TEMPLATE_USE_SVG = 1 << 2;
 var TEMPLATE_USE_MATHML = 1 << 3;
-var HYDRATION_START = "[";
-var HYDRATION_END = "]";
+var HYDRATION_START = '[';
+var HYDRATION_END = ']';
 var HYDRATION_ERROR = {};
 var ELEMENT_PRESERVE_ATTRIBUTE_CASE = 1 << 1;
 var UNINITIALIZED = Symbol();
-var FILENAME = Symbol("filename");
-var HMR = Symbol("hmr");
+var FILENAME = Symbol('filename');
+var HMR = Symbol('hmr');
 
 // node_modules/svelte/src/internal/client/dev/tracing.js
 var tracing_expressions = null;
@@ -222,17 +241,17 @@ function get_stack(label) {
   let error = Error();
   const stack2 = error.stack;
   if (stack2) {
-    const lines = stack2.split("\n");
-    const new_lines = ["\n"];
+    const lines = stack2.split('\n');
+    const new_lines = ['\n'];
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if (line === "Error") {
+      if (line === 'Error') {
         continue;
       }
-      if (line.includes("validate_each_keys")) {
+      if (line.includes('validate_each_keys')) {
         return null;
       }
-      if (line.includes("svelte/src/internal")) {
+      if (line.includes('svelte/src/internal')) {
         continue;
       }
       new_lines.push(line);
@@ -240,12 +259,12 @@ function get_stack(label) {
     if (new_lines.length === 1) {
       return null;
     }
-    define_property(error, "stack", {
-      value: new_lines.join("\n")
+    define_property(error, 'stack', {
+      value: new_lines.join('\n'),
     });
-    define_property(error, "name", {
+    define_property(error, 'name', {
       // 'Error' suffix is required for stack traces to be rendered properly
-      value: `${label}Error`
+      value: `${label}Error`,
     });
   }
   return error;
@@ -257,7 +276,7 @@ function lifecycle_outside_component(name) {
     const error = new Error(`lifecycle_outside_component
 \`${name}(...)\` can only be used during component initialisation
 https://svelte.dev/e/lifecycle_outside_component`);
-    error.name = "Svelte error";
+    error.name = 'Svelte error';
     throw error;
   } else {
     throw new Error(`https://svelte.dev/e/lifecycle_outside_component`);
@@ -274,31 +293,30 @@ function set_dev_current_component_function(fn) {
   dev_current_component_function = fn;
 }
 function getContext(key) {
-  const context_map = get_or_init_context_map("getContext");
-  const result = (
+  const context_map = get_or_init_context_map('getContext');
+  const result =
     /** @type {T} */
-    context_map.get(key)
-  );
+    context_map.get(key);
   return result;
 }
 function setContext(key, context) {
-  const context_map = get_or_init_context_map("setContext");
+  const context_map = get_or_init_context_map('setContext');
   context_map.set(key, context);
   return context;
 }
 function hasContext(key) {
-  const context_map = get_or_init_context_map("hasContext");
+  const context_map = get_or_init_context_map('hasContext');
   return context_map.has(key);
 }
 function getAllContexts() {
-  const context_map = get_or_init_context_map("getAllContexts");
+  const context_map = get_or_init_context_map('getAllContexts');
   return (
     /** @type {T} */
     context_map
   );
 }
 function push(props, runes = false, fn) {
-  var ctx = component_context = {
+  var ctx = (component_context = {
     p: component_context,
     c: null,
     d: false,
@@ -306,14 +324,14 @@ function push(props, runes = false, fn) {
     m: false,
     s: props,
     x: null,
-    l: null
-  };
+    l: null,
+  });
   if (legacy_mode_flag && !runes) {
     component_context.l = {
       s: null,
       u: null,
       r1: [],
-      r2: source(false)
+      r2: source(false),
     };
   }
   teardown(() => {
@@ -350,21 +368,24 @@ function pop(component2) {
     }
     component_context = context_stack_item.p;
     if (true_default) {
-      dev_current_component_function = ((_a = context_stack_item.p) == null ? void 0 : _a.function) ?? null;
+      dev_current_component_function =
+        ((_a = context_stack_item.p) == null ? void 0 : _a.function) ?? null;
     }
     context_stack_item.m = true;
   }
-  return component2 || /** @type {T} */
-  {};
+  return component2 || /** @type {T} */ {};
 }
 function is_runes() {
-  return !legacy_mode_flag || component_context !== null && component_context.l === null;
+  return !legacy_mode_flag || (component_context !== null && component_context.l === null);
 }
 function get_or_init_context_map(name) {
   if (component_context === null) {
     lifecycle_outside_component(name);
   }
-  return component_context.c ?? (component_context.c = new Map(get_parent_context(component_context) || void 0));
+  return (
+    component_context.c ??
+    (component_context.c = new Map(get_parent_context(component_context) || void 0))
+  );
 }
 function get_parent_context(component_context2) {
   let parent = component_context2.p;
@@ -380,7 +401,7 @@ function get_parent_context(component_context2) {
 
 // node_modules/svelte/src/internal/client/proxy.js
 function proxy(value) {
-  if (typeof value !== "object" || value === null || STATE_SYMBOL in value) {
+  if (typeof value !== 'object' || value === null || STATE_SYMBOL in value) {
     return value;
   }
   const prototype = get_prototype_of(value);
@@ -390,9 +411,9 @@ function proxy(value) {
   var sources = /* @__PURE__ */ new Map();
   var is_proxied_array = is_array(value);
   var version = state(0);
-  var stack2 = true_default && tracing_mode_flag ? get_stack("CreatedAt") : null;
+  var stack2 = true_default && tracing_mode_flag ? get_stack('CreatedAt') : null;
   var reaction = active_reaction;
-  var with_parent = (fn) => {
+  var with_parent = fn => {
     var previous_reaction = active_reaction;
     set_active_reaction(reaction);
     var result = fn();
@@ -400,18 +421,26 @@ function proxy(value) {
     return result;
   };
   if (is_proxied_array) {
-    sources.set("length", state(
-      /** @type {any[]} */
-      value.length,
-      stack2
-    ));
+    sources.set(
+      'length',
+      state(
+        /** @type {any[]} */
+        value.length,
+        stack2
+      )
+    );
   }
   return new Proxy(
     /** @type {any} */
     value,
     {
       defineProperty(_, prop2, descriptor) {
-        if (!("value" in descriptor) || descriptor.configurable === false || descriptor.enumerable === false || descriptor.writable === false) {
+        if (
+          !('value' in descriptor) ||
+          descriptor.configurable === false ||
+          descriptor.enumerable === false ||
+          descriptor.writable === false
+        ) {
           state_descriptors_fixed();
         }
         var s = sources.get(prop2);
@@ -437,11 +466,10 @@ function proxy(value) {
             update_version(version);
           }
         } else {
-          if (is_proxied_array && typeof prop2 === "string") {
-            var ls = (
+          if (is_proxied_array && typeof prop2 === 'string') {
+            var ls =
               /** @type {Source<number>} */
-              sources.get("length")
-            );
+              sources.get('length');
             var n = Number(prop2);
             if (Number.isInteger(n) && n < ls.v) {
               set(ls, n);
@@ -459,7 +487,10 @@ function proxy(value) {
         }
         var s = sources.get(prop2);
         var exists = prop2 in target;
-        if (s === void 0 && (!exists || ((_a = get_descriptor(target, prop2)) == null ? void 0 : _a.writable))) {
+        if (
+          s === void 0 &&
+          (!exists || ((_a = get_descriptor(target, prop2)) == null ? void 0 : _a.writable))
+        ) {
           s = with_parent(() => state(proxy(exists ? target[prop2] : UNINITIALIZED), stack2));
           sources.set(prop2, s);
         }
@@ -471,7 +502,7 @@ function proxy(value) {
       },
       getOwnPropertyDescriptor(target, prop2) {
         var descriptor = Reflect.getOwnPropertyDescriptor(target, prop2);
-        if (descriptor && "value" in descriptor) {
+        if (descriptor && 'value' in descriptor) {
           var s = sources.get(prop2);
           if (s) descriptor.value = get(s);
         } else if (descriptor === void 0) {
@@ -482,7 +513,7 @@ function proxy(value) {
               enumerable: true,
               configurable: true,
               value: value2,
-              writable: true
+              writable: true,
             };
           }
         }
@@ -494,8 +525,12 @@ function proxy(value) {
           return true;
         }
         var s = sources.get(prop2);
-        var has = s !== void 0 && s.v !== UNINITIALIZED || Reflect.has(target, prop2);
-        if (s !== void 0 || active_effect !== null && (!has || ((_a = get_descriptor(target, prop2)) == null ? void 0 : _a.writable))) {
+        var has = (s !== void 0 && s.v !== UNINITIALIZED) || Reflect.has(target, prop2);
+        if (
+          s !== void 0 ||
+          (active_effect !== null &&
+            (!has || ((_a = get_descriptor(target, prop2)) == null ? void 0 : _a.writable)))
+        ) {
           if (s === void 0) {
             s = with_parent(() => state(has ? proxy(target[prop2]) : UNINITIALIZED, stack2));
             sources.set(prop2, s);
@@ -511,15 +546,14 @@ function proxy(value) {
         var _a;
         var s = sources.get(prop2);
         var has = prop2 in target;
-        if (is_proxied_array && prop2 === "length") {
-          for (var i = value2; i < /** @type {Source<number>} */
-          s.v; i += 1) {
-            var other_s = sources.get(i + "");
+        if (is_proxied_array && prop2 === 'length') {
+          for (var i = value2; i < /** @type {Source<number>} */ s.v; i += 1) {
+            var other_s = sources.get(i + '');
             if (other_s !== void 0) {
               set(other_s, UNINITIALIZED);
             } else if (i in target) {
               other_s = with_parent(() => state(UNINITIALIZED, stack2));
-              sources.set(i + "", other_s);
+              sources.set(i + '', other_s);
             }
           }
         }
@@ -544,11 +578,10 @@ function proxy(value) {
           descriptor.set.call(receiver, value2);
         }
         if (!has) {
-          if (is_proxied_array && typeof prop2 === "string") {
-            var ls = (
+          if (is_proxied_array && typeof prop2 === 'string') {
+            var ls =
               /** @type {Source<number>} */
-              sources.get("length")
-            );
+              sources.get('length');
             var n = Number(prop2);
             if (Number.isInteger(n) && n >= ls.v) {
               set(ls, n + 1);
@@ -560,7 +593,7 @@ function proxy(value) {
       },
       ownKeys(target) {
         get(version);
-        var own_keys = Reflect.ownKeys(target).filter((key2) => {
+        var own_keys = Reflect.ownKeys(target).filter(key2 => {
           var source3 = sources.get(key2);
           return source3 === void 0 || source3.v !== UNINITIALIZED;
         });
@@ -573,7 +606,7 @@ function proxy(value) {
       },
       setPrototypeOf() {
         state_prototype_fixed();
-      }
+      },
     }
   );
 }
@@ -582,11 +615,10 @@ function update_version(signal, d = 1) {
 }
 function get_proxied_value(value) {
   try {
-    if (value !== null && typeof value === "object" && STATE_SYMBOL in value) {
+    if (value !== null && typeof value === 'object' && STATE_SYMBOL in value) {
       return value[STATE_SYMBOL];
     }
-  } catch {
-  }
+  } catch {}
   return value;
 }
 
@@ -653,7 +685,8 @@ function update_derived(derived2) {
     derived2.wv = increment_write_version();
   }
   if (is_destroying_effect) return;
-  var status = (skip_reaction || (derived2.f & UNOWNED) !== 0) && derived2.deps !== null ? MAYBE_DIRTY : CLEAN;
+  var status =
+    (skip_reaction || (derived2.f & UNOWNED) !== 0) && derived2.deps !== null ? MAYBE_DIRTY : CLEAN;
   set_signal_status(derived2, status);
 }
 
@@ -671,10 +704,10 @@ function source(v, stack2) {
     reactions: null,
     equals,
     rv: 0,
-    wv: 0
+    wv: 0,
   };
   if (true_default && tracing_mode_flag) {
-    signal.created = stack2 ?? get_stack("CreatedAt");
+    signal.created = stack2 ?? get_stack('CreatedAt');
     signal.debug = null;
   }
   return signal;
@@ -697,7 +730,13 @@ function mutable_source(initial_value, immutable = false) {
 }
 function set(source2, value, should_proxy = false) {
   var _a;
-  if (active_reaction !== null && !untracking && is_runes() && (active_reaction.f & (DERIVED | BLOCK_EFFECT)) !== 0 && !((_a = reaction_sources) == null ? void 0 : _a.includes(source2))) {
+  if (
+    active_reaction !== null &&
+    !untracking &&
+    is_runes() &&
+    (active_reaction.f & (DERIVED | BLOCK_EFFECT)) !== 0 &&
+    !((_a = reaction_sources) == null ? void 0 : _a.includes(source2))
+  ) {
     state_unsafe_mutation();
   }
   let new_value = should_proxy ? proxy(value) : value;
@@ -713,7 +752,7 @@ function internal_set(source2, value) {
     }
     source2.v = value;
     if (true_default && tracing_mode_flag) {
-      source2.updated = get_stack("UpdatedAt");
+      source2.updated = get_stack('UpdatedAt');
       if (active_effect != null) {
         source2.trace_need_increase = true;
         source2.trace_v ?? (source2.trace_v = old_value);
@@ -730,7 +769,12 @@ function internal_set(source2, value) {
     }
     source2.wv = increment_write_version();
     mark_reactions(source2, DIRTY);
-    if (is_runes() && active_effect !== null && (active_effect.f & CLEAN) !== 0 && (active_effect.f & (BRANCH_EFFECT | ROOT_EFFECT)) === 0) {
+    if (
+      is_runes() &&
+      active_effect !== null &&
+      (active_effect.f & CLEAN) !== 0 &&
+      (active_effect.f & (BRANCH_EFFECT | ROOT_EFFECT)) === 0
+    ) {
       if (untracked_writes === null) {
         set_untracked_writes([source2]);
       } else {
@@ -785,40 +829,56 @@ function mark_reactions(signal, status) {
 }
 
 // node_modules/svelte/src/internal/client/warnings.js
-var bold = "font-weight: bold";
-var normal = "font-weight: normal";
+var bold = 'font-weight: bold';
+var normal = 'font-weight: normal';
 function hydration_mismatch(location) {
   if (true_default) {
-    console.warn(`%c[svelte] hydration_mismatch
-%c${location ? `Hydration failed because the initial UI does not match what was rendered on the server. The error occurred near ${location}` : "Hydration failed because the initial UI does not match what was rendered on the server"}
-https://svelte.dev/e/hydration_mismatch`, bold, normal);
+    console.warn(
+      `%c[svelte] hydration_mismatch
+%c${location ? `Hydration failed because the initial UI does not match what was rendered on the server. The error occurred near ${location}` : 'Hydration failed because the initial UI does not match what was rendered on the server'}
+https://svelte.dev/e/hydration_mismatch`,
+      bold,
+      normal
+    );
   } else {
     console.warn(`https://svelte.dev/e/hydration_mismatch`);
   }
 }
 function invalid_raw_snippet_render() {
   if (true_default) {
-    console.warn(`%c[svelte] invalid_raw_snippet_render
+    console.warn(
+      `%c[svelte] invalid_raw_snippet_render
 %cThe \`render\` function passed to \`createRawSnippet\` should return HTML for a single element
-https://svelte.dev/e/invalid_raw_snippet_render`, bold, normal);
+https://svelte.dev/e/invalid_raw_snippet_render`,
+      bold,
+      normal
+    );
   } else {
     console.warn(`https://svelte.dev/e/invalid_raw_snippet_render`);
   }
 }
 function lifecycle_double_unmount() {
   if (true_default) {
-    console.warn(`%c[svelte] lifecycle_double_unmount
+    console.warn(
+      `%c[svelte] lifecycle_double_unmount
 %cTried to unmount a component that was not mounted
-https://svelte.dev/e/lifecycle_double_unmount`, bold, normal);
+https://svelte.dev/e/lifecycle_double_unmount`,
+      bold,
+      normal
+    );
   } else {
     console.warn(`https://svelte.dev/e/lifecycle_double_unmount`);
   }
 }
 function state_proxy_equality_mismatch(operator) {
   if (true_default) {
-    console.warn(`%c[svelte] state_proxy_equality_mismatch
+    console.warn(
+      `%c[svelte] state_proxy_equality_mismatch
 %cReactive \`$state(...)\` proxies and the values they proxy have different identities. Because of this, comparisons with \`${operator}\` will produce unexpected results
-https://svelte.dev/e/state_proxy_equality_mismatch`, bold, normal);
+https://svelte.dev/e/state_proxy_equality_mismatch`,
+      bold,
+      normal
+    );
   } else {
     console.warn(`https://svelte.dev/e/state_proxy_equality_mismatch`);
   }
@@ -835,7 +895,7 @@ function set_hydrate_node(node) {
     hydration_mismatch();
     throw HYDRATION_ERROR;
   }
-  return hydrate_node = node;
+  return (hydrate_node = node);
 }
 function hydrate_next() {
   return set_hydrate_node(
@@ -852,36 +912,36 @@ function init_array_prototype_warnings() {
     cleanup();
   }
   const { indexOf, lastIndexOf, includes } = array_prototype2;
-  array_prototype2.indexOf = function(item, from_index) {
+  array_prototype2.indexOf = function (item, from_index) {
     const index2 = indexOf.call(this, item, from_index);
     if (index2 === -1) {
       for (let i = from_index ?? 0; i < this.length; i += 1) {
         if (get_proxied_value(this[i]) === item) {
-          state_proxy_equality_mismatch("array.indexOf(...)");
+          state_proxy_equality_mismatch('array.indexOf(...)');
           break;
         }
       }
     }
     return index2;
   };
-  array_prototype2.lastIndexOf = function(item, from_index) {
+  array_prototype2.lastIndexOf = function (item, from_index) {
     const index2 = lastIndexOf.call(this, item, from_index ?? this.length - 1);
     if (index2 === -1) {
       for (let i = 0; i <= (from_index ?? this.length - 1); i += 1) {
         if (get_proxied_value(this[i]) === item) {
-          state_proxy_equality_mismatch("array.lastIndexOf(...)");
+          state_proxy_equality_mismatch('array.lastIndexOf(...)');
           break;
         }
       }
     }
     return index2;
   };
-  array_prototype2.includes = function(item, from_index) {
+  array_prototype2.includes = function (item, from_index) {
     const has = includes.call(this, item, from_index);
     if (!has) {
       for (let i = 0; i < this.length; i += 1) {
         if (get_proxied_value(this[i]) === item) {
-          state_proxy_equality_mismatch("array.includes(...)");
+          state_proxy_equality_mismatch('array.includes(...)');
           break;
         }
       }
@@ -911,8 +971,8 @@ function init_operations() {
   var element_prototype = Element.prototype;
   var node_prototype = Node.prototype;
   var text_prototype = Text.prototype;
-  first_child_getter = get_descriptor(node_prototype, "firstChild").get;
-  next_sibling_getter = get_descriptor(node_prototype, "nextSibling").get;
+  first_child_getter = get_descriptor(node_prototype, 'firstChild').get;
+  next_sibling_getter = get_descriptor(node_prototype, 'nextSibling').get;
   if (is_extensible(element_prototype)) {
     element_prototype.__click = void 0;
     element_prototype.__className = void 0;
@@ -928,7 +988,7 @@ function init_operations() {
     init_array_prototype_warnings();
   }
 }
-function create_text(value = "") {
+function create_text(value = '') {
   return document.createTextNode(value);
 }
 function get_first_child(node) {
@@ -938,7 +998,7 @@ function get_next_sibling(node) {
   return next_sibling_getter.call(node);
 }
 function clear_text_content(node) {
-  node.textContent = "";
+  node.textContent = '';
 }
 
 // node_modules/svelte/src/internal/client/reactivity/effects.js
@@ -984,7 +1044,7 @@ function create_effect(type, fn, sync, push2 = true) {
     prev: null,
     teardown: null,
     transitions: null,
-    wv: 0
+    wv: 0,
   };
   if (true_default) {
     effect2.component_function = dev_current_component_function;
@@ -1000,16 +1060,21 @@ function create_effect(type, fn, sync, push2 = true) {
   } else if (fn !== null) {
     schedule_effect(effect2);
   }
-  var inert = sync && effect2.deps === null && effect2.first === null && effect2.nodes_start === null && effect2.teardown === null && (effect2.f & (EFFECT_HAS_DERIVED | BOUNDARY_EFFECT)) === 0;
+  var inert =
+    sync &&
+    effect2.deps === null &&
+    effect2.first === null &&
+    effect2.nodes_start === null &&
+    effect2.teardown === null &&
+    (effect2.f & (EFFECT_HAS_DERIVED | BOUNDARY_EFFECT)) === 0;
   if (!inert && push2) {
     if (parent !== null) {
       push_effect(effect2, parent);
     }
     if (active_reaction !== null && (active_reaction.f & DERIVED) !== 0) {
-      var derived2 = (
+      var derived2 =
         /** @type {Derived} */
-        active_reaction
-      );
+        active_reaction;
       (derived2.effects ?? (derived2.effects = [])).push(effect2);
     }
   }
@@ -1022,22 +1087,25 @@ function teardown(fn) {
   return effect2;
 }
 function user_effect(fn) {
-  validate_effect("$effect");
-  var defer = active_effect !== null && (active_effect.f & BRANCH_EFFECT) !== 0 && component_context !== null && !component_context.m;
+  validate_effect('$effect');
+  var defer =
+    active_effect !== null &&
+    (active_effect.f & BRANCH_EFFECT) !== 0 &&
+    component_context !== null &&
+    !component_context.m;
   if (true_default) {
-    define_property(fn, "name", {
-      value: "$effect"
+    define_property(fn, 'name', {
+      value: '$effect',
     });
   }
   if (defer) {
-    var context = (
+    var context =
       /** @type {ComponentContext} */
-      component_context
-    );
+      component_context;
     (context.e ?? (context.e = [])).push({
       fn,
       effect: active_effect,
-      reaction: active_reaction
+      reaction: active_reaction,
     });
   } else {
     var signal = effect(fn);
@@ -1053,7 +1121,7 @@ function effect_root(fn) {
 function component_root(fn) {
   const effect2 = create_effect(ROOT_EFFECT, fn, true);
   return (options = {}) => {
-    return new Promise((fulfil) => {
+    return new Promise(fulfil => {
       if (options.outro) {
         pause_effect(effect2, () => {
           destroy_effect(effect2);
@@ -1140,14 +1208,19 @@ function destroy_effect(effect2, remove_dom = true) {
   if (true_default) {
     effect2.component_function = null;
   }
-  effect2.next = effect2.prev = effect2.teardown = effect2.ctx = effect2.deps = effect2.fn = effect2.nodes_start = effect2.nodes_end = null;
+  effect2.next =
+    effect2.prev =
+    effect2.teardown =
+    effect2.ctx =
+    effect2.deps =
+    effect2.fn =
+    effect2.nodes_start =
+    effect2.nodes_end =
+      null;
 }
 function remove_effect_dom(node, end) {
   while (node !== null) {
-    var next2 = node === end ? null : (
-      /** @type {TemplateNode} */
-      get_next_sibling(node)
-    );
+    var next2 = node === end ? null : /** @type {TemplateNode} */ get_next_sibling(node);
     node.remove();
     node = next2;
   }
@@ -1283,14 +1356,18 @@ function check_dirtiness(reaction) {
       var is_unowned_connected = is_unowned && active_effect !== null && !skip_reaction;
       var length = dependencies.length;
       if (is_disconnected || is_unowned_connected) {
-        var derived2 = (
+        var derived2 =
           /** @type {Derived} */
-          reaction
-        );
+          reaction;
         var parent = derived2.parent;
         for (i = 0; i < length; i++) {
           dependency = dependencies[i];
-          if (is_disconnected || !((_a = dependency == null ? void 0 : dependency.reactions) == null ? void 0 : _a.includes(derived2))) {
+          if (
+            is_disconnected ||
+            !((_a = dependency == null ? void 0 : dependency.reactions) == null
+              ? void 0
+              : _a.includes(derived2))
+          ) {
             (dependency.reactions ?? (dependency.reactions = [])).push(derived2);
           }
         }
@@ -1303,10 +1380,12 @@ function check_dirtiness(reaction) {
       }
       for (i = 0; i < length; i++) {
         dependency = dependencies[i];
-        if (check_dirtiness(
-          /** @type {Derived} */
-          dependency
-        )) {
+        if (
+          check_dirtiness(
+            /** @type {Derived} */
+            dependency
+          )
+        ) {
           update_derived(
             /** @type {Derived} */
             dependency
@@ -1317,7 +1396,7 @@ function check_dirtiness(reaction) {
         }
       }
     }
-    if (!is_unowned || active_effect !== null && !skip_reaction) {
+    if (!is_unowned || (active_effect !== null && !skip_reaction)) {
       set_signal_status(reaction, CLEAN);
     }
   }
@@ -1340,7 +1419,10 @@ function propagate_error(error, effect2) {
   throw error;
 }
 function should_rethrow_error(effect2) {
-  return (effect2.f & DESTROYED) === 0 && (effect2.parent === null || (effect2.parent.f & BOUNDARY_EFFECT) === 0);
+  return (
+    (effect2.f & DESTROYED) === 0 &&
+    (effect2.parent === null || (effect2.parent.f & BOUNDARY_EFFECT) === 0)
+  );
 }
 function handle_error(error, effect2, previous_effect, component_context2) {
   var _a, _b;
@@ -1356,7 +1438,12 @@ function handle_error(error, effect2, previous_effect, component_context2) {
   if (previous_effect !== null) {
     is_throwing_error = true;
   }
-  if (true_default && component_context2 !== null && error instanceof Error && !handled_errors.has(error)) {
+  if (
+    true_default &&
+    component_context2 !== null &&
+    error instanceof Error &&
+    !handled_errors.has(error)
+  ) {
     handled_errors.add(error);
     const component_stack = [];
     const effect_name = (_a = effect2.fn) == null ? void 0 : _a.name;
@@ -1367,34 +1454,40 @@ function handle_error(error, effect2, previous_effect, component_context2) {
     while (current_context !== null) {
       var filename = (_b = current_context.function) == null ? void 0 : _b[FILENAME];
       if (filename) {
-        const file = filename.split("/").pop();
+        const file = filename.split('/').pop();
         component_stack.push(file);
       }
       current_context = current_context.p;
     }
-    const indent = is_firefox ? "  " : "	";
-    define_property(error, "message", {
-      value: error.message + `
-${component_stack.map((name) => `
-${indent}in ${name}`).join("")}
-`
+    const indent = is_firefox ? '  ' : '	';
+    define_property(error, 'message', {
+      value:
+        error.message +
+        `
+${component_stack
+  .map(
+    name => `
+${indent}in ${name}`
+  )
+  .join('')}
+`,
     });
-    define_property(error, "component_stack", {
-      value: component_stack
+    define_property(error, 'component_stack', {
+      value: component_stack,
     });
     const stack2 = error.stack;
     if (stack2) {
-      const lines = stack2.split("\n");
+      const lines = stack2.split('\n');
       const new_lines = [];
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        if (line.includes("svelte/src/internal")) {
+        if (line.includes('svelte/src/internal')) {
           continue;
         }
         new_lines.push(line);
       }
-      define_property(error, "stack", {
-        value: new_lines.join("\n")
+      define_property(error, 'stack', {
+        value: new_lines.join('\n'),
       });
     }
   }
@@ -1440,11 +1533,11 @@ function update_reaction(reaction) {
   var previous_component_context = component_context;
   var previous_untracking = untracking;
   var flags = reaction.f;
-  new_deps = /** @type {null | Value[]} */
-  null;
+  new_deps = /** @type {null | Value[]} */ null;
   skipped_deps = 0;
   untracked_writes = null;
-  skip_reaction = (flags & UNOWNED) !== 0 && (untracking || !is_updating_effect || active_reaction === null);
+  skip_reaction =
+    (flags & UNOWNED) !== 0 && (untracking || !is_updating_effect || active_reaction === null);
   active_reaction = (flags & (BRANCH_EFFECT | ROOT_EFFECT)) === 0 ? reaction : null;
   reaction_sources = null;
   set_component_context(reaction.ctx);
@@ -1452,10 +1545,9 @@ function update_reaction(reaction) {
   read_version++;
   reaction.f |= EFFECT_IS_UPDATING;
   try {
-    var result = (
+    var result =
       /** @type {Function} */
-      (0, reaction.fn)()
-    );
+      (0, reaction.fn)();
     var deps = reaction.deps;
     if (new_deps !== null) {
       var i;
@@ -1477,9 +1569,14 @@ function update_reaction(reaction) {
       remove_reactions(reaction, skipped_deps);
       deps.length = skipped_deps;
     }
-    if (is_runes() && untracked_writes !== null && !untracking && deps !== null && (reaction.f & (DERIVED | MAYBE_DIRTY | DIRTY)) === 0) {
-      for (i = 0; i < /** @type {Source[]} */
-      untracked_writes.length; i++) {
+    if (
+      is_runes() &&
+      untracked_writes !== null &&
+      !untracking &&
+      deps !== null &&
+      (reaction.f & (DERIVED | MAYBE_DIRTY | DIRTY)) === 0
+    ) {
+      for (i = 0; i < /** @type {Source[]} */ untracked_writes.length; i++) {
         schedule_possible_effect_self_invalidation(
           untracked_writes[i],
           /** @type {Effect} */
@@ -1493,8 +1590,7 @@ function update_reaction(reaction) {
         if (previous_untracked_writes === null) {
           previous_untracked_writes = untracked_writes;
         } else {
-          previous_untracked_writes.push(.../** @type {Source[]} */
-          untracked_writes);
+          previous_untracked_writes.push(.../** @type {Source[]} */ untracked_writes);
         }
       }
     }
@@ -1525,10 +1621,13 @@ function remove_reaction(signal, dependency) {
       }
     }
   }
-  if (reactions === null && (dependency.f & DERIVED) !== 0 && // Destroying a child effect while updating a parent effect can cause a dependency to appear
-  // to be unused, when in fact it is used by the currently-updating parent. Checking `new_deps`
-  // allows us to skip the expensive work of disconnecting and immediately reconnecting it
-  (new_deps === null || !new_deps.includes(dependency))) {
+  if (
+    reactions === null &&
+    (dependency.f & DERIVED) !== 0 && // Destroying a child effect while updating a parent effect can cause a dependency to appear
+    // to be unused, when in fact it is used by the currently-updating parent. Checking `new_deps`
+    // allows us to skip the expensive work of disconnecting and immediately reconnecting it
+    (new_deps === null || !new_deps.includes(dependency))
+  ) {
     set_signal_status(dependency, MAYBE_DIRTY);
     if ((dependency.f & (UNOWNED | DISCONNECTED)) === 0) {
       dependency.f ^= DISCONNECTED;
@@ -1574,7 +1673,7 @@ function update_effect(effect2) {
     }
     execute_effect_teardown(effect2);
     var teardown2 = update_reaction(effect2);
-    effect2.teardown = typeof teardown2 === "function" ? teardown2 : null;
+    effect2.teardown = typeof teardown2 === 'function' ? teardown2 : null;
     effect2.wv = write_version;
     var deps = effect2.deps;
     if (true_default && tracing_mode_flag && (effect2.f & DIRTY) !== 0 && deps !== null) {
@@ -1602,8 +1701,8 @@ function update_effect(effect2) {
 }
 function log_effect_stack() {
   console.error(
-    "Last ten effects were: ",
-    dev_effect_stack.slice(-10).map((d) => d.fn)
+    'Last ten effects were: ',
+    dev_effect_stack.slice(-10).map(d => d.fn)
   );
   dev_effect_stack = [];
 }
@@ -1612,8 +1711,8 @@ function infinite_loop_guard() {
     effect_update_depth_exceeded();
   } catch (error) {
     if (true_default) {
-      define_property(error, "stack", {
-        value: ""
+      define_property(error, 'stack', {
+        value: '',
       });
     }
     if (last_scheduled_effect !== null) {
@@ -1690,7 +1789,7 @@ function schedule_effect(signal) {
     is_flushing = true;
     queueMicrotask(flush_queued_root_effects);
   }
-  var effect2 = last_scheduled_effect = signal;
+  var effect2 = (last_scheduled_effect = signal);
   while (effect2.parent !== null) {
     effect2 = effect2.parent;
     var flags = effect2.f;
@@ -1781,26 +1880,34 @@ function get(signal) {
         }
       }
     }
-  } else if (is_derived && /** @type {Derived} */
-  signal.deps === null && /** @type {Derived} */
-  signal.effects === null) {
-    var derived2 = (
+  } else if (
+    is_derived &&
+    /** @type {Derived} */
+    signal.deps === null &&
+    /** @type {Derived} */
+    signal.effects === null
+  ) {
+    var derived2 =
       /** @type {Derived} */
-      signal
-    );
+      signal;
     var parent = derived2.parent;
     if (parent !== null && (parent.f & UNOWNED) === 0) {
       derived2.f ^= UNOWNED;
     }
   }
   if (is_derived) {
-    derived2 = /** @type {Derived} */
-    signal;
+    derived2 = /** @type {Derived} */ signal;
     if (check_dirtiness(derived2)) {
       update_derived(derived2);
     }
   }
-  if (true_default && tracing_mode_flag && tracing_expressions !== null && active_reaction !== null && tracing_expressions.reaction === active_reaction) {
+  if (
+    true_default &&
+    tracing_mode_flag &&
+    tracing_expressions !== null &&
+    active_reaction !== null &&
+    tracing_expressions.reaction === active_reaction
+  ) {
     if (signal.debug) {
       signal.debug();
     } else if (signal.created) {
@@ -1809,7 +1916,7 @@ function get(signal) {
         entry = { read: [] };
         tracing_expressions.entries.set(signal, entry);
       }
-      entry.read.push(get_stack("TracedAt"));
+      entry.read.push(get_stack('TracedAt'));
     }
   }
   if (is_destroying_effect && old_values.has(signal)) {
@@ -1828,89 +1935,82 @@ function untrack(fn) {
 }
 var STATUS_MASK = ~(DIRTY | MAYBE_DIRTY | CLEAN);
 function set_signal_status(signal, status) {
-  signal.f = signal.f & STATUS_MASK | status;
+  signal.f = (signal.f & STATUS_MASK) | status;
 }
 
 // node_modules/svelte/src/utils.js
 var DOM_BOOLEAN_ATTRIBUTES = [
-  "allowfullscreen",
-  "async",
-  "autofocus",
-  "autoplay",
-  "checked",
-  "controls",
-  "default",
-  "disabled",
-  "formnovalidate",
-  "hidden",
-  "indeterminate",
-  "inert",
-  "ismap",
-  "loop",
-  "multiple",
-  "muted",
-  "nomodule",
-  "novalidate",
-  "open",
-  "playsinline",
-  "readonly",
-  "required",
-  "reversed",
-  "seamless",
-  "selected",
-  "webkitdirectory",
-  "defer",
-  "disablepictureinpicture",
-  "disableremoteplayback"
+  'allowfullscreen',
+  'async',
+  'autofocus',
+  'autoplay',
+  'checked',
+  'controls',
+  'default',
+  'disabled',
+  'formnovalidate',
+  'hidden',
+  'indeterminate',
+  'inert',
+  'ismap',
+  'loop',
+  'multiple',
+  'muted',
+  'nomodule',
+  'novalidate',
+  'open',
+  'playsinline',
+  'readonly',
+  'required',
+  'reversed',
+  'seamless',
+  'selected',
+  'webkitdirectory',
+  'defer',
+  'disablepictureinpicture',
+  'disableremoteplayback',
 ];
 var DOM_PROPERTIES = [
   ...DOM_BOOLEAN_ATTRIBUTES,
-  "formNoValidate",
-  "isMap",
-  "noModule",
-  "playsInline",
-  "readOnly",
-  "value",
-  "volume",
-  "defaultValue",
-  "defaultChecked",
-  "srcObject",
-  "noValidate",
-  "allowFullscreen",
-  "disablePictureInPicture",
-  "disableRemotePlayback"
+  'formNoValidate',
+  'isMap',
+  'noModule',
+  'playsInline',
+  'readOnly',
+  'value',
+  'volume',
+  'defaultValue',
+  'defaultChecked',
+  'srcObject',
+  'noValidate',
+  'allowFullscreen',
+  'disablePictureInPicture',
+  'disableRemotePlayback',
 ];
-var PASSIVE_EVENTS = ["touchstart", "touchmove"];
+var PASSIVE_EVENTS = ['touchstart', 'touchmove'];
 function is_passive_event(name) {
   return PASSIVE_EVENTS.includes(name);
 }
-var STATE_CREATION_RUNES = (
+var STATE_CREATION_RUNES =
   /** @type {const} */
-  [
-    "$state",
-    "$state.raw",
-    "$derived",
-    "$derived.by"
-  ]
-);
-var RUNES = (
+  ['$state', '$state.raw', '$derived', '$derived.by'];
+var RUNES =
   /** @type {const} */
   [
     ...STATE_CREATION_RUNES,
-    "$state.snapshot",
-    "$props",
-    "$props.id",
-    "$bindable",
-    "$effect",
-    "$effect.pre",
-    "$effect.tracking",
-    "$effect.root",
-    "$inspect",
-    "$inspect().with",
-    "$inspect.trace",
-    "$host"
-  ]
-);
+    '$state.snapshot',
+    '$props',
+    '$props.id',
+    '$bindable',
+    '$effect',
+    '$effect.pre',
+    '$effect.tracking',
+    '$effect.root',
+    '$inspect',
+    '$inspect().with',
+    '$inspect.trace',
+    '$host',
+  ];
 
 // node_modules/svelte/src/internal/client/dom/elements/events.js
 var all_registered_events = /* @__PURE__ */ new Set();
@@ -1918,22 +2018,22 @@ var root_event_handles = /* @__PURE__ */ new Set();
 function handle_event_propagation(event2) {
   var _a;
   var handler_element = this;
-  var owner_document = (
+  var owner_document =
     /** @type {Node} */
-    handler_element.ownerDocument
-  );
+    handler_element.ownerDocument;
   var event_name = event2.type;
   var path = ((_a = event2.composedPath) == null ? void 0 : _a.call(event2)) || [];
-  var current_target = (
+  var current_target =
     /** @type {null | Element} */
-    path[0] || event2.target
-  );
+    path[0] || event2.target;
   var path_idx = 0;
   var handled_at = event2.__root;
   if (handled_at) {
     var at_idx = path.indexOf(handled_at);
-    if (at_idx !== -1 && (handler_element === document || handler_element === /** @type {any} */
-    window)) {
+    if (
+      at_idx !== -1 &&
+      (handler_element === document || handler_element === /** @type {any} */ window)
+    ) {
       event2.__root = handler_element;
       return;
     }
@@ -1945,14 +2045,13 @@ function handle_event_propagation(event2) {
       path_idx = at_idx;
     }
   }
-  current_target = /** @type {Element} */
-  path[path_idx] || event2.target;
+  current_target = /** @type {Element} */ path[path_idx] || event2.target;
   if (current_target === handler_element) return;
-  define_property(event2, "currentTarget", {
+  define_property(event2, 'currentTarget', {
     configurable: true,
     get() {
       return current_target || owner_document;
-    }
+    },
   });
   var previous_reaction = active_reaction;
   var previous_effect = active_effect;
@@ -1962,14 +2061,20 @@ function handle_event_propagation(event2) {
     var throw_error;
     var other_errors = [];
     while (current_target !== null) {
-      var parent_element = current_target.assignedSlot || current_target.parentNode || /** @type {any} */
-      current_target.host || null;
+      var parent_element =
+        current_target.assignedSlot ||
+        current_target.parentNode ||
+        /** @type {any} */
+        current_target.host ||
+        null;
       try {
-        var delegated = current_target["__" + event_name];
-        if (delegated != null && (!/** @type {any} */
-        current_target.disabled || // DOM could've been updated already by the time this is reached, so we check this as well
-        // -> the target could not have been disabled because it emits the event in the first place
-        event2.target === current_target)) {
+        var delegated = current_target['__' + event_name];
+        if (
+          delegated != null &&
+          (!(/** @type {any} */ current_target.disabled) || // DOM could've been updated already by the time this is reached, so we check this as well
+            // -> the target could not have been disabled because it emits the event in the first place
+            event2.target === current_target)
+        ) {
           if (is_array(delegated)) {
             var [fn, ...data] = delegated;
             fn.apply(current_target, [event2, ...data]);
@@ -2013,17 +2118,16 @@ function reset_head_anchor() {
 
 // node_modules/svelte/src/internal/client/dom/reconciler.js
 function create_fragment_from_html(html2) {
-  var elem = document.createElement("template");
-  elem.innerHTML = html2.replaceAll("<!>", "<!---->");
+  var elem = document.createElement('template');
+  elem.innerHTML = html2.replaceAll('<!>', '<!---->');
   return elem.content;
 }
 
 // node_modules/svelte/src/internal/client/dom/template.js
 function assign_nodes(start, end) {
-  var effect2 = (
+  var effect2 =
     /** @type {Effect} */
-    active_effect
-  );
+    active_effect;
   if (effect2.nodes_start === null) {
     effect2.nodes_start = start;
     effect2.nodes_end = end;
@@ -2056,14 +2160,14 @@ function hydrate(component2, options) {
   const was_hydrating = hydrating;
   const previous_hydrate_node = hydrate_node;
   try {
-    var anchor = (
+    var anchor =
       /** @type {TemplateNode} */
-      get_first_child(target)
-    );
-    while (anchor && (anchor.nodeType !== 8 || /** @type {Comment} */
-    anchor.data !== HYDRATION_START)) {
-      anchor = /** @type {TemplateNode} */
-      get_next_sibling(anchor);
+      get_first_child(target);
+    while (
+      anchor &&
+      (anchor.nodeType !== 8 || /** @type {Comment} */ anchor.data !== HYDRATION_START)
+    ) {
+      anchor = /** @type {TemplateNode} */ get_next_sibling(anchor);
     }
     if (!anchor) {
       throw HYDRATION_ERROR;
@@ -2075,8 +2179,12 @@ function hydrate(component2, options) {
     );
     hydrate_next();
     const instance = _mount(component2, { ...options, anchor });
-    if (hydrate_node === null || hydrate_node.nodeType !== 8 || /** @type {Comment} */
-    hydrate_node.data !== HYDRATION_END) {
+    if (
+      hydrate_node === null ||
+      hydrate_node.nodeType !== 8 ||
+      /** @type {Comment} */
+      hydrate_node.data !== HYDRATION_END
+    ) {
       hydration_mismatch();
       throw HYDRATION_ERROR;
     }
@@ -2106,7 +2214,7 @@ var document_listeners = /* @__PURE__ */ new Map();
 function _mount(Component, { target, anchor, props = {}, events, context, intro = true }) {
   init_operations();
   var registered_events = /* @__PURE__ */ new Set();
-  var event_handle = (events2) => {
+  var event_handle = events2 => {
     for (var i = 0; i < events2.length; i++) {
       var event_name = events2[i];
       if (registered_events.has(event_name)) continue;
@@ -2130,10 +2238,9 @@ function _mount(Component, { target, anchor, props = {}, events, context, intro 
     branch(() => {
       if (context) {
         push({});
-        var ctx = (
+        var ctx =
           /** @type {ComponentContext} */
-          component_context
-        );
+          component_context;
         ctx.c = context;
       }
       if (events) {
@@ -2160,10 +2267,9 @@ function _mount(Component, { target, anchor, props = {}, events, context, intro 
       var _a;
       for (var event_name of registered_events) {
         target.removeEventListener(event_name, handle_event_propagation);
-        var n = (
+        var n =
           /** @type {number} */
-          document_listeners.get(event_name)
-        );
+          document_listeners.get(event_name);
         if (--n === 0) {
           document.removeEventListener(event_name, handle_event_propagation);
           document_listeners.delete(event_name);
@@ -2200,14 +2306,12 @@ function createRawSnippet(fn) {
     var snippet2 = fn(...params);
     var element2;
     if (hydrating) {
-      element2 = /** @type {Element} */
-      hydrate_node;
+      element2 = /** @type {Element} */ hydrate_node;
       hydrate_next();
     } else {
       var html2 = snippet2.render().trim();
       var fragment = create_fragment_from_html(html2);
-      element2 = /** @type {Element} */
-      get_first_child(fragment);
+      element2 = /** @type {Element} */ get_first_child(fragment);
       if (true_default && (get_next_sibling(element2) !== null || element2.nodeType !== 1)) {
         invalid_raw_snippet_render();
       }
@@ -2215,20 +2319,20 @@ function createRawSnippet(fn) {
     }
     const result = (_a = snippet2.setup) == null ? void 0 : _a.call(snippet2, element2);
     assign_nodes(element2, element2);
-    if (typeof result === "function") {
+    if (typeof result === 'function') {
       teardown(result);
     }
   };
 }
 
 // node_modules/svelte/src/internal/shared/attributes.js
-var whitespace = [..." 	\n\r\f \v\uFEFF"];
+var whitespace = [...' 	\n\r\f \v\uFEFF'];
 
 // node_modules/svelte/src/internal/client/dom/elements/attributes.js
-var CLASS = Symbol("class");
-var STYLE = Symbol("style");
-var IS_CUSTOM_ELEMENT = Symbol("is custom element");
-var IS_HTML = Symbol("is html");
+var CLASS = Symbol('class');
+var STYLE = Symbol('style');
+var IS_CUSTOM_ELEMENT = Symbol('is custom element');
+var IS_HTML = Symbol('is html');
 
 // node_modules/svelte/src/internal/client/dom/elements/bindings/size.js
 var _listeners, _observer, _options, _ResizeObserverSingleton_instances, getObserver_fn;
@@ -2252,7 +2356,9 @@ var _ResizeObserverSingleton = class _ResizeObserverSingleton {
     var listeners = __privateGet(this, _listeners).get(element2) || /* @__PURE__ */ new Set();
     listeners.add(listener);
     __privateGet(this, _listeners).set(element2, listeners);
-    __privateMethod(this, _ResizeObserverSingleton_instances, getObserver_fn).call(this).observe(element2, __privateGet(this, _options));
+    __privateMethod(this, _ResizeObserverSingleton_instances, getObserver_fn)
+      .call(this)
+      .observe(element2, __privateGet(this, _options));
     return () => {
       var listeners2 = __privateGet(this, _listeners).get(element2);
       listeners2.delete(listener);
@@ -2267,30 +2373,37 @@ _listeners = new WeakMap();
 _observer = new WeakMap();
 _options = new WeakMap();
 _ResizeObserverSingleton_instances = new WeakSet();
-getObserver_fn = function() {
-  return __privateGet(this, _observer) ?? __privateSet(this, _observer, new ResizeObserver(
-    /** @param {any} entries */
-    (entries) => {
-      for (var entry of entries) {
-        _ResizeObserverSingleton.entries.set(entry.target, entry);
-        for (var listener of __privateGet(this, _listeners).get(entry.target) || []) {
-          listener(entry);
+getObserver_fn = function () {
+  return (
+    __privateGet(this, _observer) ??
+    __privateSet(
+      this,
+      _observer,
+      new ResizeObserver(
+        /** @param {any} entries */
+        entries => {
+          for (var entry of entries) {
+            _ResizeObserverSingleton.entries.set(entry.target, entry);
+            for (var listener of __privateGet(this, _listeners).get(entry.target) || []) {
+              listener(entry);
+            }
+          }
         }
-      }
-    }
-  ));
+      )
+    )
+  );
 };
 /** @static */
-__publicField(_ResizeObserverSingleton, "entries", /* @__PURE__ */ new WeakMap());
+__publicField(_ResizeObserverSingleton, 'entries', /* @__PURE__ */ new WeakMap());
 var ResizeObserverSingleton = _ResizeObserverSingleton;
 var resize_observer_content_box = new ResizeObserverSingleton({
-  box: "content-box"
+  box: 'content-box',
 });
 var resize_observer_border_box = new ResizeObserverSingleton({
-  box: "border-box"
+  box: 'border-box',
 });
 var resize_observer_device_pixel_content_box = new ResizeObserverSingleton({
-  box: "device-pixel-content-box"
+  box: 'device-pixel-content-box',
 });
 
 // node_modules/svelte/src/internal/client/reactivity/store.js
@@ -2320,7 +2433,7 @@ var Svelte4Component = class {
       return s;
     };
     const props = new Proxy(
-      { ...options.props || {}, $$events: {} },
+      { ...(options.props || {}), $$events: {} },
       {
         get(target, prop2) {
           return get(sources.get(prop2) ?? add_source(prop2, Reflect.get(target, prop2)));
@@ -2333,23 +2446,30 @@ var Svelte4Component = class {
         set(target, prop2, value) {
           set(sources.get(prop2) ?? add_source(prop2, value), value);
           return Reflect.set(target, prop2, value);
-        }
+        },
       }
     );
-    __privateSet(this, _instance, (options.hydrate ? hydrate : mount)(options.component, {
-      target: options.target,
-      anchor: options.anchor,
-      props,
-      context: options.context,
-      intro: options.intro ?? false,
-      recover: options.recover
-    }));
-    if (!((_a = options == null ? void 0 : options.props) == null ? void 0 : _a.$$host) || options.sync === false) {
+    __privateSet(
+      this,
+      _instance,
+      (options.hydrate ? hydrate : mount)(options.component, {
+        target: options.target,
+        anchor: options.anchor,
+        props,
+        context: options.context,
+        intro: options.intro ?? false,
+        recover: options.recover,
+      })
+    );
+    if (
+      !((_a = options == null ? void 0 : options.props) == null ? void 0 : _a.$$host) ||
+      options.sync === false
+    ) {
       flushSync();
     }
     __privateSet(this, _events, props.$$events);
     for (const key of Object.keys(__privateGet(this, _instance))) {
-      if (key === "$set" || key === "$destroy" || key === "$on") continue;
+      if (key === '$set' || key === '$destroy' || key === '$on') continue;
       define_property(this, key, {
         get() {
           return __privateGet(this, _instance)[key];
@@ -2358,13 +2478,14 @@ var Svelte4Component = class {
         set(value) {
           __privateGet(this, _instance)[key] = value;
         },
-        enumerable: true
+        enumerable: true,
       });
     }
-    __privateGet(this, _instance).$set = /** @param {Record<string, any>} next */
-    (next2) => {
-      Object.assign(props, next2);
-    };
+    __privateGet(this, _instance).$set =
+      /** @param {Record<string, any>} next */
+      next2 => {
+        Object.assign(props, next2);
+      };
     __privateGet(this, _instance).$destroy = () => {
       unmount(__privateGet(this, _instance));
     };
@@ -2385,7 +2506,7 @@ var Svelte4Component = class {
     return () => {
       __privateGet(this, _events)[event2] = __privateGet(this, _events)[event2].filter(
         /** @param {any} fn */
-        (fn) => fn !== cb
+        fn => fn !== cb
       );
     };
   }
@@ -2398,7 +2519,7 @@ _instance = new WeakMap();
 
 // node_modules/svelte/src/internal/client/dom/elements/custom-element.js
 var SvelteElement;
-if (typeof HTMLElement === "function") {
+if (typeof HTMLElement === 'function') {
   SvelteElement = class extends HTMLElement {
     /**
      * @param {*} $$componentCtor
@@ -2408,29 +2529,29 @@ if (typeof HTMLElement === "function") {
     constructor($$componentCtor, $$slots, use_shadow_dom) {
       super();
       /** The Svelte component constructor */
-      __publicField(this, "$$ctor");
+      __publicField(this, '$$ctor');
       /** Slots */
-      __publicField(this, "$$s");
+      __publicField(this, '$$s');
       /** @type {any} The Svelte component instance */
-      __publicField(this, "$$c");
+      __publicField(this, '$$c');
       /** Whether or not the custom element is connected */
-      __publicField(this, "$$cn", false);
+      __publicField(this, '$$cn', false);
       /** @type {Record<string, any>} Component props data */
-      __publicField(this, "$$d", {});
+      __publicField(this, '$$d', {});
       /** `true` if currently in the process of reflecting component props back to attributes */
-      __publicField(this, "$$r", false);
+      __publicField(this, '$$r', false);
       /** @type {Record<string, CustomElementPropDefinition>} Props definition (name, reflected, type etc) */
-      __publicField(this, "$$p_d", {});
+      __publicField(this, '$$p_d', {});
       /** @type {Record<string, EventListenerOrEventListenerObject[]>} Event listeners */
-      __publicField(this, "$$l", {});
+      __publicField(this, '$$l', {});
       /** @type {Map<EventListenerOrEventListenerObject, Function>} Event listener unsubscribe functions */
-      __publicField(this, "$$l_u", /* @__PURE__ */ new Map());
+      __publicField(this, '$$l_u', /* @__PURE__ */ new Map());
       /** @type {any} The managed render effect for reflecting attributes */
-      __publicField(this, "$$me");
+      __publicField(this, '$$me');
       this.$$ctor = $$componentCtor;
       this.$$s = $$slots;
       if (use_shadow_dom) {
-        this.attachShadow({ mode: "open" });
+        this.attachShadow({ mode: 'open' });
       }
     }
     /**
@@ -2465,10 +2586,10 @@ if (typeof HTMLElement === "function") {
     async connectedCallback() {
       this.$$cn = true;
       if (!this.$$c) {
-        let create_slot = function(name) {
-          return (anchor) => {
-            const slot2 = document.createElement("slot");
-            if (name !== "default") slot2.name = name;
+        let create_slot = function (name) {
+          return anchor => {
+            const slot2 = document.createElement('slot');
+            if (name !== 'default') slot2.name = name;
             append(anchor, slot2);
           };
         };
@@ -2480,7 +2601,7 @@ if (typeof HTMLElement === "function") {
         const existing_slots = get_custom_elements_slots(this);
         for (const name of this.$$s) {
           if (name in existing_slots) {
-            if (name === "default" && !this.$$d.children) {
+            if (name === 'default' && !this.$$d.children) {
               this.$$d.children = create_slot(name);
               $$slots.default = true;
             } else {
@@ -2491,7 +2612,7 @@ if (typeof HTMLElement === "function") {
         for (const attribute of this.attributes) {
           const name = this.$$g_p(attribute.name);
           if (!(name in this.$$d)) {
-            this.$$d[name] = get_custom_element_value(name, attribute.value, this.$$p_d, "toProp");
+            this.$$d[name] = get_custom_element_value(name, attribute.value, this.$$p_d, 'toProp');
           }
         }
         for (const key in this.$$p_d) {
@@ -2506,8 +2627,8 @@ if (typeof HTMLElement === "function") {
           props: {
             ...this.$$d,
             $$slots,
-            $$host: this
-          }
+            $$host: this,
+          },
         });
         this.$$me = effect_root(() => {
           render_effect(() => {
@@ -2520,7 +2641,7 @@ if (typeof HTMLElement === "function") {
                 key,
                 this.$$d[key],
                 this.$$p_d,
-                "toAttribute"
+                'toAttribute'
               );
               if (attribute_value == null) {
                 this.removeAttribute(this.$$p_d[key].attribute || key);
@@ -2551,7 +2672,7 @@ if (typeof HTMLElement === "function") {
       var _a;
       if (this.$$r) return;
       attr2 = this.$$g_p(attr2);
-      this.$$d[attr2] = get_custom_element_value(attr2, newValue, this.$$p_d, "toProp");
+      this.$$d[attr2] = get_custom_element_value(attr2, newValue, this.$$p_d, 'toProp');
       (_a = this.$$c) == null ? void 0 : _a.$set({ [attr2]: this.$$d[attr2] });
     }
     disconnectedCallback() {
@@ -2568,39 +2689,43 @@ if (typeof HTMLElement === "function") {
      * @param {string} attribute_name
      */
     $$g_p(attribute_name) {
-      return object_keys(this.$$p_d).find(
-        (key) => this.$$p_d[key].attribute === attribute_name || !this.$$p_d[key].attribute && key.toLowerCase() === attribute_name
-      ) || attribute_name;
+      return (
+        object_keys(this.$$p_d).find(
+          key =>
+            this.$$p_d[key].attribute === attribute_name ||
+            (!this.$$p_d[key].attribute && key.toLowerCase() === attribute_name)
+        ) || attribute_name
+      );
     }
   };
 }
 function get_custom_element_value(prop2, value, props_definition, transform) {
   var _a;
   const type = (_a = props_definition[prop2]) == null ? void 0 : _a.type;
-  value = type === "Boolean" && typeof value !== "boolean" ? value != null : value;
+  value = type === 'Boolean' && typeof value !== 'boolean' ? value != null : value;
   if (!transform || !props_definition[prop2]) {
     return value;
-  } else if (transform === "toAttribute") {
+  } else if (transform === 'toAttribute') {
     switch (type) {
-      case "Object":
-      case "Array":
+      case 'Object':
+      case 'Array':
         return value == null ? null : JSON.stringify(value);
-      case "Boolean":
-        return value ? "" : null;
-      case "Number":
+      case 'Boolean':
+        return value ? '' : null;
+      case 'Number':
         return value == null ? null : value;
       default:
         return value;
     }
   } else {
     switch (type) {
-      case "Object":
-      case "Array":
+      case 'Object':
+      case 'Array':
         return value && JSON.parse(value);
-      case "Boolean":
+      case 'Boolean':
         return value;
       // conversion already handled above
-      case "Number":
+      case 'Number':
         return value != null ? +value : value;
       default:
         return value;
@@ -2609,10 +2734,10 @@ function get_custom_element_value(prop2, value, props_definition, transform) {
 }
 function get_custom_elements_slots(element2) {
   const result = {};
-  element2.childNodes.forEach((node) => {
+  element2.childNodes.forEach(node => {
     result[
       /** @type {Element} node */
-      node.slot || "default"
+      node.slot || 'default'
     ] = true;
   });
   return result;
@@ -2620,7 +2745,7 @@ function get_custom_elements_slots(element2) {
 
 // node_modules/svelte/src/index-client.js
 if (true_default) {
-  let throw_rune_error = function(rune) {
+  let throw_rune_error = function (rune) {
     if (!(rune in globalThis)) {
       let value;
       Object.defineProperty(globalThis, rune, {
@@ -2632,38 +2757,39 @@ if (true_default) {
           }
           rune_outside_svelte(rune);
         },
-        set: (v) => {
+        set: v => {
           value = v;
-        }
+        },
       });
     }
   };
-  throw_rune_error("$state");
-  throw_rune_error("$effect");
-  throw_rune_error("$derived");
-  throw_rune_error("$inspect");
-  throw_rune_error("$props");
-  throw_rune_error("$bindable");
+  throw_rune_error('$state');
+  throw_rune_error('$effect');
+  throw_rune_error('$derived');
+  throw_rune_error('$inspect');
+  throw_rune_error('$props');
+  throw_rune_error('$bindable');
 }
 function onMount(fn) {
   if (component_context === null) {
-    lifecycle_outside_component("onMount");
+    lifecycle_outside_component('onMount');
   }
   if (legacy_mode_flag && component_context.l !== null) {
     init_update_callbacks(component_context).m.push(fn);
   } else {
     user_effect(() => {
       const cleanup = untrack(fn);
-      if (typeof cleanup === "function") return (
-        /** @type {() => void} */
-        cleanup
-      );
+      if (typeof cleanup === 'function')
+        return (
+          /** @type {() => void} */
+          cleanup
+        );
     });
   }
 }
 function onDestroy(fn) {
   if (component_context === null) {
-    lifecycle_outside_component("onDestroy");
+    lifecycle_outside_component('onDestroy');
   }
   onMount(() => () => untrack(fn));
 }
@@ -2673,17 +2799,13 @@ function create_custom_event(type, detail, { bubbles = false, cancelable = false
 function createEventDispatcher() {
   const active_component_context = component_context;
   if (active_component_context === null) {
-    lifecycle_outside_component("createEventDispatcher");
+    lifecycle_outside_component('createEventDispatcher');
   }
   return (type, detail, options) => {
     var _a;
-    const events = (
+    const events =
       /** @type {Record<string, Function | Function[]>} */
-      (_a = active_component_context.s.$$events) == null ? void 0 : _a[
-        /** @type {any} */
-        type
-      ]
-    );
+      (_a = active_component_context.s.$$events) == null ? void 0 : /** @type {any} */ _a[type];
     if (events) {
       const callbacks = is_array(events) ? events.slice() : [events];
       const event2 = create_custom_event(
@@ -2702,27 +2824,26 @@ function createEventDispatcher() {
 }
 function beforeUpdate(fn) {
   if (component_context === null) {
-    lifecycle_outside_component("beforeUpdate");
+    lifecycle_outside_component('beforeUpdate');
   }
   if (component_context.l === null) {
-    lifecycle_legacy_only("beforeUpdate");
+    lifecycle_legacy_only('beforeUpdate');
   }
   init_update_callbacks(component_context).b.push(fn);
 }
 function afterUpdate(fn) {
   if (component_context === null) {
-    lifecycle_outside_component("afterUpdate");
+    lifecycle_outside_component('afterUpdate');
   }
   if (component_context.l === null) {
-    lifecycle_legacy_only("afterUpdate");
+    lifecycle_legacy_only('afterUpdate');
   }
   init_update_callbacks(component_context).a.push(fn);
 }
 function init_update_callbacks(context) {
-  var l = (
+  var l =
     /** @type {ComponentContextLegacy} */
-    context.l
-  );
+    context.l;
   return l.u ?? (l.u = { a: [], b: [], m: [] });
 }
 export {
@@ -2741,6 +2862,6 @@ export {
   setContext,
   tick,
   unmount,
-  untrack
+  untrack,
 };
 //# sourceMappingURL=svelte.js.map

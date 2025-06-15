@@ -5,6 +5,7 @@
 **STOP AND VERIFY AFTER EVERY SINGLE STEP**
 
 For each and every conversion step in this migration:
+
 1. **STOP** immediately after completing the step
 2. **RUN** `npm run build` to check for TypeScript errors
 3. **TEST** the application to ensure functionality remains intact
@@ -15,6 +16,7 @@ For each and every conversion step in this migration:
 **DO NOT PROCEED TO THE NEXT STEP WITHOUT EXPLICIT CONFIRMATION**
 
 This incremental approach ensures:
+
 - ✅ Each change is validated before building on it
 - ✅ Issues are caught immediately, not after multiple changes
 - ✅ The codebase remains in a working state at all times
@@ -29,7 +31,7 @@ This document outlines a comprehensive plan to convert the Soul Recycling Simula
 
 **Current Status**: JavaScript with JSDoc annotations  
 **Target**: Full TypeScript with strict type safety  
-**Estimated Timeline**: 18-24 hours across 12 phases  
+**Estimated Timeline**: 18-24 hours across 12 phases
 
 ## Migration Strategy
 
@@ -42,12 +44,14 @@ The migration will follow an incremental approach, converting files in dependenc
 ### 1.1 Update Build Configuration ✅
 
 **Files to modify:**
+
 - `package.json` - Add TypeScript dependencies
 - `tsconfig.json` - Create comprehensive TypeScript config (replace jsconfig.json)
 - `vite.config.js` → `vite.config.ts` - Convert to TypeScript
 - `svelte.config.js` → `svelte.config.ts` - Convert to TypeScript
 
 **Dependencies to add:**
+
 ```json
 {
   "devDependencies": {
@@ -60,6 +64,7 @@ The migration will follow an incremental approach, converting files in dependenc
 ```
 
 **TypeScript Configuration:**
+
 ```json
 {
   "compilerOptions": {
@@ -88,11 +93,7 @@ The migration will follow an incremental approach, converting files in dependenc
       "$components/*": ["src/components/*"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.svelte",
-    "src/**/*.d.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.svelte", "src/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
 ```
@@ -103,7 +104,7 @@ The migration will follow an incremental approach, converting files in dependenc
 
 - ✅ `three.d.ts` - Extended Three.js types for custom properties
 - ✅ `simulation.d.ts` - Core simulation types
-- ✅ `performance.d.ts` - Performance management types  
+- ✅ `performance.d.ts` - Performance management types
 - ✅ `svelte.d.ts` - Svelte component types
 
 ### 1.3 Phase 1 Summary ✅
@@ -115,6 +116,7 @@ The migration will follow an incremental approach, converting files in dependenc
 **Project structure:** Ready for systematic TypeScript migration
 
 **Key accomplishments:**
+
 - ✅ Complete TypeScript build configuration (`tsconfig.json`)
 - ✅ Updated Vite and Svelte configs to support TypeScript
 - ✅ Installed all required TypeScript dependencies
@@ -239,9 +241,10 @@ declare module 'three' {
 **Build status:** ✅ All type definitions compile successfully
 
 **Key accomplishments:**
+
 - ✅ Complete soul data and simulation state typing
 - ✅ Performance metrics and quality management types
-- ✅ LOD configuration and statistics interfaces  
+- ✅ LOD configuration and statistics interfaces
 - ✅ Extended Three.js types for custom userData properties
 - ✅ Foundation for type-safe development across entire codebase
 
@@ -252,11 +255,13 @@ declare module 'three' {
 ### 3.1 Convert Constants Files ✅
 
 **Completed conversions:**
+
 - ✅ `src/lib/constants/config.js` → `config.ts` - Feature flags and default parameters with validation
-- ✅ `src/lib/constants/physics.js` → `physics.ts` - Physics constants with comprehensive type definitions  
+- ✅ `src/lib/constants/physics.js` → `physics.ts` - Physics constants with comprehensive type definitions
 - ✅ `src/lib/constants/rendering.js` → `rendering.ts` - Camera, lighting, geometry, and controls settings
 
 **Added comprehensive type exports:**
+
 ```typescript
 // config.ts - Feature flags and validation
 export interface FeatureFlags {
@@ -347,6 +352,7 @@ export function clearAllStorage(): void {
 ### 3.3 Type System Integration ✅
 
 **Completed tasks:**
+
 - ✅ Added all rendering types to central type exports (`src/types/index.ts`)
 - ✅ Updated all import statements across the codebase to use new TypeScript modules
 - ✅ Removed old JavaScript files (`config.js`, `physics.js`, `rendering.js`, `localStorage.js`)
@@ -362,6 +368,7 @@ export function clearAllStorage(): void {
 **Build status:** ✅ All builds passing, zero TypeScript errors
 
 **Key improvements:**
+
 - Type-safe configuration management
 - Runtime validation with type guards
 - Comprehensive 3D rendering type coverage
@@ -375,9 +382,11 @@ export function clearAllStorage(): void {
 ### 4.1 Convert LODManager ✅ COMPLETED
 
 **File to convert:**
+
 - `src/lib/LODManager.js` → `LODManager.ts`
 
 **🛑 CHECKPOINT 4.1**: After converting this file, STOP and verify:
+
 - [x] File compiles without TypeScript errors ✅
 - [x] All imports resolve correctly ✅
 - [x] Application still runs without runtime errors ✅
@@ -388,11 +397,11 @@ export function clearAllStorage(): void {
 
 ```typescript
 import * as THREE from 'three';
-import type { 
-  LODConfiguration, 
-  LODStatistics, 
+import type {
+  LODConfiguration,
+  LODStatistics,
   LODData,
-  AdaptivePerformanceManager 
+  AdaptivePerformanceManager,
 } from '../types';
 
 export class LODManager {
@@ -417,7 +426,7 @@ export class LODManager {
   public calculateLODLevel(soulPosition: THREE.Vector3): keyof LODConfiguration {
     // Calculate distance-based LOD level
     const distanceSq = this.camera.position.distanceToSquared(soulPosition);
-    
+
     if (distanceSq > this.CULLED_DISTANCE_SQ) return 'CULLED';
     if (distanceSq > this.LOW_DISTANCE_SQ) return 'LOW';
     if (distanceSq > this.MEDIUM_DISTANCE_SQ) return 'MEDIUM';
@@ -461,6 +470,7 @@ export interface LODData {
 ```
 
 **🛑 CHECKPOINT 4.3**: After adding LOD types, STOP and verify:
+
 - [x] Type definitions compile correctly ✅
 - [x] No circular import dependencies ✅
 - [x] LODManager uses new types without errors ✅
@@ -474,9 +484,11 @@ export interface LODData {
 ### 5.1 Convert AdaptivePerformanceManager
 
 **File to convert:**
+
 - `src/lib/adaptive-performance.js` → `AdaptivePerformanceManager.ts`
 
 **🛑 CHECKPOINT 5.1**: After converting this file, STOP and verify:
+
 - [ ] File compiles without TypeScript errors
 - [ ] All imports resolve correctly
 - [ ] Performance management still functions
@@ -486,12 +498,12 @@ export interface LODData {
 ### 5.2 AdaptivePerformanceManager TypeScript Conversion
 
 ```typescript
-import type { 
-  PerformanceMetrics, 
-  QualityLevel, 
+import type {
+  PerformanceMetrics,
+  QualityLevel,
   QualitySettings,
   HardwareProfile,
-  AdaptiveConfig 
+  AdaptiveConfig,
 } from '../types';
 
 interface AdaptivePerformanceOptions {
@@ -526,11 +538,11 @@ export class AdaptivePerformanceManager {
   }
 
   public updateMetrics(
-    fps: number, 
-    frameTime: number, 
-    memory: number, 
-    workerTime: number, 
-    renderTime: number, 
+    fps: number,
+    frameTime: number,
+    memory: number,
+    workerTime: number,
+    renderTime: number,
     soulCount: number
   ): void {
     // Update performance metrics with type safety
@@ -574,6 +586,7 @@ export interface AdaptiveConfig {
 ```
 
 **🛑 CHECKPOINT 5.3**: After adding performance types, STOP and verify:
+
 - [ ] All performance types compile correctly
 - [ ] AdaptivePerformanceManager uses new types properly
 - [ ] No type conflicts with existing code
@@ -587,9 +600,11 @@ export interface AdaptiveConfig {
 ### 6.1 Convert InstancedSoulRenderer
 
 **File to convert:**
+
 - `src/lib/InstancedSoulRenderer.js` → `InstancedSoulRenderer.ts`
 
 **🛑 CHECKPOINT 6.1**: After converting this file, STOP and verify:
+
 - [ ] File compiles without TypeScript errors
 - [ ] All Three.js types are properly imported
 - [ ] Instanced rendering still works correctly
@@ -632,12 +647,12 @@ export class InstancedSoulRenderer {
     this.frustumCulling = options.frustumCulling ?? true;
     this.enableLOD = options.enableLOD ?? true;
     this.updateFrequency = options.updateFrequency ?? 60;
-    
+
     this.activeInstances = 0;
     this.soulToInstanceMap = new Map();
     this.unusedInstances = [];
     this.lastUpdateTime = 0;
-    
+
     this.initializeInstancedMesh();
   }
 
@@ -674,9 +689,11 @@ export class InstancedSoulRenderer {
 ### 7.1 Convert Simulation Worker
 
 **File to convert:**
+
 - `src/lib/simulation.worker.js` → `simulation.worker.ts`
 
 **🛑 CHECKPOINT 7.1**: After converting this file, STOP and verify:
+
 - [ ] Worker file compiles without TypeScript errors
 - [ ] Worker messages are properly typed
 - [ ] Physics simulation still runs correctly
@@ -734,7 +751,11 @@ class SimulationWorker {
     // Initialize with default physics constants
   }
 
-  private updatePhysics(souls: SoulData[], deltaTime: number, mousePosition: { x: number; y: number }): SoulData[] {
+  private updatePhysics(
+    souls: SoulData[],
+    deltaTime: number,
+    mousePosition: { x: number; y: number }
+  ): SoulData[] {
     // Physics update implementation with type safety
   }
 
@@ -786,6 +807,7 @@ export interface WorkerPerformanceMetrics {
 ```
 
 **🛑 CHECKPOINT 7.3**: After adding worker types, STOP and verify:
+
 - [ ] Worker types compile correctly
 - [ ] Message passing is properly typed
 - [ ] No worker communication errors
@@ -801,6 +823,7 @@ export interface WorkerPerformanceMetrics {
 **Convert:** `src/lib/stores/simulationState.svelte.js` → `simulationState.svelte.ts`
 
 **🛑 CHECKPOINT 8.1**: After converting state management, STOP and verify:
+
 - [x] State store compiles without TypeScript errors ✅
 - [x] All reactive state works correctly ✅
 - [x] Svelte runes maintain proper typing ✅
@@ -857,9 +880,10 @@ export function addSoul(soul: THREE.Object3D): void {
 **Build status:** ✅ All builds passing, zero TypeScript errors
 
 **Key accomplishments:**
+
 - ✅ Successfully converted `simulationState.svelte.js` → `simulationState.svelte.ts`
 - ✅ Added comprehensive TypeScript interfaces for all state properties
-- ✅ Created proper typing for component interfaces (ToastNotification, FpsCounter)  
+- ✅ Created proper typing for component interfaces (ToastNotification, FpsCounter)
 - ✅ Added type safety to all getter and setter functions
 - ✅ Updated all import statements across the codebase to use new TypeScript module
 - ✅ Maintained full Svelte 5 runes functionality with type safety
@@ -872,11 +896,13 @@ export function addSoul(soul: THREE.Object3D): void {
 ### 9.1 Convert Utility Files
 
 **Files to convert:**
+
 - `src/lib/utils/soulManager.js` → `soulManager.ts`
-- `src/lib/utils/workerManager.js` → `workerManager.ts`  
+- `src/lib/utils/workerManager.js` → `workerManager.ts`
 - `src/lib/utils/animationController.js` → `animationController.ts`
 
 **🛑 CHECKPOINT 9.1**: After converting EACH utility file, STOP and verify:
+
 - [ ] Each file compiles without TypeScript errors
 - [ ] Soul creation and management works correctly
 - [ ] Worker management functions properly
@@ -903,7 +929,7 @@ export function createSoul(
   // Create soul with proper type safety
   const soulData: SoulData = {
     id: generateSoulId(),
-    type: isDewa ? 'dewa' : (isHuman ? 'human' : 'gpt'),
+    type: isDewa ? 'dewa' : isHuman ? 'human' : 'gpt',
     position: new THREE.Vector3(),
     velocity: new THREE.Vector3(),
     lifespan: MIN_LIFESPAN + Math.random() * (MAX_LIFESPAN - MIN_LIFESPAN),
@@ -913,17 +939,17 @@ export function createSoul(
     saturation: 50 + Math.random() * 50,
     lightness: 40 + Math.random() * 40,
     isDewa,
-    isHuman
+    isHuman,
   };
-  
+
   // Create mesh with userData
   const geometry = createSoulGeometry(soulData.type);
   const material = createSoulMaterial(soulData);
   const mesh = new THREE.Mesh(geometry, material);
-  
+
   // Set userData with proper typing
   mesh.userData = soulData;
-  
+
   return mesh;
 }
 
@@ -966,11 +992,11 @@ function createSoulMaterial(soulData: SoulData): THREE.Material {
     soulData.saturation / 100,
     soulData.lightness / 100
   );
-  
+
   return new THREE.MeshStandardMaterial({
     color,
     transparent: true,
-    opacity: 0.8
+    opacity: 0.8,
   });
 }
 ```
@@ -1011,7 +1037,7 @@ export class WorkerManager {
     this.simulationWorker.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
       const { type, data } = event.data;
       const handler = this.messageHandlers.get(type);
-      
+
       if (handler) {
         handler(data);
       } else {
@@ -1019,7 +1045,7 @@ export class WorkerManager {
       }
     });
 
-    this.simulationWorker.addEventListener('error', (error) => {
+    this.simulationWorker.addEventListener('error', error => {
       console.error('Worker error:', error);
     });
   }
@@ -1082,12 +1108,12 @@ export class AnimationController {
   constructor(options: AnimationOptions = {}) {
     this.targetFPS = options.targetFPS ?? 60;
     this.enableAdaptiveFPS = options.enableAdaptiveFPS ?? true;
-    this.maxDeltaTime = options.maxDeltaTime ?? 1/30; // Max 30 FPS minimum
+    this.maxDeltaTime = options.maxDeltaTime ?? 1 / 30; // Max 30 FPS minimum
   }
 
   public start(): void {
     if (this.isRunning) return;
-    
+
     this.isRunning = true;
     this.lastTime = performance.now();
     this.animate();
@@ -1095,7 +1121,7 @@ export class AnimationController {
 
   public stop(): void {
     if (!this.isRunning) return;
-    
+
     this.isRunning = false;
     if (this.animationId !== null) {
       cancelAnimationFrame(this.animationId);
@@ -1131,7 +1157,8 @@ export class AnimationController {
 
   private updateFPSHistory(fps: number): void {
     this.fpsHistory.push(fps);
-    if (this.fpsHistory.length > 60) { // Keep last 60 frames
+    if (this.fpsHistory.length > 60) {
+      // Keep last 60 frames
       this.fpsHistory.shift();
     }
   }
@@ -1162,7 +1189,7 @@ export class AnimationController {
     return {
       averageFPS: this.getAverageFPS(),
       currentFPS: this.getCurrentFPS(),
-      frameCount: this.frameCount
+      frameCount: this.frameCount,
     };
   }
 }
@@ -1175,6 +1202,7 @@ export class AnimationController {
 ### 10.1 Convert Components to TypeScript
 
 **Files to convert (in order):**
+
 1. `src/components/FpsCounter.svelte` → Add `<script lang="ts">`
 2. `src/components/PopulationCounter.svelte` → Add TypeScript
 3. `src/components/EntityLinks.svelte` → Add TypeScript
@@ -1185,6 +1213,7 @@ export class AnimationController {
 8. `src/components/BottomLinks.svelte` → Add TypeScript
 
 **🛑 CHECKPOINT 10.1**: After converting EACH component, STOP and verify:
+
 - [ ] Component compiles without TypeScript errors
 - [ ] Component renders correctly in the UI
 - [ ] All props and events are properly typed
@@ -1201,10 +1230,10 @@ interface FpsCounterProps {
   averageWindowSize?: number;
 }
 
-let { 
+let {
   showCounter = true,
   updateInterval = 1000,
-  averageWindowSize = 10 
+  averageWindowSize = 10,
 }: FpsCounterProps = $props();
 
 // SliderControls.svelte
@@ -1217,17 +1246,19 @@ interface SliderControlsProps {
 let {
   NEW_SOUL_SPAWN_RATE = $bindable<number>(),
   MIN_LIFESPAN = $bindable<number>(),
-  MAX_LIFESPAN = $bindable<number>()
+  MAX_LIFESPAN = $bindable<number>(),
 }: SliderControlsProps = $props();
 ```
 
 ### 10.3 Convert Simulation Components
 
 **Files to convert:**
+
 - `src/components/simulation/SceneManager.svelte` → Add TypeScript
 - `src/components/simulation/SimulationManager.svelte` → Add TypeScript
 
 **🛑 CHECKPOINT 10.3**: After converting simulation components, STOP and verify:
+
 - [ ] Scene management compiles and works correctly
 - [ ] Simulation manager maintains all functionality
 - [ ] Three.js integration remains stable
@@ -1268,11 +1299,13 @@ let {
 ### 11.1 Convert Main Files
 
 **Files to convert:**
+
 - `src/main.js` → `main.ts`
 - `src/App.svelte` → Add TypeScript
 - `src/lib/ai-test-bridge.js` → `ai-test-bridge.ts`
 
 **🛑 CHECKPOINT 11.1**: After converting EACH main file, STOP and verify:
+
 - [ ] File compiles without TypeScript errors
 - [ ] Application bootstraps correctly
 - [ ] All imports resolve properly
@@ -1287,7 +1320,7 @@ let {
   import type { FpsCounter } from './components/FpsCounter.svelte';
   import type { ToastNotification } from './components/ToastNotification.svelte';
   import type { SimulationManager } from './components/simulation/SimulationManager.svelte';
-  
+
   let localContainer: HTMLElement | undefined = $state();
   let localToastNotification: ToastNotification | undefined = $state();
   let localFpsCounter: FpsCounter | undefined = $state();
@@ -1323,12 +1356,14 @@ export default app;
 ### 12.1 Type Checking and Error Resolution
 
 **Tasks:**
+
 - Run `tsc --noEmit` to check for type errors
 - Fix any remaining type issues
 - Ensure all imports have proper types
 - Validate worker message types
 
 **🛑 CHECKPOINT 12.1**: After each validation task, STOP and verify:
+
 - [ ] Zero TypeScript compilation errors
 - [ ] All type definitions are complete
 - [ ] No any types remain (except where necessary)
@@ -1338,12 +1373,14 @@ export default app;
 ### 12.2 Build and Runtime Testing
 
 **Tasks:**
+
 - Run `npm run build` to ensure TypeScript builds correctly
 - Test application functionality in development mode
 - Verify all component interactions work
 - Test performance with TypeScript overhead
 
 **🛑 CHECKPOINT 12.2**: After each testing task, STOP and verify:
+
 - [ ] Production build succeeds without errors
 - [ ] Development mode runs without issues
 - [ ] All features work identically to JavaScript version
@@ -1353,11 +1390,13 @@ export default app;
 ### 12.3 Documentation Updates
 
 **Files to update:**
+
 - Update `README.md` with TypeScript information
 - Add TypeScript section to `tech-opt.md`
 - Document new type interfaces and their usage
 
 **🛑 FINAL CHECKPOINT 12.3**: After documentation updates, STOP and verify:
+
 - [ ] All documentation reflects TypeScript migration
 - [ ] Type interfaces are properly documented
 - [ ] Migration process is recorded
@@ -1369,11 +1408,13 @@ export default app;
 ## Migration Checklist
 
 ### Pre-Migration
+
 - [ ] Backup current codebase
 - [ ] Ensure all tests pass in JavaScript
 - [ ] Document current API interfaces
 
 ### Phase-by-Phase Completion
+
 - [x] Phase 1: Project setup and configuration ✅ COMPLETED
 - [x] Phase 2: Core type definitions ✅ COMPLETED
 - [x] Phase 3: Constants and configuration ✅ COMPLETED
@@ -1383,7 +1424,7 @@ export default app;
   - [x] 4.3 LOD Type Definitions - ✅ COMPLETED & VERIFIED
 - [x] Phase 5: Performance Management System ✅ COMPLETED
   - [x] 5.1 Convert AdaptivePerformanceManager - ✅ COMPLETED & VERIFIED
-  - [x] 5.2 TypeScript Implementation - ✅ COMPLETED & VERIFIED  
+  - [x] 5.2 TypeScript Implementation - ✅ COMPLETED & VERIFIED
   - [x] 5.3 Performance Type Definitions - ✅ COMPLETED & VERIFIED
 - [x] Phase 6: Rendering System ✅ COMPLETED
   - [x] 6.1 Convert InstancedSoulRenderer - ✅ COMPLETED & VERIFIED
@@ -1400,7 +1441,7 @@ export default app;
 - [x] Phase 10: Svelte Components ✅ COMPLETED
   - [x] 10.1 Convert each component individually - ✅ COMPLETED & VERIFIED
     - [x] FpsCounter.svelte - ✅ COMPLETED & VERIFIED
-    - [x] PopulationCounter.svelte - ✅ COMPLETED & VERIFIED  
+    - [x] PopulationCounter.svelte - ✅ COMPLETED & VERIFIED
     - [x] EntityLinks.svelte - ✅ COMPLETED & VERIFIED
     - [x] SliderControls.svelte - ✅ COMPLETED & VERIFIED
     - [x] EquilibriumInfo.svelte - ✅ COMPLETED & VERIFIED
@@ -1421,6 +1462,7 @@ export default app;
   - [x] 12.3 Documentation updates - ✅ COMPLETED & VERIFIED
 
 ### Post-Migration
+
 - [ ] All TypeScript compilation passes
 - [ ] Application runs without runtime errors
 - [ ] Performance benchmarks match or exceed JavaScript version
@@ -1432,26 +1474,31 @@ export default app;
 ## Expected Benefits
 
 ### 1. **Type Safety**
+
 - Catch errors at compile time instead of runtime
 - Prevent common JavaScript pitfalls (null/undefined access)
 - Better IDE support with autocompletion and error detection
 
 ### 2. **Developer Experience**
+
 - Enhanced IntelliSense and code completion
 - Better refactoring capabilities
 - Improved code navigation and documentation
 
 ### 3. **Maintainability**
+
 - Self-documenting interfaces and types
 - Easier onboarding for new developers
 - Reduced debugging time for complex data flows
 
 ### 4. **Performance Insights**
+
 - Type-guided optimizations
 - Better tree-shaking with explicit exports
 - Compile-time detection of unused code
 
 ### 5. **Future-Proofing**
+
 - Better compatibility with modern tooling
 - Easier integration with TypeScript-first libraries
 - Improved support for advanced IDE features
@@ -1461,22 +1508,27 @@ export default app;
 ## Potential Challenges and Mitigation
 
 ### 1. **Three.js Type Complexity**
+
 **Challenge**: Complex Three.js object hierarchies and custom properties  
 **Mitigation**: Create module augmentations and custom type definitions
 
 ### 2. **Worker Message Types**
+
 **Challenge**: Untyped communication between main thread and workers  
 **Mitigation**: Define strict message interfaces and validation schemas
 
 ### 3. **Svelte Runes with TypeScript**
+
 **Challenge**: Ensuring proper type inference with Svelte 5 runes  
 **Mitigation**: Use explicit type annotations where needed, leverage $bindable types
 
 ### 4. **Performance Overhead**
+
 **Challenge**: TypeScript compilation and type checking impact  
 **Mitigation**: Optimize tsconfig.json, use incremental compilation, monitor bundle size
 
 ### 5. **Dynamic Property Access**
+
 **Challenge**: Existing code using dynamic object property access  
 **Mitigation**: Use index signatures and type assertions where necessary
 

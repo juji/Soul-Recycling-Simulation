@@ -17,7 +17,7 @@ export type {
   MaterialOpacity,
   GeometrySettings,
   LineSettings,
-  ControlsSettings
+  ControlsSettings,
 } from '../lib/constants/rendering';
 
 // Additional global types that don't fit in specific modules

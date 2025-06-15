@@ -1,26 +1,22 @@
 /**
  * Worker Communication Manager
- * 
+ *
  * Manages Web Worker communication for the Soul Recycling Simulation.
  * Handles worker initialization, message passing, and performance tracking.
- * 
+ *
  * Phase 6a: Extract Worker Communication Manager from App.svelte
  */
 
 import * as THREE from 'three';
 import type { WorkerMessage, WorkerSoulUpdate, ConnectionData, SoulWorkerData } from '../../types';
-import { 
+import {
   performanceMetrics as getPerformanceMetrics,
   souls as getSouls,
   renderingMode as getRenderingMode,
-  instancedRenderer as getInstancedRenderer
+  instancedRenderer as getInstancedRenderer,
 } from '../stores/simulationState.svelte';
 
-import { 
-  handleSoulRemoval,
-  updateSoulFromWorker,
-  updateConnectionLines
-} from './soulManager';
+import { handleSoulRemoval, updateSoulFromWorker, updateConnectionLines } from './soulManager';
 
 export type WorkerMessageHandler = (data: any) => void;
 
@@ -43,18 +39,17 @@ export class WorkerManager {
   initializeWorker(initialSouls: SoulWorkerData[], constants: any): void {
     try {
       // Create new worker instance
-      this.simulationWorker = new Worker(
-        new URL('../simulation.worker.ts', import.meta.url), 
-        { type: 'module' }
-      );
+      this.simulationWorker = new Worker(new URL('../simulation.worker.ts', import.meta.url), {
+        type: 'module',
+      });
 
       // Send initialization data to worker
       this.simulationWorker.postMessage({
         type: 'init',
         data: {
           souls: initialSouls,
-          constants: constants
-        }
+          constants: constants,
+        },
       });
 
       // Setup message handler
@@ -63,7 +58,6 @@ export class WorkerManager {
       };
 
       this.isInitialized = true;
-
     } catch (error) {
       console.error('WorkerManager: Failed to initialize worker:', error);
       this.isInitialized = false;
@@ -81,19 +75,19 @@ export class WorkerManager {
       const souls = getSouls();
       const renderingMode = getRenderingMode();
       const instancedRenderer = getInstancedRenderer();
-      
+
       performanceMetrics.soulsUpdated = data.length;
-      
+
       // Dual rendering path - instanced vs individual meshes
       if (renderingMode === 'instanced' && instancedRenderer) {
         // Update individual soul mesh positions for compatibility using soulManager
         data.forEach(updatedSoulData => {
           updateSoulFromWorker(updatedSoulData, renderingMode);
         });
-        
+
         // Update all souls through instanced renderer with updated mesh data
         instancedRenderer.updateInstances(souls);
-        
+
         // Track instanced performance
         const instancedTime = performance.now() - updateStartTime;
         performanceMetrics.instancedUpdateTime += instancedTime;
@@ -103,7 +97,7 @@ export class WorkerManager {
         data.forEach(updatedSoulData => {
           updateSoulFromWorker(updatedSoulData, renderingMode);
         });
-        
+
         // Track individual mesh performance
         const individualTime = performance.now() - updateStartTime;
         performanceMetrics.individualUpdateTime += individualTime;
@@ -116,7 +110,7 @@ export class WorkerManager {
       // Handle soul removal using soulManager
       const soulIdToRemove = data.soulId;
       const renderingMode = getRenderingMode();
-      
+
       if (this.sceneRef) {
         handleSoulRemoval(soulIdToRemove, this.sceneRef, renderingMode);
       }
@@ -136,7 +130,7 @@ export class WorkerManager {
    */
   handleWorkerMessage(e: MessageEvent<WorkerMessage>): void {
     const { type, data } = e.data;
-    
+
     const handler = this.messageHandlers.get(type);
     if (handler) {
       try {
@@ -163,7 +157,7 @@ export class WorkerManager {
     if (this.simulationWorker && this.isInitialized) {
       this.simulationWorker.postMessage({
         type: 'update',
-        data: updateData
+        data: updateData,
       });
     } else {
       console.warn('WorkerManager: Worker not initialized, cannot send update');
@@ -177,7 +171,7 @@ export class WorkerManager {
     if (this.simulationWorker && this.isInitialized) {
       this.simulationWorker.postMessage({
         type: 'addSoul',
-        data: { soul: soulData }
+        data: { soul: soulData },
       });
     } else {
       console.warn('WorkerManager: Worker not initialized, cannot add soul');
@@ -188,11 +182,7 @@ export class WorkerManager {
    * Set references for scene-dependent operations
    * This is called from the main application to provide context
    */
-  setSceneReferences(
-    scene: THREE.Scene, 
-    lineSegments: THREE.LineSegments, 
-    maxLines: number
-  ): void {
+  setSceneReferences(scene: THREE.Scene, lineSegments: THREE.LineSegments, maxLines: number): void {
     this.sceneRef = scene;
     this.lineSegmentsRef = lineSegments;
     this.maxLinesRef = maxLines;
@@ -209,7 +199,7 @@ export class WorkerManager {
     return {
       isInitialized: this.isInitialized,
       hasWorker: !!this.simulationWorker,
-      handlersCount: this.messageHandlers.size
+      handlersCount: this.messageHandlers.size,
     };
   }
 
