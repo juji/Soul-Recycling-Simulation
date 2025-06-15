@@ -35,12 +35,12 @@ The Soul Recycling Simulation is a high-performance 3D particle simulation built
 - Application tested and working correctly
 
 ✅ **Phase 2: Extract Constants** (1 hour)  
-- Moved all configuration to dedicated modules (`config.js`, `rendering.js`, `physics.js`)
+- Moved all configuration to dedicated modules (`config.ts`, `rendering.ts`, `physics.ts`)
 - Centralized feature flags, geometry settings, and physics parameters
 - Eliminated duplicate constants throughout codebase
 
 ✅ **Phase 3: Create State Management** (1 hour)
-- Implemented centralized state store using Svelte 5 runes (`simulationState.svelte.js`)
+- Implemented centralized state store using Svelte 5 runes (`simulationState.svelte.ts`)
 - Used proper `$state()` object pattern to avoid export restrictions
 - Created getter/setter functions for external state access with localStorage sync
 
@@ -50,25 +50,25 @@ The Soul Recycling Simulation is a high-performance 3D particle simulation built
 - Implemented proper event dispatching and resize handling
 
 ✅ **Phase 5a: Create Soul Creation Functions** (1 hour)
-- Created `src/lib/utils/soulManager.js` with comprehensive soul creation utilities
+- Created `src/lib/utils/soulManager.ts` with comprehensive soul creation utilities
 - Extracted ~200 lines of soul creation logic from App.svelte
 - Implemented shared geometries and materials for memory efficiency
 - Maintained full compatibility with both rendering modes and Web Worker integration
 
 ✅ **Phase 5b: Extract Soul Lifecycle Management** (1 hour)
-- Extended soulManager.js with soul lifecycle and connection management functions
+- Extended soulManager.ts with soul lifecycle and connection management functions
 - Extracted ~200 lines of soul removal, cleanup, and connection line logic
 - Implemented proper memory management for both rendering modes
 - Created efficient soul update functions with worker data integration
 
 ✅ **Phase 6a: Create Worker Communication Manager** (1 hour)
-- Created `src/lib/utils/workerManager.js` with comprehensive worker communication management
+- Created `src/lib/utils/workerManager.ts` with comprehensive worker communication management
 - Extracted Web Worker initialization and message handling from App.svelte
 - Implemented message handler registration system for extensibility
 - Maintained all performance optimizations and error handling
 
 ✅ **Phase 6b: Extract Animation Loop** (1 hour)
-- Created `animationController.js` with comprehensive animation loop management
+- Created `animationController.ts` with comprehensive animation loop management
 - Extracted performance tracking, mouse interaction, and soul spawning logic
 - Tested smooth animation and performance metrics preservation
 
@@ -77,7 +77,7 @@ The Soul Recycling Simulation is a high-performance 3D particle simulation built
 - Integrated soul, worker, and animation managers with proper coordination
 - Tested complete simulation functionality across all rendering modes
 ✅ **Phase 6b: Extract Animation Loop** (1 hour)
-- Created `animationController.js` with comprehensive animation loop management
+- Created `animationController.ts` with comprehensive animation loop management
 - Extracted performance tracking, mouse interaction, and soul spawning logic
 - Tested smooth animation and performance metrics preservation
 
@@ -199,7 +199,7 @@ Critical performance bottleneck resolved in worker message handling by replacing
 
 ### 2. Web Worker Physics Engine
 
-**Implementation**: `src/lib/simulation.worker.js`
+**Implementation**: `src/lib/simulation.worker.ts`
 
 The simulation physics run entirely in a dedicated Web Worker to prevent main thread blocking using spatial partitioning for O(n) collision detection.
 
@@ -211,7 +211,7 @@ The simulation physics run entirely in a dedicated Web Worker to prevent main th
 
 ### 3. GPU Instanced Rendering
 
-**Implementation**: `src/lib/InstancedSoulRenderer.js`
+**Implementation**: `src/lib/InstancedSoulRenderer.ts`
 
 Uses Three.js InstancedMesh for massive draw call reduction with single draw call for thousands of particles.
 
@@ -223,7 +223,7 @@ Uses Three.js InstancedMesh for massive draw call reduction with single draw cal
 
 ### 4. Level of Detail (LOD) System
 
-**Implementation**: `src/lib/LODManager.js`
+**Implementation**: `src/lib/LODManager.ts`
 
 Dynamic quality scaling based on distance and performance with multiple LOD levels for geometry and material complexity.
 
@@ -247,7 +247,7 @@ Minimizes data transfer between worker and main thread using delta compression f
 
 ### 6. Adaptive Performance Management
 
-**Implementation**: `src/lib/adaptive-performance.js`
+**Implementation**: `src/lib/AdaptivePerformanceManager.ts`
 
 Real-time performance monitoring and automatic quality adjustment with multiple performance tiers.
 
@@ -406,7 +406,7 @@ The incremental refactoring has resulted in a well-organized, maintainable codeb
 ```
 src/
 ├── App.svelte                    # Main application component (68 lines - simplified)
-├── main.js                       # Application entry point
+├── main.ts                       # Application entry point
 ├── components/                   # UI components
 │   ├── FpsCounter.svelte         # Performance monitoring
 │   ├── PopulationCounter.svelte  # Soul count display
@@ -418,19 +418,19 @@ src/
 │       └── SimulationManager.svelte # ✅ Simulation coordination component
 ├── lib/                          # Core libraries and utilities
 │   ├── constants/                # ✅ Centralized configuration
-│   │   ├── config.js             # Feature flags, defaults
-│   │   ├── rendering.js          # Camera, lighting, geometry settings
-│   │   └── physics.js            # Physics parameters, interaction settings
+│   │   ├── config.ts             # Feature flags, defaults
+│   │   ├── rendering.ts          # Camera, lighting, geometry settings
+│   │   └── physics.ts            # Physics parameters, interaction settings
 │   ├── stores/                   # ✅ State management
-│   │   └── simulationState.svelte.js # Centralized Svelte 5 runes state
+│   │   └── simulationState.svelte.ts # Centralized Svelte 5 runes state
 │   ├── utils/                    # ✅ Complete utility modules
-│   │   ├── soulManager.js        # Soul creation and lifecycle (473 lines)
-│   │   ├── workerManager.js      # Worker communication (237 lines)
-│   │   └── animationController.js # Animation loop management (232 lines)
-│   ├── simulation.worker.js      # Physics calculations
-│   ├── InstancedSoulRenderer.js  # GPU instancing optimization
-│   ├── LODManager.js            # Level-of-detail system
-│   └── adaptive-performance.js   # Dynamic quality adjustment
+│   │   ├── soulManager.ts        # Soul creation and lifecycle (473 lines)
+│   │   ├── workerManager.ts      # Worker communication (237 lines)
+│   │   └── animationController.ts # Animation loop management (232 lines)
+│   ├── simulation.worker.ts      # Physics calculations
+│   ├── InstancedSoulRenderer.ts  # GPU instancing optimization
+│   ├── LODManager.ts            # Level-of-detail system
+│   └── AdaptivePerformanceManager.ts   # Dynamic quality adjustment
 ```
 
 ### State Management Architecture
@@ -446,9 +446,9 @@ The centralized state management system uses Svelte 5 runes for optimal performa
 ### Constants Organization
 
 All configuration has been extracted into dedicated modules:
-- **config.js**: Feature flags and defaults
-- **rendering.js**: Three.js settings for camera, lighting, geometry
-- **physics.js**: Simulation parameters for interactions and physics
+- **config.ts**: Feature flags and defaults
+- **rendering.ts**: Three.js settings for camera, lighting, geometry
+- **physics.ts**: Simulation parameters for interactions and physics
 
 ## Conclusion
 
