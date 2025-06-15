@@ -1,5 +1,6 @@
-<!-- App.svelte - Fully Refactored (Phase 8) -->
-<script>
+<!-- App.svelte - TypeScript Migration Phase 11.2 -->
+<script lang="ts">
+  import * as THREE from 'three';
   import FpsCounter from './components/FpsCounter.svelte';
   import PopulationCounter from './components/PopulationCounter.svelte';
   import EntityLinks from './components/EntityLinks.svelte';
@@ -9,7 +10,7 @@
   import ThreeContainer from './components/ThreeContainer.svelte';
   import SceneManager from './components/simulation/SceneManager.svelte';
   import SimulationManager from './components/simulation/SimulationManager.svelte';
-  import './lib/ai-test-bridge.js';
+  import './lib/ai-test-bridge.ts';
   
   import { 
     mouse as getMouse,
@@ -18,11 +19,29 @@
     setFpsCounter
   } from './lib/stores/simulationState.svelte.ts';
 
+  // TypeScript interfaces
+  interface MouseMoveEvent {
+    detail: {
+      mouseX: number;
+      mouseY: number;
+    };
+  }
+
+  interface SceneReadyEvent {
+    detail: {
+      scene: THREE.Scene;
+      camera: THREE.PerspectiveCamera;
+      renderer: THREE.WebGLRenderer;
+      controls: any; // ArcballControls
+    };
+  }
+
+  // Component references with TypeScript typing
   let mouse = $derived(getMouse());
-  let localContainer = $state();
-  let localToastNotification = $state();
-  let localFpsCounter = $state();
-  let simulationManager = $state();
+  let localContainer = $state<HTMLElement | undefined>();
+  let localToastNotification = $state<ToastNotification | undefined>();
+  let localFpsCounter = $state<FpsCounter | undefined>();
+  let simulationManager = $state<SimulationManager | undefined>();
 
   $effect(() => {
     if (localContainer) setContainer(localContainer);
@@ -36,13 +55,13 @@
     if (localFpsCounter) setFpsCounter(localFpsCounter);
   });
 
-  function handleMouseMove(event) {
+  function handleMouseMove(event: MouseMoveEvent): void {
     const { mouseX, mouseY } = event.detail;
     mouse.x = mouseX;
     mouse.y = mouseY;
   }
   
-  function handleSceneReady(event) {
+  function handleSceneReady(event: SceneReadyEvent): void {
     if (simulationManager) {
       simulationManager.handleSceneReady(event.detail);
     }
