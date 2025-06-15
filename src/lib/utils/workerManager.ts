@@ -7,35 +7,40 @@
  * Phase 6a: Extract Worker Communication Manager from App.svelte
  */
 
+import * as THREE from 'three';
+import type { WorkerMessage, WorkerSoulUpdate, ConnectionData, SoulWorkerData } from '../../types';
 import { 
   performanceMetrics as getPerformanceMetrics,
   souls as getSouls,
   renderingMode as getRenderingMode,
   instancedRenderer as getInstancedRenderer
-} from '../stores/simulationState.svelte.ts';
+} from '../stores/simulationState.svelte';
 
 import { 
   handleSoulRemoval,
   updateSoulFromWorker,
   updateConnectionLines
-} from './soulManager.js';
+} from './soulManager';
+
+export type WorkerMessageHandler = (data: any) => void;
 
 export class WorkerManager {
+  private simulationWorker: Worker | null = null;
+  private isInitialized: boolean = false;
+  private messageHandlers: Map<string, WorkerMessageHandler> = new Map();
+  private sceneRef: THREE.Scene | null = null;
+  private lineSegmentsRef: THREE.LineSegments | null = null;
+  private maxLinesRef: number = 0;
+
   constructor() {
-    this.simulationWorker = null;
-    this.isInitialized = false;
-    this.messageHandlers = new Map();
-    
     // Setup default message handlers
     this.setupDefaultHandlers();
   }
 
   /**
    * Initialize the Web Worker with souls and constants
-   * @param {Array} initialSouls - Initial souls for worker initialization
-   * @param {Object} constants - Physics and interaction constants
    */
-  initializeWorker(initialSouls, constants) {
+  initializeWorker(initialSouls: SoulWorkerData[], constants: any): void {
     try {
       // Create new worker instance
       this.simulationWorker = new Worker(
@@ -53,7 +58,7 @@ export class WorkerManager {
       });
 
       // Setup message handler
-      this.simulationWorker.onmessage = (e) => {
+      this.simulationWorker.onmessage = (e: MessageEvent<WorkerMessage>) => {
         this.handleWorkerMessage(e);
       };
 
@@ -68,9 +73,9 @@ export class WorkerManager {
   /**
    * Setup default message handlers for common worker message types
    */
-  setupDefaultHandlers() {
+  setupDefaultHandlers(): void {
     // Handler for soul updates from worker
-    this.messageHandlers.set('soulsUpdated', (data) => {
+    this.messageHandlers.set('soulsUpdated', (data: WorkerSoulUpdate[]) => {
       const updateStartTime = performance.now();
       const performanceMetrics = getPerformanceMetrics();
       const souls = getSouls();
@@ -107,7 +112,7 @@ export class WorkerManager {
     });
 
     // Handler for soul removal from worker
-    this.messageHandlers.set('soulRemoved', (data) => {
+    this.messageHandlers.set('soulRemoved', (data: { soulId: number }) => {
       // Handle soul removal using soulManager
       const soulIdToRemove = data.soulId;
       const renderingMode = getRenderingMode();
@@ -118,7 +123,7 @@ export class WorkerManager {
     });
 
     // Handler for connection updates from worker
-    this.messageHandlers.set('connectionsUpdated', (data) => {
+    this.messageHandlers.set('connectionsUpdated', (data: ConnectionData[]) => {
       // Handle connections calculated in worker using soulManager
       if (this.lineSegmentsRef && this.maxLinesRef) {
         updateConnectionLines(this.lineSegmentsRef, data, this.maxLinesRef);
@@ -128,9 +133,8 @@ export class WorkerManager {
 
   /**
    * Handle incoming messages from the worker
-   * @param {MessageEvent} e - Worker message event
    */
-  handleWorkerMessage(e) {
+  handleWorkerMessage(e: MessageEvent<WorkerMessage>): void {
     const { type, data } = e.data;
     
     const handler = this.messageHandlers.get(type);
@@ -147,18 +151,15 @@ export class WorkerManager {
 
   /**
    * Register a custom message handler
-   * @param {string} messageType - Type of message to handle
-   * @param {Function} handler - Handler function
    */
-  registerMessageHandler(messageType, handler) {
+  registerMessageHandler(messageType: string, handler: WorkerMessageHandler): void {
     this.messageHandlers.set(messageType, handler);
   }
 
   /**
    * Send update data to the worker
-   * @param {Object} updateData - Data to send to worker
    */
-  sendUpdate(updateData) {
+  sendUpdate(updateData: any): void {
     if (this.simulationWorker && this.isInitialized) {
       this.simulationWorker.postMessage({
         type: 'update',
@@ -171,9 +172,8 @@ export class WorkerManager {
 
   /**
    * Send a new soul to the worker
-   * @param {Object} soulData - Soul data to add to worker
    */
-  addSoulToWorker(soulData) {
+  addSoulToWorker(soulData: SoulWorkerData): void {
     if (this.simulationWorker && this.isInitialized) {
       this.simulationWorker.postMessage({
         type: 'addSoul',
@@ -187,11 +187,12 @@ export class WorkerManager {
   /**
    * Set references for scene-dependent operations
    * This is called from the main application to provide context
-   * @param {THREE.Scene} scene - Three.js scene reference
-   * @param {THREE.LineSegments} lineSegments - Connection lines reference
-   * @param {number} maxLines - Maximum number of connection lines
    */
-  setSceneReferences(scene, lineSegments, maxLines) {
+  setSceneReferences(
+    scene: THREE.Scene, 
+    lineSegments: THREE.LineSegments, 
+    maxLines: number
+  ): void {
     this.sceneRef = scene;
     this.lineSegmentsRef = lineSegments;
     this.maxLinesRef = maxLines;
@@ -199,9 +200,12 @@ export class WorkerManager {
 
   /**
    * Get worker status information
-   * @returns {Object} Status information
    */
-  getStatus() {
+  getStatus(): {
+    isInitialized: boolean;
+    hasWorker: boolean;
+    handlersCount: number;
+  } {
     return {
       isInitialized: this.isInitialized,
       hasWorker: !!this.simulationWorker,
@@ -212,7 +216,7 @@ export class WorkerManager {
   /**
    * Terminate the worker and cleanup resources
    */
-  terminate() {
+  terminate(): void {
     if (this.simulationWorker) {
       this.simulationWorker.terminate();
       this.simulationWorker = null;
@@ -223,10 +227,8 @@ export class WorkerManager {
 
   /**
    * Restart the worker with the same initialization data
-   * @param {Array} initialSouls - Initial souls for worker initialization
-   * @param {Object} constants - Physics and interaction constants
    */
-  restart(initialSouls, constants) {
+  restart(initialSouls: SoulWorkerData[], constants: any): void {
     this.terminate();
     this.initializeWorker(initialSouls, constants);
   }

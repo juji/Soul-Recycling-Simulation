@@ -1,32 +1,33 @@
-// src/lib/utils/soulManager.js
+// src/lib/utils/soulManager.ts
 // Soul creation and management utilities
 import * as THREE from 'three';
-import { DEWA_SPAWN_CHANCE, DEWA_BASE_SPEED } from '../constants/config.js';
+import type { SoulWorkerData, ConnectionData, WorkerSoulUpdate } from '../../types';
+import { DEWA_SPAWN_CHANCE, DEWA_BASE_SPEED } from '../constants/config';
 import { GEOMETRY_SETTINGS, LINE_SETTINGS } from '../constants/rendering';
-import { addSoul, removeSoulById, soulLookupMap } from '../stores/simulationState.svelte.ts';
+import { addSoul, removeSoulById, soulLookupMap } from '../stores/simulationState.svelte';
 
 // Shared geometries for better memory efficiency
-let humanGeometry = null;
-let gptGeometry = null;
-let dewaGeometry = null;
+let humanGeometry: THREE.SphereGeometry | null = null;
+let gptGeometry: THREE.BoxGeometry | null = null;
+let dewaGeometry: THREE.SphereGeometry | null = null;
 
 // Shared materials for better memory efficiency
-let sharedHumanMaterial = null;
-let sharedGptMaterial = null;
-let sharedDewaMaterial = null;
+let sharedHumanMaterial: THREE.MeshBasicMaterial | null = null;
+let sharedGptMaterial: THREE.MeshBasicMaterial | null = null;
+let sharedDewaMaterial: THREE.MeshLambertMaterial | null = null;
 
 // Soul ID counter (will be initialized by initializeSoulManager)
-let nextSoulId = 0;
+let nextSoulId: number = 0;
 
 // Base hue values (will be set by initializeSoulManager)
-let humanBaseHue = 0;
-let gptBaseHue = 0;
+let humanBaseHue: number = 0;
+let gptBaseHue: number = 0;
 
 /**
  * Initialize the soul manager with geometries, materials, and base values
  * This should be called once when the simulation starts
  */
-export function initializeSoulManager() {
+export function initializeSoulManager(): void {
   // Create shared geometries for different soul types
   humanGeometry = new THREE.SphereGeometry(
     GEOMETRY_SETTINGS.HUMAN_RADIUS, 
@@ -72,29 +73,29 @@ export function initializeSoulManager() {
 
 /**
  * Create a soul mesh with specified properties
- * @param {boolean} isHuman - Whether the soul is human type
- * @param {boolean} isDewa - Whether the soul is a dewa entity
- * @param {number} angle - Angle for color variation (optional)
- * @param {number} speed - Custom speed (optional, 0 for random)
- * @param {THREE.Scene} scene - Three.js scene for rendering mode check
- * @param {string} renderingMode - 'instanced' or 'individual'
- * @param {number} MIN_LIFESPAN - Minimum lifespan for the soul
- * @param {number} MAX_LIFESPAN - Maximum lifespan for the soul
- * @param {Object} simulationWorker - Web worker for physics simulation
- * @returns {THREE.Mesh} The created soul mesh
  */
-export function createSoul(isHuman, isDewa = false, angle = 0, speed = 0, scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, simulationWorker = null) {
+export function createSoul(
+  isHuman: boolean, 
+  isDewa: boolean = false, 
+  angle: number = 0, 
+  speed: number = 0, 
+  scene: THREE.Scene, 
+  renderingMode: 'instanced' | 'individual', 
+  MIN_LIFESPAN: number, 
+  MAX_LIFESPAN: number, 
+  simulationWorker?: Worker | null
+): THREE.Mesh {
   // Select geometry based on soul type
-  let geometry;
+  let geometry: THREE.BufferGeometry;
   if (isDewa) {
-    geometry = dewaGeometry;
+    geometry = dewaGeometry!;
   } else {
-    geometry = isHuman ? humanGeometry : gptGeometry;
+    geometry = isHuman ? humanGeometry! : gptGeometry!;
   }
   
   // Create material and HSL color values
-  let material;
-  let h_val, s_val, l_val;
+  let material: THREE.Material;
+  let h_val: number, s_val: number, l_val: number;
 
   if (isDewa) {
     // Dewa entities: random vibrant color
@@ -108,7 +109,7 @@ export function createSoul(isHuman, isDewa = false, angle = 0, speed = 0, scene,
     });
   } else {
     // Regular souls: use shared material and set color
-    material = isHuman ? sharedHumanMaterial.clone() : sharedGptMaterial.clone();
+    material = (isHuman ? sharedHumanMaterial! : sharedGptMaterial!).clone();
     material.transparent = true;
     material.opacity = 0.8;
     
@@ -117,7 +118,7 @@ export function createSoul(isHuman, isDewa = false, angle = 0, speed = 0, scene,
     h_val = (baseHue + hueOffset + angle / (2 * Math.PI)) % 1;
     s_val = 1;
     l_val = 0.56;
-    material.color.setHSL(h_val, s_val, l_val);
+    (material as THREE.MeshBasicMaterial).color.setHSL(h_val, s_val, l_val);
   }
 
   // Create the mesh
@@ -151,16 +152,16 @@ export function createSoul(isHuman, isDewa = false, angle = 0, speed = 0, scene,
   mesh.userData.velocity = { x: initialVelocity.x, y: initialVelocity.y, z: initialVelocity.z };
 
   // Prepare data for worker
-  const soulDataForWorker = {
-    id: mesh.userData.id,
+  const soulDataForWorker: SoulWorkerData = {
+    id: mesh.userData.id!,
     position: { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z },
     velocity: { x: initialVelocity.x, y: initialVelocity.y, z: initialVelocity.z },
     speed: currentSpeed,
     isHuman,
     isDewa,
-    flickerPhase: mesh.userData.flickerPhase,
-    life: mesh.userData.life,
-    baseHSL: mesh.userData.baseHSL,
+    flickerPhase: mesh.userData.flickerPhase!,
+    life: mesh.userData.life!,
+    baseHSL: mesh.userData.baseHSL!,
   };
 
   // Send to worker if available
@@ -181,14 +182,14 @@ export function createSoul(isHuman, isDewa = false, angle = 0, speed = 0, scene,
 
 /**
  * Create a new soul with random properties
- * @param {THREE.Scene} scene - Three.js scene
- * @param {string} renderingMode - 'instanced' or 'individual'
- * @param {number} MIN_LIFESPAN - Minimum lifespan for the soul
- * @param {number} MAX_LIFESPAN - Maximum lifespan for the soul
- * @param {Object} simulationWorker - Web worker for physics simulation
- * @returns {THREE.Mesh} The created soul mesh
  */
-export function createNewSoul(scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, simulationWorker = null) {
+export function createNewSoul(
+  scene: THREE.Scene, 
+  renderingMode: 'instanced' | 'individual', 
+  MIN_LIFESPAN: number, 
+  MAX_LIFESPAN: number, 
+  simulationWorker?: Worker | null
+): THREE.Mesh {
   const isDewa = Math.random() < DEWA_SPAWN_CHANCE;
   const isHuman = isDewa ? true : Math.random() < 0.5;
   return createSoul(isHuman, isDewa, 0, 0, scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, simulationWorker);
@@ -196,16 +197,16 @@ export function createNewSoul(scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, 
 
 /**
  * Create initial souls for simulation startup
- * @param {number} count - Number of souls to create
- * @param {THREE.Scene} scene - Three.js scene
- * @param {string} renderingMode - 'instanced' or 'individual'
- * @param {number} MIN_LIFESPAN - Minimum lifespan for souls
- * @param {number} MAX_LIFESPAN - Maximum lifespan for souls
- * @param {Object} simulationWorker - Web worker for physics simulation
- * @returns {Array} Array of soul data for worker initialization
  */
-export function createInitialSouls(count, scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, simulationWorker = null) {
-  const initialSoulsForWorkerInit = [];
+export function createInitialSouls(
+  count: number, 
+  scene: THREE.Scene, 
+  renderingMode: 'instanced' | 'individual', 
+  MIN_LIFESPAN: number, 
+  MAX_LIFESPAN: number, 
+  simulationWorker?: Worker | null
+): SoulWorkerData[] {
+  const initialSoulsForWorkerInit: SoulWorkerData[] = [];
   
   for (let i = 0; i < count; i++) {
     const angle = (i / count) * Math.PI * 2;
@@ -216,15 +217,15 @@ export function createInitialSouls(count, scene, renderingMode, MIN_LIFESPAN, MA
     const mesh = createSoul(isHuman, isDewa, angle, speed, scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, simulationWorker);
     
     initialSoulsForWorkerInit.push({
-      id: mesh.userData.id,
+      id: mesh.userData.id!,
       position: { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z },
-      velocity: mesh.userData.velocity,
-      speed: mesh.userData.speed,
-      isHuman: mesh.userData.isHuman,
-      isDewa: mesh.userData.isDewa,
-      flickerPhase: mesh.userData.flickerPhase,
-      life: mesh.userData.life,
-      baseHSL: mesh.userData.baseHSL
+      velocity: mesh.userData.velocity!,
+      speed: mesh.userData.speed!,
+      isHuman: mesh.userData.isHuman!,
+      isDewa: mesh.userData.isDewa!,
+      flickerPhase: mesh.userData.flickerPhase!,
+      life: mesh.userData.life!,
+      baseHSL: mesh.userData.baseHSL!
     });
   }
   
@@ -233,23 +234,22 @@ export function createInitialSouls(count, scene, renderingMode, MIN_LIFESPAN, MA
 
 /**
  * Get the current soul ID counter value
- * @returns {number} Current soul ID counter
  */
-export function getCurrentSoulId() {
+export function getCurrentSoulId(): number {
   return nextSoulId;
 }
 
 /**
  * Reset the soul ID counter (useful for testing)
  */
-export function resetSoulIdCounter() {
+export function resetSoulIdCounter(): void {
   nextSoulId = 0;
 }
 
 /**
  * Dispose of shared geometries and materials (cleanup)
  */
-export function disposeSoulManager() {
+export function disposeSoulManager(): void {
   if (humanGeometry) {
     humanGeometry.dispose();
     humanGeometry = null;
@@ -280,12 +280,12 @@ export function disposeSoulManager() {
 
 /**
  * Handle soul removal with proper cleanup for different rendering modes
- * @param {string} soulId - ID of the soul to remove
- * @param {THREE.Scene} scene - Three.js scene
- * @param {string} renderingMode - 'instanced' or 'individual'
- * @returns {boolean} True if soul was found and removed, false otherwise
  */
-export function handleSoulRemoval(soulId, scene, renderingMode) {
+export function handleSoulRemoval(
+  soulId: number, 
+  scene: THREE.Scene, 
+  renderingMode: 'instanced' | 'individual'
+): boolean {
   const soulMesh = soulLookupMap().get(soulId);
   if (!soulMesh) {
     return false;
@@ -299,15 +299,16 @@ export function handleSoulRemoval(soulId, scene, renderingMode) {
   } else {
     // Individual mesh mode: dispose resources as before
     scene.remove(soulMesh);
-    if (soulMesh.geometry) {
-      soulMesh.geometry.dispose();
+    const mesh = soulMesh as THREE.Mesh;
+    if (mesh.geometry) {
+      mesh.geometry.dispose();
     }
-    if (soulMesh.material) {
+    if (mesh.material) {
       // If material is an array (e.g. multi-material), dispose each
-      if (Array.isArray(soulMesh.material)) {
-        soulMesh.material.forEach(material => material.dispose());
+      if (Array.isArray(mesh.material)) {
+        mesh.material.forEach((material: THREE.Material) => material.dispose());
       } else {
-        soulMesh.material.dispose();
+        mesh.material.dispose();
       }
     }
   }
@@ -319,11 +320,11 @@ export function handleSoulRemoval(soulId, scene, renderingMode) {
 
 /**
  * Update soul mesh properties from worker data
- * @param {Object} soulData - Soul data from worker with id, pos, rgb, opacity
- * @param {string} renderingMode - 'instanced' or 'individual'
- * @returns {boolean} True if soul was found and updated, false otherwise
  */
-export function updateSoulFromWorker(soulData, renderingMode) {
+export function updateSoulFromWorker(
+  soulData: WorkerSoulUpdate, 
+  renderingMode: 'instanced' | 'individual'
+): boolean {
   const soulMesh = soulLookupMap().get(soulData.id);
   if (!soulMesh) {
     return false;
@@ -343,27 +344,32 @@ export function updateSoulFromWorker(soulData, renderingMode) {
   }
 
   // For individual mesh rendering, also update material properties
-  if (renderingMode === 'individual' && soulMesh.material) {
-    let materialNeedsUpdate = false;
+  if (renderingMode === 'individual') {
+    const mesh = soulMesh as THREE.Mesh;
+    const material = mesh.material as THREE.MeshBasicMaterial;
     
-    // Only update color if it actually changed (delta optimization)
-    if (soulData.rgb && Array.isArray(soulData.rgb) && soulData.rgb.length === 3) {
-      if (soulMesh.material.color) {
-        soulMesh.material.color.setRGB(soulData.rgb[0], soulData.rgb[1], soulData.rgb[2]);
+    if (material) {
+      let materialNeedsUpdate = false;
+      
+      // Only update color if it actually changed (delta optimization)
+      if (soulData.rgb && Array.isArray(soulData.rgb) && soulData.rgb.length === 3) {
+        if (material.color) {
+          material.color.setRGB(soulData.rgb[0], soulData.rgb[1], soulData.rgb[2]);
+          materialNeedsUpdate = true;
+        }
+      }
+      
+      // Only update opacity if it actually changed (delta optimization)
+      if (soulData.opacity !== undefined && typeof soulData.opacity === 'number' && 
+          !isNaN(soulData.opacity) && material.opacity !== undefined) {
+        material.opacity = Math.max(0, Math.min(1, soulData.opacity));
         materialNeedsUpdate = true;
       }
-    }
-    
-    // Only update opacity if it actually changed (delta optimization)
-    if (soulData.opacity !== undefined && typeof soulData.opacity === 'number' && 
-        !isNaN(soulData.opacity) && soulMesh.material.opacity !== undefined) {
-      soulMesh.material.opacity = Math.max(0, Math.min(1, soulData.opacity));
-      materialNeedsUpdate = true;
-    }
-    
-    // Only mark material for update if we actually changed something
-    if (materialNeedsUpdate && soulMesh.material.needsUpdate !== undefined) {
-      soulMesh.material.needsUpdate = true;
+      
+      // Only mark material for update if we actually changed something
+      if (materialNeedsUpdate) {
+        material.needsUpdate = true;
+      }
     }
   }
 
@@ -374,11 +380,11 @@ export function updateSoulFromWorker(soulData, renderingMode) {
 
 /**
  * Initialize line segments for soul connections
- * @param {THREE.Scene} scene - Three.js scene
- * @param {number} maxLines - Maximum number of connection lines
- * @returns {THREE.LineSegments} The created line segments object
  */
-export function initializeConnectionLines(scene, maxLines) {
+export function initializeConnectionLines(
+  scene: THREE.Scene, 
+  maxLines: number
+): THREE.LineSegments {
   const geometry = new THREE.BufferGeometry();
   const positions = new Float32Array(
     maxLines * LINE_SETTINGS.VERTICES_PER_LINE * LINE_SETTINGS.VERTEX_COORDS
@@ -404,18 +410,19 @@ export function initializeConnectionLines(scene, maxLines) {
 
 /**
  * Update connection lines from worker-calculated connection data
- * @param {THREE.LineSegments} lineSegments - The line segments object to update
- * @param {Array} connections - Array of connection objects from worker
- * @param {number} maxLines - Maximum number of lines that can be displayed
  */
-export function updateConnectionLines(lineSegments, connections, maxLines) {
+export function updateConnectionLines(
+  lineSegments: THREE.LineSegments, 
+  connections: ConnectionData[], 
+  maxLines: number
+): void {
   if (!lineSegments || !connections || connections.length === 0) {
     if (lineSegments) lineSegments.geometry.setDrawRange(0, 0);
     return;
   }
 
-  const positions = lineSegments.geometry.attributes.position.array;
-  const colors = lineSegments.geometry.attributes.color.array;
+  const positions = lineSegments.geometry.attributes.position.array as Float32Array;
+  const colors = lineSegments.geometry.attributes.color.array as Float32Array;
   
   let lineIdx = 0;
   const maxLineCount = Math.min(connections.length, maxLines);
@@ -457,10 +464,11 @@ export function updateConnectionLines(lineSegments, connections, maxLines) {
 
 /**
  * Dispose of connection line resources
- * @param {THREE.LineSegments} lineSegments - The line segments object to dispose
- * @param {THREE.Scene} scene - Three.js scene to remove from
  */
-export function disposeConnectionLines(lineSegments, scene) {
+export function disposeConnectionLines(
+  lineSegments: THREE.LineSegments, 
+  scene: THREE.Scene
+): void {
   if (lineSegments) {
     scene.remove(lineSegments);
     if (lineSegments.geometry) {

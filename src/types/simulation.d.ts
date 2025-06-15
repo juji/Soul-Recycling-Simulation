@@ -18,11 +18,9 @@ export interface SoulData {
 }
 
 export interface ConnectionData {
-  soul1Id: number;
-  soul2Id: number;
-  distance: number;
-  strength: number;
-  color?: THREE.Color;
+  start: [number, number, number];
+  end: [number, number, number];
+  color: [number, number, number];
 }
 
 export interface LODLevel {
@@ -237,4 +235,30 @@ export interface PhysicsConstants {
   DEWA_ENHANCEMENT_RADIUS: number;
   ENHANCEMENT_SATURATION_BOOST: number;
   ENHANCEMENT_LIGHTNESS_BOOST: number;
+}
+
+// Additional soul manager interfaces
+export interface SoulWorkerData {
+  id: number;
+  position: { x: number; y: number; z: number };
+  velocity: { x: number; y: number; z: number };
+  speed: number;
+  isHuman: boolean;
+  isDewa: boolean;
+  flickerPhase: number;
+  life: number;
+  baseHSL: { h: number; s: number; l: number };
+}
+
+export interface ConnectionData {
+  start: [number, number, number];
+  end: [number, number, number];
+  color: [number, number, number];
+}
+
+export interface WorkerSoulUpdate {
+  id: number;
+  pos?: [number, number, number];
+  rgb?: [number, number, number];
+  opacity?: number;
 }

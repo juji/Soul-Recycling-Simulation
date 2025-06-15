@@ -15,10 +15,10 @@
     createNewSoul, 
     createInitialSouls,
     initializeConnectionLines
-  } from '../../lib/utils/soulManager.js';
+  } from '../../lib/utils/soulManager';
   
-  import { workerManager } from '../../lib/utils/workerManager.js';
-  import { animationController } from '../../lib/utils/animationController.js';
+  import { workerManager } from '../../lib/utils/workerManager';
+  import { animationController } from '../../lib/utils/animationController';
   
   // Import state management
   import { 

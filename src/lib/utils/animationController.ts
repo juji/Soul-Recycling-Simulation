@@ -8,6 +8,7 @@
  */
 
 import * as THREE from 'three';
+import type { PerformanceMetrics, QualityLevel } from '../../types';
 import { 
   performanceMetrics as getPerformanceMetrics,
   souls as getSouls,
@@ -17,38 +18,47 @@ import {
   mouse as getMouse,
   NEW_SOUL_SPAWN_RATE as getNEW_SOUL_SPAWN_RATE,
   adjustQualityBasedOnFPS
-} from '../stores/simulationState.svelte.ts';
+} from '../stores/simulationState.svelte';
+
+interface SceneObjects {
+  scene: THREE.Scene;
+  camera: THREE.Camera;
+  renderer: THREE.WebGLRenderer;
+  controls: any; // ArcballControls or any camera controls
+}
+
+interface AnimationCallbacks {
+  onSoulSpawn?: () => void;
+  onWorkerUpdate?: (data: any) => void;
+}
 
 export class AnimationController {
+  private isRunning: boolean = false;
+  private animationId: number | null = null;
+  
+  // Three.js objects (set by caller)
+  private scene: THREE.Scene | null = null;
+  private camera: THREE.Camera | null = null;
+  private renderer: THREE.WebGLRenderer | null = null;
+  private controls: any = null;
+  
+  // Mouse interaction
+  private raycaster: THREE.Raycaster = new THREE.Raycaster();
+  private pointerPosition3D: THREE.Vector3 | null = null;
+  private interactionPlane: THREE.Plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  
+  // Callbacks (set by caller)
+  private onSoulSpawn: (() => void) | null = null;
+  private onWorkerUpdate: ((data: any) => void) | null = null;
+
   constructor() {
-    this.isRunning = false;
-    this.animationId = null;
-    
-    // Three.js objects (set by caller)
-    this.scene = null;
-    this.camera = null;
-    this.renderer = null;
-    this.controls = null;
-    
-    // Mouse interaction
-    this.raycaster = new THREE.Raycaster();
-    this.pointerPosition3D = null;
-    this.interactionPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    
-    // Callbacks (set by caller)
-    this.onSoulSpawn = null;
-    this.onWorkerUpdate = null;
+    // Initialization handled in methods
   }
 
   /**
    * Initialize the animation controller with scene objects
-   * @param {Object} sceneObjects - Three.js scene objects
-   * @param {THREE.Scene} sceneObjects.scene - Three.js scene
-   * @param {THREE.Camera} sceneObjects.camera - Three.js camera
-   * @param {THREE.WebGLRenderer} sceneObjects.renderer - Three.js renderer
-   * @param {Object} sceneObjects.controls - Camera controls
    */
-  initializeScene(sceneObjects) {
+  initializeScene(sceneObjects: SceneObjects): void {
     const { scene, camera, renderer, controls } = sceneObjects;
     this.scene = scene;
     this.camera = camera;
@@ -58,19 +68,16 @@ export class AnimationController {
 
   /**
    * Set callback functions for animation loop events
-   * @param {Object} callbacks - Callback functions
-   * @param {Function} callbacks.onSoulSpawn - Called when new souls should be spawned
-   * @param {Function} callbacks.onWorkerUpdate - Called to send updates to worker
    */
-  setCallbacks(callbacks) {
-    this.onSoulSpawn = callbacks.onSoulSpawn;
-    this.onWorkerUpdate = callbacks.onWorkerUpdate;
+  setCallbacks(callbacks: AnimationCallbacks): void {
+    this.onSoulSpawn = callbacks.onSoulSpawn || null;
+    this.onWorkerUpdate = callbacks.onWorkerUpdate || null;
   }
 
   /**
    * Start the animation loop
    */
-  start() {
+  start(): void {
     if (this.isRunning) {
       console.warn('AnimationController: Animation loop already running');
       return;
@@ -88,7 +95,7 @@ export class AnimationController {
   /**
    * Stop the animation loop
    */
-  stop() {
+  stop(): void {
     this.isRunning = false;
     if (this.animationId !== null) {
       cancelAnimationFrame(this.animationId);
@@ -98,9 +105,8 @@ export class AnimationController {
 
   /**
    * Main animation loop
-   * @private
    */
-  animate() {
+  private animate(): void {
     if (!this.isRunning) {
       return;
     }
@@ -117,8 +123,13 @@ export class AnimationController {
     this.handleSoulSpawning();
 
     // Update controls and render
-    this.controls.update();
-    this.renderer.render(this.scene, this.camera);
+    if (this.controls && this.controls.update) {
+      this.controls.update();
+    }
+    
+    if (this.renderer && this.scene && this.camera) {
+      this.renderer.render(this.scene, this.camera);
+    }
 
     // Update performance metrics
     this.updatePerformanceMetrics();
@@ -132,27 +143,29 @@ export class AnimationController {
 
   /**
    * Update mouse interaction and raycasting
-   * @private
    */
-  updateMouseInteraction() {
+  private updateMouseInteraction(): void {
     const mouse = getMouse();
     
     // Update pointer position in 3D space for main thread (raycasting)
-    this.raycaster.setFromCamera(mouse, this.camera);
-    const intersectionPoint = new THREE.Vector3();
-    
-    if (this.raycaster.ray.intersectPlane(this.interactionPlane, intersectionPoint)) {
-      this.pointerPosition3D = intersectionPoint;
-    } else {
-      this.pointerPosition3D = null;
+    if (this.camera) {
+      // Convert mouse position to THREE.Vector2
+      const mouseVector = new THREE.Vector2(mouse.x, mouse.y);
+      this.raycaster.setFromCamera(mouseVector, this.camera);
+      const intersectionPoint = new THREE.Vector3();
+      
+      if (this.raycaster.ray.intersectPlane(this.interactionPlane, intersectionPoint)) {
+        this.pointerPosition3D = intersectionPoint;
+      } else {
+        this.pointerPosition3D = null;
+      }
     }
   }
 
   /**
    * Send update data to worker
-   * @private
    */
-  sendWorkerUpdate() {
+  private sendWorkerUpdate(): void {
     if (this.onWorkerUpdate) {
       this.onWorkerUpdate({
         pointerPosition3D: null, // Dewa is everywhere, not tied to a specific mouse-derived point
@@ -163,9 +176,8 @@ export class AnimationController {
 
   /**
    * Handle soul spawning logic
-   * @private
    */
-  handleSoulSpawning() {
+  private handleSoulSpawning(): void {
     if (!this.onSoulSpawn) {
       return;
     }
@@ -186,12 +198,9 @@ export class AnimationController {
 
   /**
    * Update performance metrics
-   * @private
    */
-  updatePerformanceMetrics() {
+  private updatePerformanceMetrics(): void {
     const performanceMetrics = getPerformanceMetrics();
-    const souls = getSouls();
-    const renderingMode = getRenderingMode();
     
     // Track draw calls for performance metrics
     performanceMetrics.drawCalls = this.trackDrawCalls();
@@ -199,10 +208,8 @@ export class AnimationController {
 
   /**
    * Track draw calls for performance metrics
-   * @private
-   * @returns {number} Number of draw calls
    */
-  trackDrawCalls() {
+  private trackDrawCalls(): number {
     const souls = getSouls();
     const renderingMode = getRenderingMode();
     
@@ -216,28 +223,25 @@ export class AnimationController {
 
   /**
    * Update global variables for AI test bridge
-   * @private
    */
-  updateGlobalVariables() {
+  private updateGlobalVariables(): void {
     if (typeof window !== 'undefined') {
       const currentQuality = getCurrentQuality();
       const souls = getSouls();
       
-      window.currentQuality = currentQuality;
-      window.soulCount = souls.length;
+      (window as any).currentQuality = currentQuality;
+      (window as any).soulCount = souls.length;
     }
   }
 
   /**
    * Adjust quality based on performance
-   * @private
    */
-  adjustQualityBasedOnPerformance() {
+  private adjustQualityBasedOnPerformance(): void {
     const fpsCounter = getFpsCounter();
     
-    if (fpsCounter) {
-      const fpsMetrics = fpsCounter.getMetrics();
-      const { fps } = fpsMetrics;
+    if (fpsCounter && fpsCounter.getCurrentFPS) {
+      const fps = fpsCounter.getCurrentFPS();
       
       // Adjust quality based on performance every second
       adjustQualityBasedOnFPS(fps);
@@ -246,17 +250,15 @@ export class AnimationController {
 
   /**
    * Get current pointer position in 3D space
-   * @returns {THREE.Vector3|null} 3D pointer position or null
    */
-  getPointerPosition3D() {
+  getPointerPosition3D(): THREE.Vector3 | null {
     return this.pointerPosition3D;
   }
 
   /**
    * Check if animation loop is running
-   * @returns {boolean} True if animation is running
    */
-  isAnimationRunning() {
+  isAnimationRunning(): boolean {
     return this.isRunning;
   }
 }

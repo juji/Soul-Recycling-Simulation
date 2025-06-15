@@ -14,6 +14,12 @@ declare module 'three' {
       lightness?: number;
       isDewa?: boolean;
       isHuman?: boolean;
+      flickerPhase?: number;
+      life?: number;
+      baseHSL?: { h: number; s: number; l: number };
+      velocity?: { x: number; y: number; z: number };
+      finalRGB?: number[];
+      finalOpacity?: number;
     };
     visible: boolean;
     geometryDetail?: number;
@@ -34,7 +40,15 @@ declare module 'three' {
       lightness?: number;
       isDewa?: boolean;
       isHuman?: boolean;
+      flickerPhase?: number;
+      life?: number;
+      baseHSL?: { h: number; s: number; l: number };
+      velocity?: { x: number; y: number; z: number };
+      finalRGB?: number[];
+      finalOpacity?: number;
     };
+    geometry: BufferGeometry;
+    material: Material | Material[];
   }
 
   interface LineSegments {
