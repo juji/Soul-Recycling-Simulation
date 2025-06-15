@@ -52,9 +52,10 @@ Then open your browser at: [http://localhost:5173](http://localhost:5173)
 
 ## 🧩 Tech Stack
 
-- **Svelte** – reactive UI framework  
+- **Svelte 5** – reactive UI framework with modern runes  
+- **TypeScript** – type-safe development with full type coverage
 - **Three.js** – real-time 3D graphics  
-- **Vite** – lightning-fast dev environment  
+- **Vite** – lightning-fast dev environment with TypeScript support  
 
 ---
 

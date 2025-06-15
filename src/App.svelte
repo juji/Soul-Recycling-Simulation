@@ -10,21 +10,20 @@
   import ThreeContainer from './components/ThreeContainer.svelte';
   import SceneManager from './components/simulation/SceneManager.svelte';
   import SimulationManager from './components/simulation/SimulationManager.svelte';
-  import './lib/ai-test-bridge.ts';
+  import './lib/ai-test-bridge';
   
   import { 
     mouse as getMouse,
     setContainer,
     setToastNotification,
-    setFpsCounter
-  } from './lib/stores/simulationState.svelte.ts';
+    setFpsCounter,
+    setMousePosition
+  } from './lib/stores/simulationState.svelte';
 
   // TypeScript interfaces
   interface MouseMoveEvent {
-    detail: {
-      mouseX: number;
-      mouseY: number;
-    };
+    mouseX: number;
+    mouseY: number;
   }
 
   interface SceneReadyEvent {
@@ -56,9 +55,8 @@
   });
 
   function handleMouseMove(event: MouseMoveEvent): void {
-    const { mouseX, mouseY } = event.detail;
-    mouse.x = mouseX;
-    mouse.y = mouseY;
+    const { mouseX, mouseY } = event;
+    setMousePosition(mouseX, mouseY);
   }
   
   function handleSceneReady(event: SceneReadyEvent): void {
@@ -70,7 +68,7 @@
 
 <ThreeContainer 
   bind:container={localContainer} 
-  on:mousemove={handleMouseMove} 
+  onmousemove={handleMouseMove} 
 />
 
 <SceneManager on:sceneReady={handleSceneReady} />

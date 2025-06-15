@@ -89,6 +89,15 @@
       fpsHistory: [...fpsHistory]
     };
   }
+
+  // Methods expected by simulationState store
+  export function getCurrentFPS(): number {
+    return fps;
+  }
+
+  export function getAverageFPS(): number {
+    return averageFPS;
+  }
   
   // Expose FPS values to global scope for AI test bridge compatibility
   $effect(() => {

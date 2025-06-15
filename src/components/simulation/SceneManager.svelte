@@ -97,18 +97,12 @@
     }
   }
 
-  function setupControls(): void {
-    if (!camera || !renderer || !scene) return;
-    
+  function setupControls() {
     // Fix passive event listener warning before creating controls
-    if (!(window as any).__wheelEventPatched) {
+    if (!window.__wheelEventPatched) {
       const originalAddEventListener = EventTarget.prototype.addEventListener;
       
-      EventTarget.prototype.addEventListener = function(
-        type: string, 
-        listener: EventListenerOrEventListenerObject, 
-        options?: boolean | AddEventListenerOptions
-      ) {
+      EventTarget.prototype.addEventListener = function(type, listener, options) {
         if (type === 'wheel' && this instanceof HTMLElement) {
           const newOptions = typeof options === 'object' ? { ...options, passive: false } : { passive: false };
           return originalAddEventListener.call(this, type, listener, newOptions);
@@ -116,7 +110,7 @@
         return originalAddEventListener.call(this, type, listener, options);
       };
       
-      (window as any).__wheelEventPatched = true;
+      window.__wheelEventPatched = true;
     }
 
     // Create controls
@@ -134,9 +128,7 @@
     controls.maxDistance = CONTROLS_SETTINGS.MAX_DISTANCE;
   }
 
-  function setupLighting(): void {
-    if (!scene) return;
-    
+  function setupLighting() {
     // Ambient light
     const ambientLight = new THREE.AmbientLight(
       LIGHTING_SETTINGS.AMBIENT.color, 
@@ -157,7 +149,7 @@
     scene.add(directionalLight);
 
     // Point lights
-    LIGHTING_SETTINGS.POINT_LIGHTS.forEach((lightConfig, index: number) => {
+    LIGHTING_SETTINGS.POINT_LIGHTS.forEach((lightConfig, index) => {
       const pointLight = new THREE.PointLight(
         lightConfig.color, 
         lightConfig.intensity, 
@@ -172,7 +164,7 @@
     });
   }
 
-  function initializePerformanceManagers(): void {
+  function initializePerformanceManagers() {
     if (FEATURE_FLAGS.USE_LOD_SYSTEM) {
       // Initialize Adaptive Performance Manager
       adaptivePerformanceManager = new AdaptivePerformanceManager({
@@ -192,12 +184,12 @@
       
       // Make performance manager globally accessible for AI test bridge
       if (typeof window !== 'undefined') {
-        (window as any).performanceManager = adaptivePerformanceManager;
+        window.performanceManager = adaptivePerformanceManager;
       }
     }
   }
 
-  function handleResize(): void {
+  function handleResize() {
     if (!camera || !renderer || !container) return;
     
     const width = container.clientWidth;
@@ -211,7 +203,7 @@
   }
 
   // Clean up resources
-  function cleanup(): void {
+  function cleanup() {
     if (renderer && renderer.domElement && container) {
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);

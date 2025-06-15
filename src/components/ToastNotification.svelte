@@ -18,12 +18,13 @@
   // Auto-hide toast after duration with TypeScript
   $effect(() => {
     if (show && duration > 0) {
-      const timer: number = setTimeout(() => {
+      const timer: ReturnType<typeof setTimeout> = setTimeout(() => {
         show = false;
       }, duration);
       
       return () => clearTimeout(timer);
     }
+    return undefined;
   });
 
   // Expose showToast method for parent components with TypeScript
