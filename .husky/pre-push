@@ -1,0 +1,3 @@
+echo "🔨 Running build checks before push..."
+npm run build
+echo "✅ Build completed successfully!"
