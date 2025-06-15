@@ -27,9 +27,9 @@ declare global {
     root: (fn: () => void | (() => void)) => () => void;
   };
 
-  const $props: <T extends Record<string, any> = any>() => T;
+  const $props: <T extends Record<string, unknown> = Record<string, unknown>>() => T;
   const $bindable: <T>(initial?: T) => T;
-  const $inspect: <T>(...values: T[]) => T extends [any] ? T[0] : T;
+  const $inspect: <T>(...values: T[]) => T extends [unknown] ? T[0] : T;
   const $host: () => void;
 }
 

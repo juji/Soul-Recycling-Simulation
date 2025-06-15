@@ -4,15 +4,15 @@
 import * as THREE from 'three';
 import type {
   LODConfiguration,
-  LODStatistics,
   LODData,
+  LODDebugInfo,
+  LODStatistics,
   LODStatisticsExtended,
   LODUpdateConfiguration,
-  LODDebugInfo,
 } from '../types/simulation';
 
 // Forward declaration for AdaptivePerformanceManager to avoid circular import
-export type AdaptivePerformanceManager = any;
+export type AdaptivePerformanceManager = unknown;
 
 export class LODManager {
   private camera: THREE.Camera;
@@ -193,14 +193,14 @@ export class LODManager {
       const lodConfig = this.lodLevels[lodLevel];
 
       // Update soul LOD properties
-      (soul as any).lod = lodLevel;
+      soul.lod = lodLevel;
       soul.visible = !lodConfig.culled;
-      (soul as any).geometryDetail = lodConfig.geometryDetail;
-      (soul as any).physicsUpdateRate = lodConfig.physicsUpdateRate;
-      (soul as any).connectionMultiplier = lodConfig.connectionMultiplier;
+      soul.geometryDetail = lodConfig.geometryDetail;
+      soul.physicsUpdateRate = lodConfig.physicsUpdateRate;
+      soul.connectionMultiplier = lodConfig.connectionMultiplier;
 
       // Determine if physics should update this frame
-      (soul as any).updatePhysics = this.shouldUpdatePhysics(lodConfig.physicsUpdateRate);
+      soul.updatePhysics = this.shouldUpdatePhysics(lodConfig.physicsUpdateRate);
 
       // Store LOD data for worker
       const soulId = soul.userData.id;
@@ -208,7 +208,7 @@ export class LODManager {
         lodData[soulId] = {
           lod: lodLevel,
           physicsUpdateRate: lodConfig.physicsUpdateRate,
-          updatePhysics: (soul as any).updatePhysics,
+          updatePhysics: soul.updatePhysics,
           connectionMultiplier: lodConfig.connectionMultiplier,
         };
       }
@@ -274,7 +274,7 @@ export class LODManager {
     this.lodStats.memoryReduction = 1 - memoryLoad / totalSouls;
 
     // Culling efficiency
-    (this.lodStats as any).cullingEfficiency = culledSouls / totalSouls;
+    this.lodStats.cullingEfficiency = culledSouls / totalSouls;
   }
 
   /**

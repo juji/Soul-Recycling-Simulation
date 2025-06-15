@@ -8,6 +8,7 @@
  */
 
 import * as THREE from 'three';
+import type { CameraControls } from '../../types/three';
 import {
   adjustQualityBasedOnFPS,
   currentQuality as getCurrentQuality,
@@ -23,12 +24,12 @@ interface SceneObjects {
   scene: THREE.Scene;
   camera: THREE.Camera;
   renderer: THREE.WebGLRenderer;
-  controls: any; // ArcballControls or any camera controls
+  controls: CameraControls; // ArcballControls or any camera controls
 }
 
 interface AnimationCallbacks {
   onSoulSpawn?: () => void;
-  onWorkerUpdate?: (data: any) => void;
+  onWorkerUpdate?: (data: unknown) => void;
 }
 
 export class AnimationController {
@@ -39,7 +40,7 @@ export class AnimationController {
   private scene: THREE.Scene | null = null;
   private camera: THREE.Camera | null = null;
   private renderer: THREE.WebGLRenderer | null = null;
-  private controls: any = null;
+  private controls: CameraControls | null = null;
 
   // Mouse interaction
   private raycaster: THREE.Raycaster = new THREE.Raycaster();
@@ -48,7 +49,7 @@ export class AnimationController {
 
   // Callbacks (set by caller)
   private onSoulSpawn: (() => void) | null = null;
-  private onWorkerUpdate: ((data: any) => void) | null = null;
+  private onWorkerUpdate: ((data: unknown) => void) | null = null;
 
   constructor() {
     // Initialization handled in methods
@@ -78,13 +79,12 @@ export class AnimationController {
    */
   start(): void {
     if (this.isRunning) {
-      console.warn('AnimationController: Animation loop already running');
+      // Animation loop already running
       return;
     }
 
     if (!this.scene || !this.camera || !this.renderer || !this.controls) {
-      console.error('AnimationController: Scene objects not initialized');
-      return;
+      throw new Error('AnimationController: Scene objects not initialized');
     }
 
     this.isRunning = true;
@@ -228,8 +228,8 @@ export class AnimationController {
       const currentQuality = getCurrentQuality();
       const souls = getSouls();
 
-      (window as any).currentQuality = currentQuality;
-      (window as any).soulCount = souls.length;
+      window.currentQuality = currentQuality;
+      window.soulCount = souls.length;
     }
   }
 

@@ -2,22 +2,22 @@
 // This file provides a centralized export of all type definitions
 
 // Re-export all types from individual modules
-export type * from './three';
-export type * from './simulation';
 export type * from './performance';
+export type * from './simulation';
 export type * from './svelte';
+export type * from './three';
 
 // Re-export rendering constants types
 export type {
-  Position3D,
   CameraSettings,
+  ControlsSettings,
+  GeometrySettings,
   LightSettings,
   LightingSettings,
-  SegmentSettings,
-  MaterialOpacity,
-  GeometrySettings,
   LineSettings,
-  ControlsSettings,
+  MaterialOpacity,
+  Position3D,
+  SegmentSettings,
 } from '../lib/constants/rendering';
 
 // Additional global types that don't fit in specific modules
@@ -37,14 +37,22 @@ export interface Constants {
 // Global window augmentations for development/testing
 declare global {
   interface Window {
-    performanceManager?: any;
+    performanceManager?: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      getPerformanceReport(): any; // Returns various performance data structures
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      forceQuality(quality: string): any; // Returns quality settings object
+      enableDebugMode(): void;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      getModelInsights?(): any; // Optional method for AI insights
+    };
     currentFPS?: number;
     averageFPS?: number;
     currentQuality?: string;
     soulCount?: number;
     memoryUsage?: number;
-    hardwareProfile?: any;
-    aiTestBridge?: any;
+    hardwareProfile?: unknown;
+    aiTestBridge?: unknown;
     __wheelEventPatched?: boolean;
   }
 

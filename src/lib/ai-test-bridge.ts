@@ -8,7 +8,8 @@ export {};
 interface AITestMessage {
   type: 'AI_PERFORMANCE_TEST';
   command: string;
-  params?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  params?: any; // Dynamic command parameters that can be various types
 }
 
 interface StressTestParams {
@@ -101,7 +102,7 @@ class AIPerformanceTestBridge {
   private sendAIInsights(): void {
     // Access the performance manager if available
     if (window.performanceManager) {
-      const insights = window.performanceManager.getModelInsights();
+      const insights = window.performanceManager.getModelInsights?.() || null;
       const report = window.performanceManager.getPerformanceReport();
 
       window.parent.postMessage(
@@ -230,6 +231,6 @@ if (window.parent !== window) {
     window.soulCount = 888;
     window.memoryUsage = 0;
     window.hardwareProfile = {};
-    window.performanceManager = null;
+    window.performanceManager = undefined;
   });
 }

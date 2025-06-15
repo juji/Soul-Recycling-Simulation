@@ -1,5 +1,6 @@
 // Svelte component types and props interfaces
 import type * as THREE from 'three';
+import type { CameraControls } from './three';
 
 export interface FpsCounterProps {
   showCounter?: boolean;
@@ -78,7 +79,7 @@ export interface SceneReadyEvent {
   scene: THREE.Scene;
   camera: THREE.Camera;
   renderer: THREE.WebGLRenderer;
-  controls: any; // ArcballControls
+  controls: CameraControls; // ArcballControls
 }
 
 // Component instance types
@@ -110,11 +111,11 @@ export interface CustomEventMap {
     scene: THREE.Scene;
     camera: THREE.Camera;
     renderer: THREE.WebGLRenderer;
-    controls: any;
+    controls: CameraControls;
   }>;
 }
 
 // Type-safe event dispatcher
-export interface TypedEventDispatcher<T extends Record<string, any>> {
+export interface TypedEventDispatcher<T extends Record<string, unknown>> {
   <K extends keyof T>(type: K, detail: T[K]): boolean;
 }

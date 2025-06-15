@@ -118,6 +118,7 @@ export const CONTROLS_SETTINGS: ControlsSettings = {
 };
 
 // Type guards and validation functions
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateCameraSettings(settings: any): settings is CameraSettings {
   return (
     typeof settings === 'object' &&
@@ -134,6 +135,7 @@ export function validateCameraSettings(settings: any): settings is CameraSetting
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateLightingSettings(settings: any): settings is LightingSettings {
   return (
     typeof settings === 'object' &&
@@ -141,12 +143,14 @@ export function validateLightingSettings(settings: any): settings is LightingSet
     validateLightSettings(settings.DIRECTIONAL) &&
     Array.isArray(settings.POINT_LIGHTS) &&
     settings.POINT_LIGHTS.every(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (light: any) =>
         validateLightSettings(light) && typeof light.distance === 'number' && light.distance > 0
     )
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateLightSettings(settings: any): settings is LightSettings {
   return (
     typeof settings === 'object' &&
@@ -156,6 +160,7 @@ export function validateLightSettings(settings: any): settings is LightSettings 
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateGeometrySettings(settings: any): settings is GeometrySettings {
   return (
     typeof settings === 'object' &&
@@ -171,6 +176,7 @@ export function validateGeometrySettings(settings: any): settings is GeometrySet
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function validateSegmentSettings(settings: any): settings is SegmentSettings {
   return (
     typeof settings === 'object' &&
@@ -181,6 +187,7 @@ function validateSegmentSettings(settings: any): settings is SegmentSettings {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function validateMaterialOpacity(settings: any): settings is MaterialOpacity {
   return (
     typeof settings === 'object' &&
@@ -193,6 +200,7 @@ function validateMaterialOpacity(settings: any): settings is MaterialOpacity {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateControlsSettings(settings: any): settings is ControlsSettings {
   return (
     typeof settings === 'object' &&

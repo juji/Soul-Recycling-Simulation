@@ -26,6 +26,7 @@ declare module 'three' {
     physicsUpdateRate?: number;
     connectionMultiplier?: number;
     updatePhysics?: boolean;
+    lod?: 'HIGH' | 'MEDIUM' | 'LOW' | 'CULLED';
   }
 
   interface Mesh {
@@ -58,11 +59,24 @@ declare module 'three' {
 }
 
 // Additional Three.js related types
+export interface CameraControls {
+  update: () => void;
+  enableDamping?: boolean;
+  dampingFactor?: number;
+  wMax?: number;
+  enablePan?: boolean;
+  enableZoom?: boolean;
+  enableRotate?: boolean;
+  minDistance?: number;
+  maxDistance?: number;
+  setGizmosVisible?: (visible: boolean) => void;
+}
+
 export interface ThreeJSScene {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
-  controls?: any; // ArcballControls
+  controls?: CameraControls; // ArcballControls
 }
 
 export interface Vector3Like {

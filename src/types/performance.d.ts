@@ -115,8 +115,8 @@ export interface PerformanceTracker {
       timestamp: number;
     }>
   >;
-  adaptationSuccess: any[];
-  hardwareBaseline: any;
+  adaptationSuccess: unknown[];
+  hardwareBaseline: unknown;
 }
 
 export interface AdaptationThresholds {

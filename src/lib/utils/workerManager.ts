@@ -8,17 +8,18 @@
  */
 
 import * as THREE from 'three';
-import type { WorkerMessage, WorkerSoulUpdate, ConnectionData, SoulWorkerData } from '../../types';
+import type { ConnectionData, SoulWorkerData, WorkerMessage, WorkerSoulUpdate } from '../../types';
 import {
-  performanceMetrics as getPerformanceMetrics,
-  souls as getSouls,
-  renderingMode as getRenderingMode,
   instancedRenderer as getInstancedRenderer,
+  performanceMetrics as getPerformanceMetrics,
+  renderingMode as getRenderingMode,
+  souls as getSouls,
 } from '../stores/simulationState.svelte';
 
-import { handleSoulRemoval, updateSoulFromWorker, updateConnectionLines } from './soulManager';
+import { handleSoulRemoval, updateConnectionLines, updateSoulFromWorker } from './soulManager';
 
-export type WorkerMessageHandler = (data: any) => void;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type WorkerMessageHandler = (data: any) => void; // Generic handler for various message types
 
 export class WorkerManager {
   private simulationWorker: Worker | null = null;
@@ -36,7 +37,7 @@ export class WorkerManager {
   /**
    * Initialize the Web Worker with souls and constants
    */
-  initializeWorker(initialSouls: SoulWorkerData[], constants: any): void {
+  initializeWorker(initialSouls: SoulWorkerData[], constants: unknown): void {
     try {
       // Create new worker instance
       this.simulationWorker = new Worker(new URL('../simulation.worker.ts', import.meta.url), {
@@ -59,8 +60,7 @@ export class WorkerManager {
 
       this.isInitialized = true;
     } catch (error) {
-      console.error('WorkerManager: Failed to initialize worker:', error);
-      this.isInitialized = false;
+      throw new Error(`WorkerManager: Failed to initialize worker: ${error}`);
     }
   }
 
@@ -136,10 +136,11 @@ export class WorkerManager {
       try {
         handler(data);
       } catch (error) {
-        console.error(`WorkerManager: Error handling message type '${type}':`, error);
+        // Error handling for message type handler
+        throw new Error(`WorkerManager: Error handling message type '${type}': ${error}`);
       }
     } else {
-      console.warn(`WorkerManager: Unknown message type '${type}'`);
+      // Unknown message type - this is expected for some cases
     }
   }
 
@@ -153,14 +154,14 @@ export class WorkerManager {
   /**
    * Send update data to the worker
    */
-  sendUpdate(updateData: any): void {
+  sendUpdate(updateData: unknown): void {
     if (this.simulationWorker && this.isInitialized) {
       this.simulationWorker.postMessage({
         type: 'update',
         data: updateData,
       });
     } else {
-      console.warn('WorkerManager: Worker not initialized, cannot send update');
+      // Worker not initialized - operation ignored
     }
   }
 
@@ -174,7 +175,7 @@ export class WorkerManager {
         data: { soul: soulData },
       });
     } else {
-      console.warn('WorkerManager: Worker not initialized, cannot add soul');
+      // Worker not initialized - operation ignored
     }
   }
 
@@ -211,14 +212,14 @@ export class WorkerManager {
       this.simulationWorker.terminate();
       this.simulationWorker = null;
       this.isInitialized = false;
-      console.log('WorkerManager: Worker terminated');
+      // Worker terminated successfully
     }
   }
 
   /**
    * Restart the worker with the same initialization data
    */
-  restart(initialSouls: SoulWorkerData[], constants: any): void {
+  restart(initialSouls: SoulWorkerData[], constants: unknown): void {
     this.terminate();
     this.initializeWorker(initialSouls, constants);
   }

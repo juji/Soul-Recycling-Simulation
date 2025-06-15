@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { CameraControls } from './three';
 
 // Core simulation data types
 export interface SoulData {
@@ -104,7 +105,7 @@ export interface LODDebugInfo {
 // Worker message types
 export interface WorkerMessage {
   type: string;
-  data: any;
+  data: unknown;
 }
 
 export interface WorkerUpdateMessage extends WorkerMessage {
@@ -187,14 +188,14 @@ export interface WorkerPerformanceMetrics {
 // Animation controller types
 export interface AnimationCallbacks {
   onSoulSpawn?: () => void;
-  onWorkerUpdate?: (data: any) => void;
+  onWorkerUpdate?: (data: unknown) => void;
 }
 
 export interface SceneObjects {
   scene: THREE.Scene;
   camera: THREE.Camera;
   renderer: THREE.WebGLRenderer;
-  controls: any; // ArcballControls type
+  controls: CameraControls; // ArcballControls type
 }
 
 // Rendering mode types
