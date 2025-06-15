@@ -2,12 +2,14 @@
 <!-- Phase 6c: SimulationManager Component -->
 <!-- Coordinates simulation initialization and manager interaction -->
 
-<script>
+<script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
-  import { InstancedSoulRenderer } from '../../lib/InstancedSoulRenderer.ts';
-  import { loadFromStorage, STORAGE_KEYS } from '../../lib/localStorage.ts';
-  import { FEATURE_FLAGS, DEFAULT_SOUL_COUNT } from '../../lib/constants/config.ts';
-  import { CONNECTION_SETTINGS, POINTER_INTERACTION_RADIUS, POINTER_INFLUENCE_STRENGTH, NEIGHBOR_SPEED_INFLUENCE_RADIUS, NEIGHBOR_SPEED_INFLUENCE_STRENGTH, SEPARATION_DISTANCE, SEPARATION_STRENGTH, DEWA_ATTRACTION_RADIUS, DEWA_ATTRACTION_STRENGTH, DEWA_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST } from '../../lib/constants/physics.ts';
+  import * as THREE from 'three';
+  import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
+  import { InstancedSoulRenderer } from '../../lib/InstancedSoulRenderer';
+  import { loadFromStorage, STORAGE_KEYS } from '../../lib/localStorage';
+  import { FEATURE_FLAGS, DEFAULT_SOUL_COUNT } from '../../lib/constants/config';
+  import { CONNECTION_SETTINGS, POINTER_INTERACTION_RADIUS, POINTER_INFLUENCE_STRENGTH, NEIGHBOR_SPEED_INFLUENCE_RADIUS, NEIGHBOR_SPEED_INFLUENCE_STRENGTH, SEPARATION_DISTANCE, SEPARATION_STRENGTH, DEWA_ATTRACTION_RADIUS, DEWA_ATTRACTION_STRENGTH, DEWA_ENHANCEMENT_RADIUS, ENHANCEMENT_SATURATION_BOOST, ENHANCEMENT_LIGHTNESS_BOOST } from '../../lib/constants/physics';
   
   // Import simulation utilities
   import { 
@@ -34,7 +36,32 @@
     showToastMessage
   } from '../../lib/stores/simulationState.svelte.ts';
 
-  // Local reactive variables
+  // TypeScript interfaces
+  interface SceneObjects {
+    scene: THREE.Scene;
+    camera: THREE.PerspectiveCamera;
+    renderer: THREE.WebGLRenderer;
+    controls: ArcballControls;
+  }
+
+  interface SoulDataForWorker {
+    id: number;
+    position: { x: number; y: number; z: number };
+    velocity: THREE.Vector3;
+    speed: number;
+    isHuman: boolean;
+    isDewa: boolean;
+    flickerPhase: number;
+    life: number;
+    baseHSL: { h: number; s: number; l: number };
+  }
+
+  // Create event dispatcher with proper typing
+  const dispatch = createEventDispatcher<{
+    simulationReady: SceneObjects;
+  }>();
+
+  // Local reactive variables with TypeScript typing
   let souls = $derived(getSouls());
   let renderingMode = $derived(getRenderingMode());
   let MIN_LIFESPAN = $derived(getMIN_LIFESPAN());
@@ -42,19 +69,17 @@
   let adaptivePerformanceManager = $derived(getAdaptivePerformanceManager());
   let instancedRenderer = $derived(getInstancedRenderer());
 
-  // Scene objects (will be set when scene is ready)
-  let scene = $state(null);
-  let camera = $state(null);
-  let renderer = $state(null);
-  let controls = $state(null);
+  // Scene objects with TypeScript typing (will be set when scene is ready)
+  let scene = $state<THREE.Scene | null>(null);
+  let camera = $state<THREE.PerspectiveCamera | null>(null);
+  let renderer = $state<THREE.WebGLRenderer | null>(null);
+  let controls = $state<ArcballControls | null>(null);
 
   // Simulation state
-  let isSimulationInitialized = $state(false);
+  let isSimulationInitialized = $state<boolean>(false);
 
-  const dispatch = createEventDispatcher();
-
-  // Export function to be called when scene is ready
-  export function handleSceneReady(sceneObjects) {
+  // Export function to be called when scene is ready with TypeScript
+  export function handleSceneReady(sceneObjects: SceneObjects): void {
     scene = sceneObjects.scene;
     camera = sceneObjects.camera;
     renderer = sceneObjects.renderer;
@@ -67,9 +92,9 @@
   /**
    * Helper function to get entity count from URL parameter
    */
-  function getEntityCountFromURL() {
+  function getEntityCountFromURL(): number {
     const urlParams = new URLSearchParams(window.location.search);
-    const val = urlParams.get('val');
+    const val: string | null = urlParams.get('val');
     
     if (val === null || val === '') {
       if (adaptivePerformanceManager) {
@@ -80,7 +105,7 @@
       return DEFAULT_SOUL_COUNT;
     }
     
-    const parsedVal = parseInt(val, 10);
+    const parsedVal: number = parseInt(val, 10);
     
     if (isNaN(parsedVal)) {
       if (adaptivePerformanceManager) {
@@ -96,7 +121,7 @@
   /**
    * Initialize the simulation once the scene is ready
    */
-  function initializeSimulation() {
+  function initializeSimulation(): void {
     if (!scene || !camera || !renderer) {
       console.warn('Scene not ready for simulation initialization');
       return;
@@ -142,17 +167,17 @@
 
     // Dispatch event to notify that simulation is ready
     dispatch('simulationReady', {
-      scene,
-      camera,
-      renderer,
-      controls
+      scene: scene!,
+      camera: camera!,
+      renderer: renderer!,
+      controls: controls!
     });
   }
 
   /**
    * Setup the core simulation logic (souls, workers, etc.)
    */
-  function setupSimulationCore() {
+  function setupSimulationCore(): void {
     const recycledSoulCount = getEntityCountFromURL();
     const interactionDistance = CONNECTION_SETTINGS.INTERACTION_DISTANCE;
     let lineSegments;
@@ -227,13 +252,13 @@
     // Set scene references for WorkerManager
     workerManager.setSceneReferences(scene, lineSegments, MAX_LINES);
 
-    // Soul creation wrapper function
-    function createNewSoulWrapper() {
-      const newSoul = createNewSoul(scene, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, null);
+    // Soul creation wrapper function with TypeScript
+    function createNewSoulWrapper(): void {
+      const newSoul = createNewSoul(scene!, renderingMode, MIN_LIFESPAN, MAX_LIFESPAN, null);
       
       // Send the new soul to the worker via WorkerManager
       if (newSoul && newSoul.userData) {
-        const soulDataForWorker = {
+        const soulDataForWorker: SoulDataForWorker = {
           id: newSoul.userData.id,
           position: { x: newSoul.position.x, y: newSoul.position.y, z: newSoul.position.z },
           velocity: newSoul.userData.velocity,
@@ -258,8 +283,8 @@
     animationController.start();
   }
 
-  // Cleanup function for simulation
-  export function cleanup() {
+  // Cleanup function for simulation with TypeScript
+  export function cleanup(): void {
     if (animationController) {
       animationController.stop();
     }

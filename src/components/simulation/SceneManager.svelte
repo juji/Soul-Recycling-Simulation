@@ -1,11 +1,11 @@
 <!-- src/components/simulation/SceneManager.svelte -->
-<script>
+<script lang="ts">
   import { onMount, createEventDispatcher, onDestroy } from 'svelte';
   import * as THREE from 'three';
   import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls';
   import { LODManager } from '../../lib/LODManager';
-  import { AdaptivePerformanceManager } from '../../lib/AdaptivePerformanceManager.js';
-  import { FEATURE_FLAGS } from '../../lib/constants/config.js';
+  import { AdaptivePerformanceManager } from '../../lib/AdaptivePerformanceManager';
+  import { FEATURE_FLAGS } from '../../lib/constants/config';
   import { CAMERA_SETTINGS, LIGHTING_SETTINGS, CONTROLS_SETTINGS } from '../../lib/constants/rendering';
   
   // Import store getters
@@ -15,20 +15,37 @@
     setAdaptivePerformanceManager
   } from '../../lib/stores/simulationState.svelte.ts';
 
-  const dispatch = createEventDispatcher();
+  // TypeScript interfaces
+  interface SceneReadyEvent {
+    scene: THREE.Scene;
+    camera: THREE.PerspectiveCamera;
+    renderer: THREE.WebGLRenderer;
+    controls: ArcballControls;
+  }
 
-  // Local Three.js objects
-  let scene = null;
-  let camera = null;
-  let renderer = null;
-  let controls = null;
-  let lodManager = null;
-  let adaptivePerformanceManager = null;
+  interface ResizeEvent {
+    width: number;
+    height: number;
+  }
 
-  // Get container reference from store - using onMount instead of $derived for compatibility
-  let container = null;
+  // Create event dispatcher with proper typing
+  const dispatch = createEventDispatcher<{
+    sceneReady: SceneReadyEvent;
+    resize: ResizeEvent;
+  }>();
 
-  function initializeScene() {
+  // Local Three.js objects with TypeScript typing
+  let scene: THREE.Scene | null = null;
+  let camera: THREE.PerspectiveCamera | null = null;
+  let renderer: THREE.WebGLRenderer | null = null;
+  let controls: ArcballControls | null = null;
+  let lodManager: LODManager | null = null;
+  let adaptivePerformanceManager: AdaptivePerformanceManager | null = null;
+
+  // Get container reference from store with TypeScript typing
+  let container: HTMLElement | null = null;
+
+  function initializeScene(): void {
     if (!container) {
       console.warn('SceneManager: Container not available yet');
       return;
@@ -72,7 +89,7 @@
         scene,
         camera,
         renderer,
-        controls
+        controls: controls!
       });
       
     } catch (error) {
@@ -80,12 +97,18 @@
     }
   }
 
-  function setupControls() {
+  function setupControls(): void {
+    if (!camera || !renderer || !scene) return;
+    
     // Fix passive event listener warning before creating controls
-    if (!window.__wheelEventPatched) {
+    if (!(window as any).__wheelEventPatched) {
       const originalAddEventListener = EventTarget.prototype.addEventListener;
       
-      EventTarget.prototype.addEventListener = function(type, listener, options) {
+      EventTarget.prototype.addEventListener = function(
+        type: string, 
+        listener: EventListenerOrEventListenerObject, 
+        options?: boolean | AddEventListenerOptions
+      ) {
         if (type === 'wheel' && this instanceof HTMLElement) {
           const newOptions = typeof options === 'object' ? { ...options, passive: false } : { passive: false };
           return originalAddEventListener.call(this, type, listener, newOptions);
@@ -93,7 +116,7 @@
         return originalAddEventListener.call(this, type, listener, options);
       };
       
-      window.__wheelEventPatched = true;
+      (window as any).__wheelEventPatched = true;
     }
 
     // Create controls
@@ -111,7 +134,9 @@
     controls.maxDistance = CONTROLS_SETTINGS.MAX_DISTANCE;
   }
 
-  function setupLighting() {
+  function setupLighting(): void {
+    if (!scene) return;
+    
     // Ambient light
     const ambientLight = new THREE.AmbientLight(
       LIGHTING_SETTINGS.AMBIENT.color, 
@@ -132,7 +157,7 @@
     scene.add(directionalLight);
 
     // Point lights
-    LIGHTING_SETTINGS.POINT_LIGHTS.forEach((lightConfig, index) => {
+    LIGHTING_SETTINGS.POINT_LIGHTS.forEach((lightConfig, index: number) => {
       const pointLight = new THREE.PointLight(
         lightConfig.color, 
         lightConfig.intensity, 
@@ -147,7 +172,7 @@
     });
   }
 
-  function initializePerformanceManagers() {
+  function initializePerformanceManagers(): void {
     if (FEATURE_FLAGS.USE_LOD_SYSTEM) {
       // Initialize Adaptive Performance Manager
       adaptivePerformanceManager = new AdaptivePerformanceManager({
@@ -167,12 +192,12 @@
       
       // Make performance manager globally accessible for AI test bridge
       if (typeof window !== 'undefined') {
-        window.performanceManager = adaptivePerformanceManager;
+        (window as any).performanceManager = adaptivePerformanceManager;
       }
     }
   }
 
-  function handleResize() {
+  function handleResize(): void {
     if (!camera || !renderer || !container) return;
     
     const width = container.clientWidth;
@@ -186,7 +211,7 @@
   }
 
   // Clean up resources
-  function cleanup() {
+  function cleanup(): void {
     if (renderer && renderer.domElement && container) {
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);

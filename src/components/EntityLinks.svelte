@@ -1,10 +1,23 @@
-<!-- Entity Links Component - Updated for Phase 7b -->
-<script>
+<!-- Entity Links Component - TypeScript Migration Phase 10.1 -->
+<script lang="ts">
   // Import state store and constants
   import { isAutomaticSoulCount as getIsAutomaticSoulCount } from '../lib/stores/simulationState.svelte.ts';
-  import { DEFAULT_SOUL_COUNT } from '../lib/constants/config.js';
+  import { DEFAULT_SOUL_COUNT } from '../lib/constants/config.ts';
   
-  // Props for configuration only (no data props needed)
+  // TypeScript interfaces
+  interface EntityLink {
+    value: number | null;
+    label: string;
+    isAuto?: boolean;
+  }
+  
+  interface EntityLinksProps {
+    showLinks?: boolean;
+    position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    links?: EntityLink[];
+  }
+  
+  // Props for configuration with TypeScript typing
   let { 
     showLinks = true,
     position = 'top-left', // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
@@ -14,21 +27,21 @@
       { value: 3333, label: '3333' },
       { value: null, label: 'Auto', isAuto: true }
     ]
-  } = $props();
+  }: EntityLinksProps = $props();
   
-  // Get data from state store
+  // Get data from state store with proper typing
   let isAutomaticSoulCount = $derived(getIsAutomaticSoulCount());
   
-  // Get active count from URL (same logic as App.svelte)
-  let activeCount = $derived(() => {
+  // Get active count from URL (same logic as App.svelte) with TypeScript
+  let activeCount = $derived((): number => {
     const urlParams = new URLSearchParams(window.location.search);
-    const val = urlParams.get('val');
+    const val: string | null = urlParams.get('val');
     
     if (val === null || val === '') {
       return DEFAULT_SOUL_COUNT;
     }
     
-    const parsedVal = parseInt(val, 10);
+    const parsedVal: number = parseInt(val, 10);
     
     if (isNaN(parsedVal)) {
       return DEFAULT_SOUL_COUNT;
@@ -37,27 +50,27 @@
     return parsedVal;
   });
   
-  // CSS classes based on position using runes
+  // CSS classes based on position using runes with typing
   let positionClass = $derived(`entity-links-${position}`);
   
-  // Helper function to check if a link is active
-  function isLinkActive(link) {
+  // Helper function to check if a link is active with TypeScript
+  function isLinkActive(link: EntityLink): boolean {
     if (link.isAuto) {
       return isAutomaticSoulCount > 0;
     }
     return activeCount() === link.value;
   }
   
-  // Helper function to get link display text
-  function getLinkText(link) {
+  // Helper function to get link display text with TypeScript
+  function getLinkText(link: EntityLink): string {
     if (link.isAuto && isAutomaticSoulCount) {
       return `Auto: ${isAutomaticSoulCount}`;
     }
     return link.label;
   }
   
-  // Helper function to get link href
-  function getLinkHref(link) {
+  // Helper function to get link href with TypeScript
+  function getLinkHref(link: EntityLink): string {
     if (link.isAuto) {
       return '/';
     }

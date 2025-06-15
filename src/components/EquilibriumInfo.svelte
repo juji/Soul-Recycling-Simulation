@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import SliderControls from './SliderControls.svelte';
   
@@ -15,23 +15,36 @@
     setMaxLifespan
   } from '../lib/stores/simulationState.svelte.ts';
 
-  // Props for configuration only (no data props needed)
+  // TypeScript interfaces
+  interface ParameterChangeEvent {
+    detail: {
+      type: 'SPAWN_RATE' | 'MIN_LIFESPAN' | 'MAX_LIFESPAN';
+      value: number;
+    };
+  }
+
+  interface EquilibriumInfoProps {
+    show?: boolean;
+    position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  }
+
+  // Props for configuration with TypeScript typing
   let { 
     show = $bindable(false),
     position = 'top-left' // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
-  } = $props();
+  }: EquilibriumInfoProps = $props();
 
-  // Get data from state store
+  // Get data from state store with proper typing
   let storeSpawnRate = $derived(getNEW_SOUL_SPAWN_RATE());
   let storeMinLifespan = $derived(getMIN_LIFESPAN());
   let storeMaxLifespan = $derived(getMAX_LIFESPAN());
   let avgLifespan = $derived(getAVG_LIFESPAN());
   let equilibriumPopulation = $derived(getEQUILIBRIUM_POPULATION());
 
-  // Local state for slider controls (bindable) - start with sensible defaults
-  let spawnRate = $state(0.7);
-  let minLifespan = $state(300);
-  let maxLifespan = $state(900);
+  // Local state for slider controls (bindable) with TypeScript typing
+  let spawnRate = $state<number>(0.7);
+  let minLifespan = $state<number>(300);
+  let maxLifespan = $state<number>(900);
 
   // Sync local state with store when store changes
   $effect(() => {
@@ -40,12 +53,12 @@
     maxLifespan = storeMaxLifespan;
   });
 
-  // Calculate equilibrium population reactively using store values
+  // Calculate equilibrium population reactively using store values with typing
   let calculatedEquilibrium = $derived(Math.round(storeSpawnRate * avgLifespan));
   let calculatedAvgLifespan = $derived((storeMinLifespan + storeMaxLifespan) / 2);
 
-  // Handle parameter changes from SliderControls
-  function handleParameterChange(event) {
+  // Handle parameter changes from SliderControls with TypeScript
+  function handleParameterChange(event: ParameterChangeEvent): void {
     const { type, value } = event.detail;
     
     switch (type) {
@@ -61,18 +74,18 @@
     }
   }
 
-  function handleReset() {
+  function handleReset(): void {
     resetParameters();
   }
 
-  // Toggle function for parent access
-  export function toggle() {
+  // Toggle function for parent access with TypeScript
+  export function toggle(): void {
     show = !show;
   }
 
   // Auto-open equilibrium info on wider screens and handle resize
   onMount(() => {
-    const handleResize = () => {
+    const handleResize = (): void => {
       if (window.innerWidth > 1200) {
         show = true;
       }

@@ -1,12 +1,25 @@
-<script>
-  // Bottom links component props
+<script lang="ts">
+  // TypeScript interfaces
+  interface LinkItem {
+    href: string;
+    text: string;
+    class?: string;
+    target?: '_blank' | '_self' | '_parent' | '_top';
+  }
+
+  interface BottomLinksProps {
+    links?: LinkItem[];
+    position?: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
+  }
+
+  // Bottom links component props with TypeScript typing
   let { 
     links = [
       { href: 'https://jujiplay.com', text: 'JujiPlay', class: 'jujiplay-link' },
-      { href: 'https://github.com/juji/Soul-Recycling-Simulation', text: 'GitHub', class: 'github-link', target: '_blank' }
+      { href: 'https://github.com/juji/Soul-Recycling-Simulation', text: 'GitHub', class: 'github-link', target: '_blank' as const }
     ],
     position = 'bottom-left' // 'bottom-left', 'bottom-right', 'top-left', 'top-right'
-  } = $props();
+  }: BottomLinksProps = $props();
 </script>
 
 <div class="bottom-links {position}">

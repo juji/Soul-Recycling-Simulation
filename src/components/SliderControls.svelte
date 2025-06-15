@@ -1,22 +1,38 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from 'svelte';
   
-  const dispatch = createEventDispatcher();
+  // TypeScript interfaces
+  interface ParameterChangeEvent {
+    type: 'SPAWN_RATE' | 'MIN_LIFESPAN' | 'MAX_LIFESPAN';
+    value: number;
+  }
   
-  // Convert to runes with $bindable for two-way binding
+  interface SliderControlsProps {
+    NEW_SOUL_SPAWN_RATE: number;
+    MIN_LIFESPAN: number;
+    MAX_LIFESPAN: number;
+  }
+  
+  // Create event dispatcher with proper typing
+  const dispatch = createEventDispatcher<{
+    parameterChange: ParameterChangeEvent;
+    reset: void;
+  }>();
+  
+  // Convert to runes with $bindable for two-way binding and TypeScript typing
   let {
-    NEW_SOUL_SPAWN_RATE = $bindable(),
-    MIN_LIFESPAN = $bindable(),
-    MAX_LIFESPAN = $bindable()
-  } = $props();
+    NEW_SOUL_SPAWN_RATE = $bindable<number>(),
+    MIN_LIFESPAN = $bindable<number>(),
+    MAX_LIFESPAN = $bindable<number>()
+  }: SliderControlsProps = $props();
   
-  const MAX_AGE_GAP = 600; // Maximum gap between min and max lifespan
-  const MIN_LIFESPAN_VAL = 100;
+  const MAX_AGE_GAP: number = 600; // Maximum gap between min and max lifespan
+  const MIN_LIFESPAN_VAL: number = 100;
 
-  // Track previous values to detect changes
-  let prevSpawnRate = NEW_SOUL_SPAWN_RATE;
-  let prevMinLifespan = MIN_LIFESPAN;
-  let prevMaxLifespan = MAX_LIFESPAN;
+  // Track previous values to detect changes with TypeScript typing
+  let prevSpawnRate: number = NEW_SOUL_SPAWN_RATE;
+  let prevMinLifespan: number = MIN_LIFESPAN;
+  let prevMaxLifespan: number = MAX_LIFESPAN;
 
   // Watch for changes using effects
   $effect(() => {
@@ -69,7 +85,8 @@
     }
   });
 
-  function resetParameters() {
+  // Reset function with TypeScript typing
+  function resetParameters(): void {
     NEW_SOUL_SPAWN_RATE = 0.7;
     MIN_LIFESPAN = 300;
     MAX_LIFESPAN = 900;

@@ -1,16 +1,24 @@
-<script>
-  // Toast notification component props
+<script lang="ts">
+  // TypeScript interfaces
+  interface ToastNotificationProps {
+    message?: string;
+    show?: boolean;
+    duration?: number;
+    position?: 'bottom-center' | 'top-center' | 'bottom-left' | 'bottom-right';
+  }
+
+  // Toast notification component props with TypeScript typing
   let { 
-    message = $bindable(''),
-    show = $bindable(false),
+    message = $bindable<string>(''),
+    show = $bindable<boolean>(false),
     duration = 2000,
     position = 'bottom-center' // 'bottom-center', 'top-center', 'bottom-left', 'bottom-right'
-  } = $props();
+  }: ToastNotificationProps = $props();
 
-  // Auto-hide toast after duration
+  // Auto-hide toast after duration with TypeScript
   $effect(() => {
     if (show && duration > 0) {
-      const timer = setTimeout(() => {
+      const timer: number = setTimeout(() => {
         show = false;
       }, duration);
       
@@ -18,8 +26,8 @@
     }
   });
 
-  // Expose showToast method for parent components
-  export function showToast(msg, customDuration = duration) {
+  // Expose showToast method for parent components with TypeScript
+  export function showToast(msg: string, customDuration: number = duration): void {
     message = msg;
     show = true;
     if (customDuration !== duration) {

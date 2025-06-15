@@ -1,21 +1,42 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   
-  // Define props using runes - container is bindable for parent access
-  let { onmousemove, onresize, container = $bindable() } = $props();
+  // TypeScript interfaces
+  interface MouseMoveEvent {
+    mouseX: number;
+    mouseY: number;
+  }
+  
+  interface ResizeEvent {
+    width: number;
+    height: number;
+  }
+  
+  interface ThreeContainerProps {
+    onmousemove?: (event: MouseMoveEvent) => void;
+    onresize?: (event: ResizeEvent) => void;
+    container?: HTMLElement;
+  }
+  
+  // Define props using runes with TypeScript typing
+  let { 
+    onmousemove, 
+    onresize, 
+    container = $bindable<HTMLElement | undefined>() 
+  }: ThreeContainerProps = $props();
 
-  // Handle mouse movements and dispatch to parent
-  function handleMouseMove(event) {
+  // Handle mouse movements and dispatch to parent with TypeScript
+  function handleMouseMove(event: MouseEvent): void {
     if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    const mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    const rect: DOMRect = container.getBoundingClientRect();
+    const mouseX: number = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const mouseY: number = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     
     onmousemove?.({ mouseX, mouseY });
   }
 
-  // Handle window resize events
-  function handleResize() {
+  // Handle window resize events with TypeScript
+  function handleResize(): void {
     onresize?.({
       width: container?.clientWidth || 0,
       height: container?.clientHeight || 0
@@ -28,7 +49,9 @@
       window.addEventListener('resize', handleResize);
 
       return () => {
-        container.removeEventListener('mousemove', handleMouseMove);
+        if (container) {
+          container.removeEventListener('mousemove', handleMouseMove);
+        }
         window.removeEventListener('resize', handleResize);
       };
     }

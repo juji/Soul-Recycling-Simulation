@@ -1,22 +1,28 @@
-<!-- Population Counter Component - Updated for Phase 7a -->
-<script>
+<!-- Population Counter Component - TypeScript Migration Phase 10.1 -->
+<script lang="ts">
   // Import state store to get soul count directly
   import { souls as getSouls } from '../lib/stores/simulationState.svelte.ts';
   
-  // Props for configuration (no data props needed)
+  // TypeScript interface for component props
+  interface PopulationCounterProps {
+    showCounter?: boolean;
+    position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  }
+  
+  // Props for configuration with TypeScript typing
   let { 
     showCounter = true,
     position = 'bottom-right' // 'bottom-right', 'bottom-left', 'top-right', 'top-left'
-  } = $props();
+  }: PopulationCounterProps = $props();
   
-  // Get soul count directly from state store
+  // Get soul count directly from state store with proper typing
   let souls = $derived(getSouls());
   let soulCount = $derived(souls.length);
   
-  // Reactive calculation for display using runes
+  // Reactive calculation for display using runes with type safety
   let displayCount = $derived(Math.max(0, soulCount));
   
-  // CSS classes based on position using runes
+  // CSS classes based on position using runes with proper typing
   let positionClass = $derived(`population-counter-${position}`);
 </script>
 

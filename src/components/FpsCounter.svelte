@@ -1,30 +1,35 @@
-<!-- FPS Counter Component - Updated for Phase 7a -->
-<script>
-  import { onMount } from 'svelte';
+<!-- FPS Counter Component - TypeScript Migration Phase 10.1 -->
+<script lang="ts">
+  // TypeScript interface for component props
+  interface FpsCounterProps {
+    showCounter?: boolean;
+    updateInterval?: number;
+    averageWindowSize?: number;
+  }
   
-  // Props
+  // Props with TypeScript typing
   let { 
     showCounter = true,
     updateInterval = 1000,
     averageWindowSize = 10 
-  } = $props();
+  }: FpsCounterProps = $props();
   
-  // State variables for FPS tracking
-  let fps = $state(0);
-  let frameCount = $state(0);
-  let lastTime = $state(performance.now());
-  let averageFPS = $state(0);
-  let fpsHistory = $state([]);
-  let memoryUsage = $state(0);
+  // State variables for FPS tracking with TypeScript types
+  let fps = $state<number>(0);
+  let frameCount = $state<number>(0);
+  let lastTime = $state<number>(performance.now());
+  let averageFPS = $state<number>(0);
+  let fpsHistory = $state<number[]>([]);
+  let memoryUsage = $state<number>(0);
   
   // Animation frame tracking
-  let animationFrameId = $state(null);
+  let animationFrameId = $state<number | null>(null);
   
-  // FPS calculation function
-  function updateFPS() {
+  // FPS calculation function with TypeScript types
+  function updateFPS(): void {
     frameCount++;
-    const currentTime = performance.now();
-    const elapsed = currentTime - lastTime;
+    const currentTime: number = performance.now();
+    const elapsed: number = currentTime - lastTime;
     
     if (elapsed >= updateInterval) {
       fps = frameCount;
@@ -39,7 +44,7 @@
       
       // Calculate average FPS
       if (fpsHistory.length > 0) {
-        averageFPS = Math.round(fpsHistory.reduce((a, b) => a + b) / fpsHistory.length);
+        averageFPS = Math.round(fpsHistory.reduce((a: number, b: number) => a + b) / fpsHistory.length);
       }
       
       // Memory usage tracking (if available)
@@ -68,8 +73,15 @@
     };
   });
   
-  // Export current metrics for parent components
-  export function getMetrics() {
+  // Export current metrics for parent components with TypeScript interface
+  interface FpsMetrics {
+    fps: number;
+    averageFPS: number;
+    memoryUsage: number;
+    fpsHistory: number[];
+  }
+  
+  export function getMetrics(): FpsMetrics {
     return {
       fps,
       averageFPS,
@@ -81,9 +93,9 @@
   // Expose FPS values to global scope for AI test bridge compatibility
   $effect(() => {
     if (typeof window !== 'undefined') {
-      window.currentFPS = fps;
-      window.averageFPS = averageFPS;
-      window.memoryUsage = memoryUsage;
+      (window as any).currentFPS = fps;
+      (window as any).averageFPS = averageFPS;
+      (window as any).memoryUsage = memoryUsage;
     }
   });
 </script>
